@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable 'child' in 'TryGenericParser.getChildNodeNames(...)' to 'childElement'&#13;&#10;- Original element: 'TryGenericParser.getChildNodeNames(NodeList).child'&#13;&#10;- Renamed element: 'TryGenericParser.getChildNodeNames(NodeList).childElement'&#13;&#10;- Update references to refactored element" description="Rename local variable 'child'" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;{TryGenericParser.java" name="childElement" references="true" selection="1063 5" stamp="1169310786437" version="1.0"/>
+</session>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/activation.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/dom.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/iitschema11.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jaas.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jaxb1-impl.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jaxb-api.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jaxb-impl.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jaxb-xjc.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jaxp-api.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jsr173_api.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/jta-spec1_0_1.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/mail.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/relaxngDatatype.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/resolver.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/saaj-api.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/saaj-impl.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/sax.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/sjsxp.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/xalan.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/xmlsec.jar"/>
+	<classpathentry kind="lib" path="C:/Documents and Settings/PIKU/Desktop/lib/xsdlib.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,9 @@
+package com.dds.dom.xml.test;
+
+import java.io.InputStream;
+
+public class TestDomParser1 
+{
+	public void showParsedData( final InputStream inStream_parm )
+
+}

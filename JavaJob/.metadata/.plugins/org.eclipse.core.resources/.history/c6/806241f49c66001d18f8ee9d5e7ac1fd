@@ -1,0 +1,6 @@
+
+public class Emp implements Comparable<EMP> 
+{
+	
+
+}

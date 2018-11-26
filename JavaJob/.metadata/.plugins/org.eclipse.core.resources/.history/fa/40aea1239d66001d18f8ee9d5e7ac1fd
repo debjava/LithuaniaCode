@@ -1,0 +1,16 @@
+
+public class Emp implements Comparable<Emp> 
+{
+	private String name ;
+	private int age;
+	
+	public Emp( String name )
+	{
+		this.name = name;
+	}
+	public int compareTo(Emp arg0) 
+	{
+		return 0;
+	}
+
+}

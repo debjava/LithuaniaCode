@@ -1,0 +1,38 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ 		       	
+           	xmlns:Timesheetinfo="http://com/iit/xmldb/iitschema"
+           	targetNamespace="http://com/iit/xmldb/iitschema" 
+           	elementFormDefault="qualified" 
+           	attributeFormDefault="qualified" 
+           	id="NewDataSet">
+	
+	
+	<xsd:element name="TimeSheetInfo">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="EmpInfo"    type="iitschema:EmpInfoType" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="EmpInfoType">
+		<xsd:sequence>
+			<xsd:element name="GuideName"		type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="EmpName"		type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="EmpId"		type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="ProjectTimeSheet"    type="iitschema:ProjectTimeSheetType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="TotalHours"		type="iitschema:string" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="ProjectTimeSheetType">
+		<xsd:sequence>
+			<xsd:element name="ProjectCode"		type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="ActivityHeading"	type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="ActivityName"	type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="Description"		type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="StartDate"		type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="WorkingHours"	type="xsd:string" minOccurs="1" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

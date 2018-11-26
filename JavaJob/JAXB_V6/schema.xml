@@ -1,0 +1,56 @@
+<?xml version="1.0" standalone="yes"?>
+
+<project basedir="." default="Createjar">
+
+  <property name="librarydir"								value="${basedir}/lib"/>
+  <property name ="src.dir"									value="${basedir}/src"/>
+  <property name ="schema.dir"								value="${src.dir}/jbpm"/>
+  <property name="bin.dir"									value="${basedir}/bin"/>
+  <property name="gen-src"									value="${basedir}/gen-src"/>
+  <!--<property name="${jaxb.prop}"								value="${gen-src}/com/rrs/corona"/> -->
+
+    <path id="libraries">
+        <fileset dir="${librarydir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+  <taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+    <classpath refid="libraries" />
+  </taskdef>
+
+<target name="init" description="to create required directories">
+<echo message="Deleting created directories and creating new directories......................"/>
+<delete dir="${bin.dir}"/>
+<delete dir="gen-src"/>
+<mkdir dir="${bin.dir}"/>
+<mkdir dir="gen-src" />
+</target>
+
+ <!-- compile all xsd files in the src dir and put the output in the build dir -->
+
+  <target name="compile" depends="init">
+  <echo message="Compiling schema files..........................."/>
+  <xjc target="gen-src" package="com.iit.xmldb">
+    <schema  dir="${schema.dir}"  includes="*.xsd"/>
+  </xjc>
+</target>
+
+ <!-- compile all JAXB generated java files -->
+
+<target name="CompileJava" depends="compile" description="to compile java files">
+	<echo message="compiling all created java files ..............................."/>
+	<javac srcdir="${basedir}/gen-src" destdir="${basedir}/bin" includes="**/*.*">
+	<classpath refid="libraries" />
+	</javac>
+</target>
+
+<!-- Create the jar file for iit schema-->
+<target name="Createjar" depends="CompileJava" description="to create jar file">
+<echo message="creating jar file ................................."/>
+<jar destfile="bin/iitschema11.jar"
+       basedir="${bin.dir}" includes="**/*.*" />
+</target>
+
+</project>
+

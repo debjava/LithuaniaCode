@@ -1,0 +1,15 @@
+package com.dds.dom.xml.test;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+public class WfinitParser 
+{
+	public static void main(String[] args) 
+	{
+		InputStream inStream = FileInputStream("E:/data/domparsingData/wfinit-config.xml");
+		
+	} 
+	
+
+}

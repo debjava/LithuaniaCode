@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="317"/>
+		<item key="DIALOG_Y_ORIGIN" value="251"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="396"/>
+		<item key="DIALOG_Y_ORIGIN" value="116"/>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<item key="selection" value="menu"/>
+		<item key="wrap" value="false"/>
+		<item key="casesensitive" value="false"/>
+		<list key="findhistory">
+			<item value="menu"/>
+			<item value="Sample Menu"/>
+			<item value="findAllTaskInstancesByActorId"/>
+			<item value="findAllTaskInstancesById"/>
+			<item value="does not exist!"/>
+			<item value="Buildfile"/>
+			<item value="PnCalendar"/>
+			<item value="Salt must be 8 bytes long"/>
+		</list>
+		<list key="replacehistory">
+			<item value="Calender"/>
+			<item value="/"/>
+		</list>
+	</section>
+</section>

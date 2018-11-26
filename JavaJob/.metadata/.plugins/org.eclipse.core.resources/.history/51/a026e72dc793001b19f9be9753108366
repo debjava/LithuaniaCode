@@ -1,0 +1,25 @@
+package com.dds.dom.xml.test;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.logging.Logger;
+
+public class WfinitParser 
+{
+	Logger logger = Logger.getLogger(WfinitParser.class);
+	public static void main(String[] args) 
+	{
+		try
+		{
+			
+		}
+		catch( Exception e )
+		{
+			
+		}
+		InputStream inStream = FileInputStream("E:/data/domparsingData/wfinit-config.xml");
+		
+	} 
+	
+
+}

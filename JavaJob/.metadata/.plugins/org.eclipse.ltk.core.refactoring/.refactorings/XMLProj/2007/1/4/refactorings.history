@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable 'name' in 'TryGeneric2.parseXMLFile(...)' to 'nodeValue'&#13;&#10;- Original element: 'TryGeneric2.parseXMLFile(String).name'&#13;&#10;- Renamed element: 'TryGeneric2.parseXMLFile(String).nodeValue'&#13;&#10;- Update references to refactored element" description="Rename local variable 'name'" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;{TryGeneric2.java" name="nodeValue" references="true" selection="2166 4" stamp="1169395208843" version="1.0"/>
+<refactoring comment="Rename local variable 'element1' in 'TryGeneric2.getTextValue(...)' to 'subElement'&#13;&#10;- Original element: 'TryGeneric2.getTextValue(Element, String).element1'&#13;&#10;- Renamed element: 'TryGeneric2.getTextValue(Element, String).subElement'&#13;&#10;- Update references to refactored element" description="Rename local variable 'element1'" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;{TryGeneric2.java" name="subElement" references="true" selection="753 8" stamp="1169396132250" version="1.0"/>
+</session>

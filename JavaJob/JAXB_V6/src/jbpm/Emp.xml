@@ -1,0 +1,9 @@
+<EmpInfo>
+	<Emp>
+		<Name>Deba</Deba>
+		<Age>23</Age>
+		<EmpId>1</EmpId>
+		<Salary>1234</Salary>
+		<Adrs>Bolangir</Adrs>
+	</Emp>
+</EmpInfo>

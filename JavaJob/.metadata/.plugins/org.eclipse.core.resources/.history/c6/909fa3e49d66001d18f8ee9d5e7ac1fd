@@ -1,0 +1,37 @@
+import java.util.ArrayList;
+import java.util.List;
+
+
+public class TestComp 
+{
+	public static void show( List<Emp> data )
+	{
+		for( Emp e : data )
+		{
+			System.out.println(e.getName());
+		}
+	}
+	public static void main(String[] args) 
+	{
+
+		List< Emp > list = new ArrayList<Emp>();
+		Emp emp = new Emp();
+		emp.setName("PQRS");
+		list.add(emp);
+		emp = new Emp();
+		emp.setName("ABC");
+		list.add(emp);
+		
+		emp = new Emp();
+		emp.setName("Z");
+		list.add(emp);
+		
+		emp = new Emp();
+		emp.setName("K");
+		list.add(emp);
+		
+		show(list);
+		
+	}
+
+}

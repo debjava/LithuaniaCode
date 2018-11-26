@@ -1,0 +1,11 @@
+package com.dds.dom.xml.test;
+
+public class WfinitParser 
+{
+	public static void main(String[] args) 
+	{
+		
+	} 
+	
+
+}

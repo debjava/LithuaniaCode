@@ -1,0 +1,28 @@
+Manifest-Version: 1.0
+Generated-from: 1199900554406;type=2
+Bundle-ManifestVersion: 2
+Bundle-Name: ASDF Plug-in
+Bundle-SymbolicName: ASDF; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: ASDF.jar
+Bundle-Activator: asdf.Activator
+Bundle-Localization: plugin
+Export-Package: asdf,
+ asdf.actions,
+ asdf.editors,
+ asdf.importWizards,
+ asdf.popup.actions,
+ asdf.preferences,
+ asdf.properties,
+ asdf.views,
+ asdf.wizards
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.jface.text,
+ org.eclipse.ui.editors,
+ org.eclipse.ui.workbench.texteditor,
+ org.eclipse.ui.ide,
+ org.eclipse.ui.intro,
+ org.eclipse.ui.intro.universal
+Eclipse-LazyStart: true

@@ -1,0 +1,21 @@
+package com.abc.def.test;
+
+class A
+{
+	public void show(final String s)
+	{
+		System.out.println("I am in a method");
+	}
+}
+
+public class Hello
+{ 
+	public static void main(String[] args) 
+	{
+		A a1 = new A();
+		System.out.println("defsdvsd");
+		a1.show("Hi");
+		//println("Hello world......");
+	}
+
+}

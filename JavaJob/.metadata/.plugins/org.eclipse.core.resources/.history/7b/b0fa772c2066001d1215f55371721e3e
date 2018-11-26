@@ -1,0 +1,19 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+
+public class TestList 
+{
+	public static void main(String[] args) 
+	{
+		ArrayList al = new ArrayList();
+		al.add( 1, "piku 1");
+		al.add( 2, "lilu 2");
+		al.add( 3, "Arzoo 3");
+		System.out.println(al);
+//		al.set(1, "John");
+//		System.out.println(al);
+	}
+
+}

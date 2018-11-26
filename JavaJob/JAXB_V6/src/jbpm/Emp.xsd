@@ -1,0 +1,26 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:EmpInfo="http://com/iit/xmldb/EmpInfo"
+           	targetNamespace="http://com/iit/xmldb/EmpInfo"
+           	elementFormDefault="qualified"
+           	attributeFormDefault="qualified"
+           	id="NewDataSet">
+
+	<xsd:element name="EmpInfo">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element name="Emp" type="EmpInfo:EmpType" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="EmpType">
+		<xsd:sequence>
+			<xsd:element name="Name" type="xsd:string"/>
+			<xsd:element name="Age" type="xsd:string"/>
+			<xsd:element name="EmpId" type="xsd:string"/>
+			<xsd:element name="Salary" type="xsd:string"/>
+			<xsd:element name="Adrs" type="xsd:string"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
+</xsd:schema>

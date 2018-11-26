@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<session version="1.0">
+<refactoring comment="Rename package 'com.dds.desgnptrn' to 'com.dds.desgnptrn.factorydesgn'&#13;&#10;- Original element: 'CoreJava/com.dds.desgnptrn'&#13;&#10;- Renamed element: 'CoreJava/com.dds.desgnptrn.factorydesgn'&#13;&#10;- Update references to refactored element&#13;&#10;- Update textual occurrences in comments and strings" description="Rename package 'com.dds.desgnptrn'" flags="589830" hierarchical="false" id="org.eclipse.jdt.ui.rename.package" input="/&lt;com.dds.desgnptrn" name="com.dds.desgnptrn.factorydesgn" qualified="false" references="true" stamp="1159547020468" textual="false" version="1.0"/>
+</session>

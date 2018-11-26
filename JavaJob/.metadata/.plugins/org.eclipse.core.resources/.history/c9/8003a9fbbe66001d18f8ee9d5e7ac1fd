@@ -1,0 +1,8 @@
+
+public class TComp implements Comparable<Emp> 
+{
+	public int compareTo(Emp arg0) 
+	{
+		return 0;
+	}
+}
