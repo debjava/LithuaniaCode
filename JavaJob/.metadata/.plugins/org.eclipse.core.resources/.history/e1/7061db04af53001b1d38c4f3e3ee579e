@@ -1,8 +1,0 @@
-package com.xyz.def.test;
-
-public class MyBean 
-{
-	private String name;
-	private int age;
-
-}

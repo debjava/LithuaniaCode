@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<session version="1.0">
-<refactoring comment="Rename local variable 'msg' in 'com.pm.utility.mail.ExternalMailer.sendMailAsText(...)' to 'mailMessage'&#13;&#10;- Original element: 'com.pm.utility.mail.ExternalMailer.sendMailAsText(String, String[], String, String, String).msg'&#13;&#10;- Renamed element: 'com.pm.utility.mail.ExternalMailer.sendMailAsText(String, String[], String, String, String).mailMessage'&#13;&#10;- Update references to refactored element" description="Rename local variable 'msg'" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;com.pm.utility.mail{ExternalMailer.java" name="mailMessage" references="true" selection="4722 3" stamp="1168014520718" version="1.0"/>
-</session>

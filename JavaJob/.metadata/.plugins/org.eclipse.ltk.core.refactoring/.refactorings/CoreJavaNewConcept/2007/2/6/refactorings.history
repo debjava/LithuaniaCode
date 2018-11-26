@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<session version="1.0">
-<refactoring comment="Rename type 'com.dds.core.util.Encoder' to 'FileEncoder'&#13;&#10;- Original element: 'com.dds.core.util.Encoder'&#13;&#10;- Renamed element: 'com.dds.core.util.FileEncoder'&#13;&#10;- Update references to refactored element&#13;&#10;- Update textual occurrences in comments and strings" description="Rename type 'Encoder'" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src&lt;com.dds.core.util{Encoder.java[Encoder" matchStrategy="1" name="FileEncoder" qualified="false" references="true" similarDeclarations="false" stamp="1170727755671" textual="false" version="1.0"/>
-</session>

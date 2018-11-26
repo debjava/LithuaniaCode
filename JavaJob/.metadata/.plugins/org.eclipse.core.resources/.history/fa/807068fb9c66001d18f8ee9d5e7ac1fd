@@ -1,6 +1,0 @@
-
-public class Emp implements Comparable<Emp> 
-{
-	
-
-}

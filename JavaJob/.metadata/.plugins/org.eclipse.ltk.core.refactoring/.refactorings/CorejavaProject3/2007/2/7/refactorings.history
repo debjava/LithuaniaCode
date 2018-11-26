@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<session version="1.0">
-<refactoring comment="Rename local variable 'cBean1' in 'TestCustomerBean.main(...)' to 'cb1'&#13;&#10;- Original element: 'TestCustomerBean.main(String[]).cBean1'&#13;&#10;- Renamed element: 'TestCustomerBean.main(String[]).cb1'&#13;&#10;- Update references to refactored element" description="Rename local variable 'cBean1'" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;{TestCustomerBean.java" name="cb1" references="true" selection="284 6" stamp="1171645746234" version="1.0"/>
-</session>

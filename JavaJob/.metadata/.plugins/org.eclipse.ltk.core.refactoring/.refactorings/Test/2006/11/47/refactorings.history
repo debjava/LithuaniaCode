@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<session version="1.0">
-<refactoring comment="Rename package 'org.y' to 'org.com.rrs.y'&#13;&#10;- Original element: 'Test/src/org.y'&#13;&#10;- Renamed element: 'Test/src/org.com.rrs.y'&#13;&#10;- Update references to refactored element&#13;&#10;- Update textual occurrences in comments and strings" description="Rename package 'org.y'" flags="589830" hierarchical="false" id="org.eclipse.jdt.ui.rename.package" input="/src&lt;org.y" name="org.com.rrs.y" qualified="false" references="true" stamp="1164116631765" textual="false" version="1.0"/>
-</session>
