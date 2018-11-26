@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/getGroup.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2004  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Program name: getGroup.java                                               */
+/*                                                                           */
+/* Description: Sample Java program that demonstrates getting messages that  */
+/*              are in a message group                                       */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Function:                                                                 */
+/*                                                                           */
+/*   This program is similar to the getgroup.c program that can be found on: */
+/*                                                                           */
+/*       http://www.developer.ibm.com/tech/sampmq.html                       */
+/*                                                                           */
+/*   It will get messages that are both in a group and not in a group.       */
+/*   If the messages are in a group, the group must be marked complete.  It  */
+/*   will then get all messages for the group before getting any other       */
+/*   messages that are on the queue.                                         */
+/*                                                                           */
+/* This program is run as follows:                                           */
+/*                                                                           */
+/*     java getGroup -q ... -qm ...                                          */
+/*                                                                           */
+/* where                                                                     */
+/*     -q   is the queue name                                                */
+/*     -qm  is the queue manager name                                        */
+/*                                                                           */
+/* An alternate method is to run the program with an getGroup.properties     */
+/* that contains the q, qm:                                                  */
+/*                                                                           */
+/*    q=SYSTEM.DEFAULT.LOCAL.QUEUE                                           */
+/*    qm=pubsub.qmgr                                                         */
+/*                                                                           */
+/* This program has been tested with WebSphere MQ 5.3 CSD5 and JDK 1.4.1.    */
+/*                                                                           */
+/* This program can be run with the putgroup sample which will put messages  */
+/* onto the queue in a group.                                                */
+/*                                                                           */
+/*****************************************************************************/
+
+import java.io.*;
+import java.lang.*;
+import com.ibm.mq.*;
+import java.util.Properties;
+
+public class getGroup implements Runnable {
+
+	private static String iQueue = null;
+	private static String iQmgr = null;
+
+	public getGroup() {
+		iQueue = System.getProperty("q");
+		iQmgr = System.getProperty("qm");
+
+		/***********************************************/
+		/* Now go and get the getGroup.properties file */
+		/***********************************************/
+		try {
+			Properties props = new Properties(System.getProperties());
+			props.load(
+				new BufferedInputStream(
+					new FileInputStream("getGroup.properties")));
+			System.setProperties(props);
+		} catch (Exception e) {
+			System.out.println("Unable to read getGroup.properties:");
+			System.out.println(" " + e);
+		}
+
+		if (iQueue == null) {
+			iQueue = System.getProperty("q");
+		}
+		if (iQmgr == null) {
+			iQmgr = System.getProperty("qm");
+		}
+
+	}
+
+	public getGroup(String[] args) {
+
+		this();
+
+		/**********************************/
+		/* Get the command-line arguments */
+		/**********************************/
+		for (int i = 0; i &lt; args.length; i++) {
+			String arg = args[i].toLowerCase();
+
+			if (arg.equals("-q")) {
+				if (i + 1 &lt; args.length) {
+					iQueue = args[++i];
+				} else {
+					System.out.println("didn't specify queue, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-qm")) {
+				if (i + 1 &lt; args.length) {
+					iQmgr = args[++i];
+				} else {
+					System.out.println("didn't specify queue manager, exiting");
+					return;
+				}
+
+			} else {
+				System.out.println("Unknown argument: " + arg);
+			}
+		}
+
+	}
+
+	public void run() {
+
+		MQQueueManager qMgr;
+		boolean doneWithGet = false;
+
+		System.out.println("getGroup started....");
+		MQException.log = null;
+
+		try {
+			if (iQmgr != null) {
+				qMgr = new MQQueueManager(iQmgr);
+			} else {
+				qMgr = new MQQueueManager("");
+			}
+			try {
+				int openOptions =
+					MQC.MQOO_INPUT_AS_Q_DEF + MQC.MQOO_FAIL_IF_QUIESCING;
+				MQQueue myQueue =
+					qMgr.accessQueue(iQueue, openOptions, null, null, null);
+				//    try {
+				do {
+					MQGetMessageOptions gmo = new MQGetMessageOptions();
+					gmo.options =
+						gmo.options + MQC.MQGMO_WAIT + MQC.MQGMO_CONVERT;
+					gmo.matchOptions = MQC.MQMO_NONE;
+					gmo.waitInterval = 15000;
+
+					MQMessage myMessage = new MQMessage();
+
+					// myMessage.clearMessage();
+					myMessage.correlationId = MQC.MQCI_NONE;
+					myMessage.messageId = MQC.MQMI_NONE;
+					myMessage.groupId = MQC.MQGI_NONE;
+
+					try {
+						myQueue.get(myMessage, gmo);
+						if ((myMessage.messageFlags &amp; MQC.MQMF_MSG_IN_GROUP)
+							== MQC.MQMF_MSG_IN_GROUP) {
+							System.out.println("Message in group");
+							System.out.print("GroupId ");
+							dumpHexId(myMessage.groupId);
+							System.out.println(
+								"  1st msg seq "
+									+ myMessage.messageSequenceNumber
+									+ " messageFlags "
+									+ myMessage.messageFlags
+									+ " message length "
+									+ myMessage.getMessageLength()
+									+ " &lt;"
+									+ myMessage.readString(
+										myMessage.getMessageLength())
+									+ "&gt;");
+							try {
+
+								/****************************************/
+								/* Need to get the rest of the messages */
+								/* that are in this group.              */
+								/****************************************/
+								while (true) {
+									gmo.matchOptions = MQC.MQMO_MATCH_GROUP_ID;
+									gmo.waitInterval = 1000;
+									myQueue.get(myMessage, gmo);
+									System.out.println(
+										" Next msg seq "
+											+ myMessage.messageSequenceNumber
+											+ " messageFlags "
+											+ myMessage.messageFlags
+											+ " message length "
+											+ myMessage.getMessageLength()
+											+ " &lt;"
+											+ myMessage.readString(
+												myMessage.getMessageLength())
+											+ "&gt;");
+								}
+
+							} catch (MQException ex) {
+
+								if (ex.reasonCode
+									!= MQException.MQRC_NO_MSG_AVAILABLE) {
+									System.err.println(
+										"Error getting message "
+											+ ex.completionCode
+											+ " "
+											+ ex.reasonCode);
+								}
+							} catch (IOException ex) {
+								System.err.println("Errors reading message");
+							}
+						} else {
+							System.out.println("Message NOT in group");
+							System.out.println(
+								" non-group msg seq "
+									+ myMessage.messageSequenceNumber
+									+ " messageFlags "
+									+ myMessage.messageFlags
+									+ " message length "
+									+ myMessage.getMessageLength()
+									+ " &lt;"
+									+ myMessage.readString(
+										myMessage.getMessageLength())
+									+ "&gt;");
+						}
+					} catch (MQException ex) {
+						doneWithGet = true;
+						if (ex.reasonCode
+							== MQException.MQRC_NO_MSG_AVAILABLE) {
+							System.out.println("No more messages");
+						} else {
+							System.err.println(
+								"Error getting message "
+									+ ex.completionCode
+									+ " "
+									+ ex.reasonCode);
+						}
+					} catch (IOException ex) {
+						System.err.println("Errors reading message");
+					}
+
+				}
+				while (!doneWithGet);
+
+				myQueue.close();
+			} catch (MQException ex) {
+				System.err.println(
+					"Error opening queue "
+						+ ex.completionCode
+						+ " "
+						+ ex.reasonCode);
+			}
+			qMgr.disconnect();
+		} catch (MQException ex) {
+			System.err.println(
+				"Error opening queue manager "
+					+ ex.completionCode
+					+ " "
+					+ ex.reasonCode);
+		}
+
+		System.out.println("getGroup finished....");
+	}
+
+	/****************************************************/
+	/* Some of the MQ Ids are actually byte strings and */
+	/* need to be dumped in hex format.                 */
+	/****************************************************/
+	static void dumpHexId(byte[] myId) {
+		System.out.print("X'");
+		for (int i = 0; i &lt; myId.length; i++) {
+			char b = (char) (myId[i] &amp; 0xFF);
+			if (b &lt; 0x10) {
+				System.out.print("0");
+			}
+			System.out.print((String) (Integer.toHexString(b)).toUpperCase());
+		}
+		System.out.println("'");
+	}
+
+	public static void main(String[] args) {
+		getGroup app = new getGroup(args);
+		if (iQueue == null) {
+			System.out.println("Usage:");
+			System.out.println("java getGroup -q ... -qm ...");
+			System.out.println("where -q is the name of the queue");
+			System.out.println(
+				"      -qm is the name of the queue manager (optional)");
+		} else {
+			Thread t = new Thread(app);
+			t.start();
+		}
+	}
+
+}
+
+</PRE></BODY></HTML>

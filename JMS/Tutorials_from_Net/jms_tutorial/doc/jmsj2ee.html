@@ -1,0 +1,428 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:20 2002">
+<title>Using the JMS API in a J2EE(TM) Application</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="advanced.html">Prev</a> |
+    <a href="j2eeapp1.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >6 &nbsp;&nbsp; Using the JMS API in a J2EE<sup><font size="-2">TM</font></sup> Application</font>
+</h1>
+
+
+<p>
+  <a name="1023386"> </a>This chapter describes the ways in which using the JMS API in a 
+  J2EE<font size="-2"><sup>TM</sup></font> application differs from using it in a standalone client application:
+</p>
+
+<ul>
+  <li ><font ><a href="#1029384">Using enterprise beans to produce and to synchronously receive messages</a></font>
+  <li ><font ><a href="#1023782">Using message-driven beans to receive messages asynchronously</a></font>
+  <li ><font ><a href="#1029338">Managing distributed transactions</a></font>
+  <font ><li ><a href="#1030529">Using application clients and Web components</a></font>
+</ul>
+
+  <p> <a name="1029889"> </a><font >This chapter assumes that you have some knowledge 
+    of the J2EE platform and J2EE components. If you have not already done so, 
+    you may wish to read the J2EE Tutorial (<a href="http://java.sun.com/j2ee/tutorial/"><code>http://java.sun.com/j2ee/tutorial/</code></a>) 
+    or the Java<font size="-2"><sup>TM</sup></font> 2 Platform, Enterprise Edition 
+    Specification, v1.3 (available from <a href="http://java.sun.com/j2ee/download.html"><code>http://java.sun.com/j2ee/download.html</code></a>).</font> 
+  </p>
+
+<h3>
+  <a name="1029384"> </a><font color="#666699" >6.1&nbsp;&nbsp; Using Enterprise Beans to Produce and to Synchronously Receive Messages</font>
+</h3>
+
+
+<p>
+  <a name="1029385"> </a><font >A J2EE application that produces messages or synchronously receives them may use any kind of enterprise bean to perform these operations. The example in <a href="j2eeapp2.html">Chapter 8</a> uses a stateless session bean to publish messages to a topic.</font>
+</p>
+
+
+  <p> <a name="1033858"> </a><font >Because a blocking synchronous receive ties 
+    up server resources, it is not a good programming practice to use such a <code>receive</code> 
+    call in an enterprise bean. Instead, use a timed synchronous receive, or use 
+    a message-driven bean to receive messages asynchronously. For details about 
+    blocking and timed synchronous receives, see <a href="client.html#1027210">Section 
+    4.2.1, "Writing the PTP Client Programs."</a></font> </p>
+
+
+<p>
+  <a name="1029394"> </a><font >Using the JMS API in a J2EE application is in many ways similar to using it in a standalone client. The main differences are in administered objects, resource management, and transactions.</font>
+</p>
+
+<h4>
+  <a name="1029706"> </a><font color="#666699" >6.1.1&nbsp;&nbsp; Administered Objects</font>
+</h4>
+
+
+  <p> <a name="1029691"> </a><font >The Platform Specification recommends that you 
+    use <code>java:comp/env/jms</code> as the environment subcontext for Java 
+    Naming and Directory Interface<font size="-2"><sup>TM</sup></font> (JNDI) 
+    API lookups of connection factories and destinations. With the J2EE SDK 1.3.1, 
+    you use the Application Deployment Tool, commonly known as the deploytool, 
+    to specify JNDI API names that correspond to those in your source code.</font> 
+  </p>
+
+
+  <p> <a name="1029698"> </a><font >Instead of looking up a JMS API connection factory 
+    or destination each time it is used in a method, it is recommended that you 
+    look up these instances once in the enterprise bean's <code>ejbCreate</code> 
+    method and cache them for the lifetime of the enterprise bean.</font> </p>
+
+<h4>
+  <a name="1029412"> </a><font color="#666699" >6.1.2&nbsp;&nbsp; Resource Management</font>
+</h4>
+
+
+<p>
+  <a name="1029835"> </a><font >A JMS API resource is a JMS API connection or a JMS API session. In general, it is important to release JMS resources when they are no longer being used. Here are some useful practices to follow.</font>
+</p>
+
+<ul>
+    <li ><font ><a name="1029882"> </a>If you wish to maintain a JMS API resource 
+      only for the life span of a business method, it is a good idea to close 
+      the resource in a <code>finally</code> block within the method.</font> 
+    <font >
+    <li ><a name="1029713"> </a>If you would like to maintain a JMS API resource 
+      for the life span of an enterprise bean instance, it is a good idea to use 
+      the component's <code>ejbCreate</code> method to create the resource and 
+      to use the component's <code>ejbRemove</code> method to close the resource. 
+      If you use a stateful session bean or an entity bean and you wish to maintain 
+      the JMS API resource in a cached state, you must close the resource in the 
+      <code>ejbPassivate</code> method and set its value to <code>null</code>, 
+      and you must create it again in the <code>ejbActivate</code> method.
+    </font>
+</ul>
+
+<h4>
+  <a name="1029701"> </a><font color="#666699" >6.1.3&nbsp;&nbsp; Transactions</font>
+</h4>
+
+
+  <p> <a name="1029709"> </a><font >Instead of using local transactions, you use 
+    the deploytool to specify container-managed transactions for bean methods 
+    that perform sends and receives, allowing the EJB<font size="-2"><sup>TM</sup></font> 
+    container to handle transaction demarcation. (You can use bean-managed transactions 
+    and the <code>javax.transaction.UserTransaction</code> interface's transaction 
+    demarcation methods, but you should do so only if your application has special 
+    requirements and you are an expert in using transactions. Usually, container-managed 
+    transactions produce the most efficient and correct behavior.)</font> </p>
+
+<h3>
+  <a name="1023782"> </a><font color="#666699" >6.2&nbsp;&nbsp; Using Message-Driven Beans</font>
+</h3>
+
+
+<p>
+  <a name="1028761"> </a><font >As we noted in <a href="overview.html#1023407">Section 1.4, "How Does the JMS API Work with the J2EE Platform?,"</a> the J2EE platform supports a new kind of enterprise bean, the message-driven bean, which allows J2EE applications to process JMS messages asynchronously. Session beans and entity beans allow you to send messages and to receive them synchronously but not asynchronously.</font>
+</p>
+
+
+<p>
+  <a name="1023663"> </a><font >A message-driven bean is a message listener that can reliably consume messages from a queue or a durable subscription. The messages may be sent by any J2EE component--from an application client, another enterprise bean, or a Web component--or from an application or a system that does not use J2EE technology.</font>
+</p>
+
+
+  <p> <a name="1031661"> </a><font >Like a message listener in a standalone JMS 
+    client, a message-driven bean contains an <code>onMessage</code> method that 
+    is called automatically when a message arrives. Like a message listener, a 
+    message-driven bean class may implement helper methods invoked by the <code>onMessage</code> 
+    method to aid in message processing.</font> </p>
+
+
+<p>
+  <a name="1023563"> </a><font >A message-driven bean differs from a standalone client's message listener in five ways, however.</font>
+</p>
+
+<ul>
+  <li>
+  <a name="1023435"> </a>The EJB container automatically performs several setup tasks that a standalone client has to do:
+  <ul>
+        <li ><font ><a name="1029447"> </a>Creating a message consumer (a <code>QueueReceiver</code> 
+          or a <code>TopicSubscriber</code>) to receive the messages. You associate 
+          the message-driven bean with a destination and a connection factory 
+          at deployment time. If you want to specify a durable subscription or 
+          use a message selector, you do this at deployment time also.</font> 
+        <li ><font ><a name="1027247"> </a>Registering the message listener. (You 
+          must not call <code>setMessageListener</code>.) </font> 
+        <font ><li ><a name="1023596"> </a>Specifying a message acknowledgment mode. (For details, see <a href="jmsj2ee.html#1029338">Section 6.3, "Managing Distributed Transactions."</a>)</font>
+  </ul>
+  </li>
+  <li>
+  <a name="1028832"> </a>Your bean class must implement the <code><font >javax.ejb.MessageDrivenBean</font></code> and the <code><font >javax.jms.MessageListener</font></code> interfaces.
+  </li>
+  <li><p>
+  <a name="1029909"> </a>Your bean class must implement the <code><font >ejbCreate</font></code> method in addition to the <code><font >onMessage</font></code> method. The method has the following signature:
+  </p>
+<pre>
+public void ejbCreate() {}
+</pre>
+      <p> <a name="1029477"> </a><font >If your message-driven bean produces messages 
+        or does synchronous receives from another destination, you use its <code>ejbCreate</code> 
+        method to look up JMS API connection factories and destinations and to 
+        create the JMS API connection.</font> </p>
+</li>
+    <li ><font ><a name="1023698"> </a>Your bean class must implement an <code>ejbRemove</code> 
+      method. The method has the following signature:</font> 
+      <pre>
+public void ejbRemove() {}
+</pre>
+      <p> <a name="1029490"> </a><font >If you used the message-driven bean's 
+        <code>ejbCreate</code> method to create the JMS API connection, you ordinarily 
+        use the <code>ejbRemove</code> method to close the connection.</font> 
+      </p>
+    <li ><font ><a name="1023706"> </a>Your bean class must implement the <code>setMessageDrivenContext</code> 
+      method. A <code>MessageDrivenContext</code> object provides some additional 
+      methods that you can use for transaction management. The method has the 
+      following signature:</font> 
+      <pre>
+public void setMessageDrivenContext(MessageDrivenContext mdc) {}
+</pre>
+</ul>
+
+  <p> <a name="1023651"> </a><font >See <a href="../examples/client_mdb/MessageBean.java"><code>MessageBean.java</code></a> 
+    for a simple example of a message-driven bean.</font> </p>
+
+
+<p>
+  <a name="1023527"> </a><font >The main difference between a message-driven bean and other enterprise beans is that a message-driven bean has no home or remote interface. Rather, it has only a bean class.</font>
+</p>
+
+
+<p>
+  <a name="1023550"> </a><font >A message-driven bean is similar in some ways to a stateless session bean: its instances are relatively short-lived and retain no state for a specific client. The instance variables of the message-driven bean instance can contain some state across the handling of client messages: for example, a JMS API connection, an open database connection, or an object reference to an enterprise bean object.</font>
+</p>
+
+
+<p>
+  <a name="1023528"> </a><font >Like a stateless session bean, a message-driven bean can have many interchangeable instances running at the same time. The container can pool these instances to allow streams of messages to be processed concurrently. Concurrency can affect the order in which messages are delivered, so you should write your application to handle messages that arrive out of sequence.</font>
+</p>
+
+
+<p>
+  <a name="1023725"> </a><font >To create a new instance of a message-driven bean, the container instantiates the bean and then</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1023729"> </a>Calls the <code>setMessageDrivenContext</code> 
+      method to pass the context object to the instance</font> 
+    <font >
+    <li  value="2"><a name="1023730"> </a>Calls the instance's <code>ejbCreate</code> 
+      method
+    </font>
+</ol>
+
+<p>
+  <a name="1029500"> </a><font ><a href="jmsj2ee.html#1030219">Figure 6.1</a> shows the life cycle of a message-driven bean.</font>
+</p>
+
+
+<p>
+  <a name="1035759"> </a><img src="images/Fig6.1.gif" border="0" hspace="0" vspace="0">
+</p>
+
+<a name="1030219"> </a><i>Figure 6.1&nbsp;&nbsp; Life Cycle of a Message-Driven Bean</i><br>
+
+<h3>
+  <a name="1029338"> </a><font color="#666699" >6.3&nbsp;&nbsp; Managing Distributed Transactions</font>
+</h3>
+
+
+<p>
+  <a name="1028770"> </a><font >JMS client applications use JMS API local transactions, described in <a href="advanced.html#1026538">Section 5.2.2, "Using JMS API Local Transactions,"</a> which allow the grouping of sends and receives within a specific JMS session. J2EE applications commonly use distributed transactions in order to ensure the integrity of accesses to external resources. For example, distributed transactions allow multiple applications to perform atomic updates on the same database, and they allow a single application to perform atomic updates on multiple databases. </font>
+</p>
+
+
+<p>
+  <a name="1028659"> </a><font >In a J2EE application that uses the JMS API, you can use transactions to combine message sends or receives with database updates and other resource manager operations. You can access resources from multiple application components within a single transaction. For example, a servlet may start a transaction, access multiple databases, invoke an enterprise bean that sends a JMS message, invoke another enterprise bean that modifies an EIS system using the Connector architecture, and finally commit the transaction. Your application cannot, however, both send a JMS message and receive a reply to it within the same transaction; the restriction described in <a href="advanced.html#1026538">Section 5.2.2, "Using JMS API Local Transactions,"</a> still applies.</font>
+</p>
+
+
+<p>
+  <a name="1028571"> </a><font >Distributed transactions can be either of two kinds:</font>
+</p>
+
+<ul>
+    <li ><font ><a name="1028703"> </a><b>Container-managed transactions.</b> 
+      The EJB container controls the integrity of your transactions without your 
+      having to call <code>commit</code> or <code>rollback</code>. Container-managed 
+      transactions are recommended for J2EE applications that use the JMS API. 
+      You can specify appropriate transaction attributes for your enterprise bean 
+      methods. </font> 
+      <p> <a name="1028708"> </a><font >Use the <code>Required</code> transaction 
+        attribute to ensure that a method is always part of a transaction. If 
+        a transaction is in progress when the method is called, the method will 
+        be part of that transaction; if not, a new transaction will be started 
+        before the method is called and will be committed when the method returns.</font> 
+      </p>
+</li>
+  <font >
+    <li ><a name="1028699"> </a><b>Bean-managed transactions.</b> You can use 
+      these in conjunction with the<code> javax.transaction.UserTransaction</code> 
+      interface, which provides its own <code>commit</code> and <code>rollback</code> 
+      methods that you can use to delimit transaction boundaries.</li>
+    </font>
+
+</ul>
+
+<p>
+  <a name="1028543"> </a><font >You can use either container-managed transactions or bean-managed transactions with message-driven beans. </font>
+</p>
+
+
+  <p> <a name="1028724"> </a><font >To ensure that all messages are received and 
+    handled within the context of a transaction, use container-managed transactions 
+    and specify the <code>Required</code> transaction attribute for the <code>onMessage</code> 
+    method. This means that a new transaction will be started before the method 
+    is called and will be committed when the method returns. An <code>onMessage</code> 
+    call is always a separate transaction, because there is never a transaction 
+    in progress when the method is called.</font> </p>
+
+
+  <p> <a name="1028726"> </a><font >When you use container-managed transactions, 
+    you can call the following <code>MessageDrivenContext</code> methods:</font> 
+  </p>
+
+<ul>
+    <li ><font ><a name="1023643"> </a><code>setRollbackOnly</code>. Use this 
+      method for error handling. If an exception occurs, <code>setRollbackOnly</code> 
+      marks the current transaction so that the only possible outcome of the transaction 
+      is a rollback.</font> 
+    <font >
+    <li ><a name="1023747"> </a><code>getRollbackOnly</code>. Use this method 
+      to test whether the current transaction has been marked for rollback.
+    </font>
+</ul>
+
+  <p> <a name="1023748"> </a><font >If you use bean-managed transactions, the 
+    delivery of a message to the <code>onMessage</code> method takes place outside 
+    of the distributed transaction context. The transaction begins when you call 
+    the <code>UserTransaction.begin</code> method within the <code>onMessage</code> 
+    method and ends when you call <code>UserTransaction.commit</code>. If you 
+    call <code>UserTransaction.rollback</code>, the message is not redelivered, 
+    whereas calling <code>setRollbackOnly</code> for container-managed transactions 
+    does cause a message to be redelivered.</font> </p>
+
+
+  <p> <a name="1029752"> </a><font >Neither the JMS API Specification nor the 
+    Enterprise JavaBeans<font size="-2"><sup>TM</sup></font> Specification (available 
+    from <a href="http://java.sun.com/products/ejb/"><code>http://java.sun.com/products/ejb/</code></a>) 
+    specifies how to handle calls to JMS API methods outside transaction boundaries. 
+    The Enterprise JavaBeans Specification does state that the EJB container is 
+    responsible for acknowledging a message that is successfully processed by 
+    the <code>onMessage</code> method of a message-driven bean that uses bean-managed 
+    transactions. Using bean-managed transactions allows you to process the message 
+    by using more than one transaction or to have some parts of the message processing 
+    take place outside a transaction context. In most cases, however, container-managed 
+    transactions provide greater reliability and are therefore preferable.</font> 
+  </p>
+
+
+  <p> <a name="1028619"> </a><font >When you create a session in an enterprise 
+    bean, the container ignores the arguments you specify, because it manages 
+    all transactional properties for enterprise beans. It is still a good idea 
+    to specify arguments of <code>true</code> and <code>0</code> to the <code>createQueueSession</code> 
+    or the <code>createTopicSession</code> method to make this situation clear:</font> 
+  </p>
+
+<pre>
+queueSession = queueConnection.createQueueSession(true, 0);
+</pre>
+
+  <p> <a name="1028620"> </a><font >When you use container-managed transactions, 
+    you usually specify the <code>Required</code> transaction attribute for your 
+    enterprise bean's business methods.</font> </p>
+
+
+<p>
+  <a name="1029772"> </a><font >You do not specify a message acknowledgment mode when you create a message-driven bean that uses container-managed transactions. The container acknowledges the message automatically when it commits the transaction.</font>
+</p>
+
+
+  <p> <a name="1030612"> </a><font >If a message-driven bean uses bean-managed 
+    transactions, the message receipt cannot be part of the bean-managed transaction, 
+    so the container acknowledges the message outside of the transaction. When 
+    you package a message-driven bean using the deploytool, the Message-Driven 
+    Bean Settings dialog box allows you to specify the acknowledgment mode, which 
+    can be either <code>AUTO_ACKNOWLEDGE</code> (the default) or <code>DUPS_OK_ACKNOWLEDGE</code>. 
+    </font> </p>
+
+
+  <p> <a name="1030610"> </a><font >If the <code>onMessage</code> method throws 
+    a <code>RuntimeException</code>, the container does not acknowledge processing 
+    the message. In that case, the JMS provider will redeliver the unacknowledged 
+    message in the future.</font> </p>
+
+<h3>
+  <a name="1030529"> </a><font color="#666699" >6.4&nbsp;&nbsp; Using the JMS API with Application Clients and Web Components</font>
+</h3>
+
+
+<p>
+  <a name="1030530"> </a><font >An application client can use the JMS API in much the same way a standalone client program does. It can produce messages, and it can consume messages by using either synchronous receives or message listeners. See <a href="j2eeapp1.html">Chapter 7</a> for an example of an application client that produces messages; see <a href="j2eeapp3.html">Chapter 9</a> and <a href="j2eeapp4.html">Chapter 10</a> for examples of using application clients to produce and to consume messages. </font>
+</p>
+
+
+<p>
+  <a name="1031273"> </a><font >The J2EE Platform Specification does not define how Web components implement a JMS provider. In the J2EE SDK 1.3.1, a Web component--one that uses either the Java Servlet API or 
+  JavaServerPages<font size="-2"><sup>TM</sup></font> 
+  (JSP<font size="-2"><sup>TM</sup></font>) technology--may send messages and consume them synchronously but may not consume them asynchronously. </font>
+</p>
+
+
+  <p> <a name="1034000"> </a><font >Because a blocking synchronous receive ties 
+    up server resources, it is not a good programming practice to use such a <code>receive</code> 
+    call in a Web component. Instead, use a timed synchronous receive. For details 
+    about blocking and timed synchronous receives, see <a href="client.html#1027210">Section 
+    4.2.1, "Writing the PTP Client Programs."</a></font> </p>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="advanced.html">Prev</a> |
+  <a href="j2eeapp1.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

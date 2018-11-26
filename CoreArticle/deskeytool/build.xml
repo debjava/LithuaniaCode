@@ -1,0 +1,193 @@
+<!--
+######################################################################################
+	Application building script for OPE PATU server.
+	Author : Debadatta Mishra
+######################################################################################
+-->
+<project name="opeserver" default="dist" basedir=".">
+
+		<property file="${basedir}/build.properties"/>
+		<property name="src.dir"							value="${basedir}/src"/>
+		<property name="test.dir"							value="${basedir}/test"/>
+		<property name="bin.dir"							value="${basedir}/bin"/>
+		<property name="lib.dir"							value="${basedir}/lib"/>
+		<property name="config.dir"							value="${basedir}/configuration"/>
+		<property name="windows.dist.dir"					value="${basedir}/windows_distribution"/>
+		<property name="unix.dist.dir"						value="${basedir}/unix_distribution"/>
+
+		<property name="core.jar.name"						value="coresecurity.jar"/>
+		<property name="keygen.jar.name"					value="keygen.jar"/>
+		<property name="encrypter.jar.name"					value="encrypter.jar"/>
+		<property name="decrypter.jar.name"					value="decrypter.jar"/>
+
+<!--
+######################################################################################
+	Deleting the already existing directories and creating the new directories.
+
+######################################################################################
+-->
+		<target name="init" description="Deleting and creating the directories">
+			<echo>Deleting and creating the directories</echo>
+			<delete		dir="${bin.dir}"/>
+			<mkdir		dir="${bin.dir}"/>
+			<delete		dir="${lib.dir}"/>
+			<mkdir		dir="${lib.dir}"/>
+		</target>
+
+<!--
+######################################################################################
+	Compiling the java source code and storing the java classes inside bin
+    directory of the application.
+######################################################################################
+-->
+		<target name="compile" depends="init" description="compiling the java source">
+			<echo>Compiling the java source files</echo>
+			<javac srcdir="${src.dir}" destdir="${bin.dir}" source="1.5" debug="on" includejavaruntime="true"/>
+			<javac srcdir="${test.dir}" destdir="${bin.dir}" source="1.5" debug="on" includejavaruntime="true"/>
+		</target>
+<!--
+######################################################################################
+	Creating the coresecurity.jar from the classes from the bin directory
+######################################################################################
+-->
+
+		<target name="createcorejar" depends="compile" description="creating the core.jar">
+			<echo>Creating the jar file for messagedata.jar</echo>
+			<jar destfile="${lib.dir}/${core.jar.name}" basedir="${bin.dir}" excludes = "FileEncrypter.class,FileDecrypter.class,TestKeyGenerator.class" >
+				<manifest>
+					<attribute name="Specification-Title"			value="Security Key Gen Specification" />
+					<attribute name="Specification-Version"			value="1.0" />
+					<attribute name="Implementation-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Specification-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Sealed"						value="true" />
+					<attribute name="Author"						value="Debadatta Mishra" />
+					<attribute name="Built-By"						value="Debadatta Mishra"/>
+			  </manifest>
+			</jar>
+		</target>
+
+<!--
+######################################################################################
+	creating the keygen jar file
+######################################################################################
+-->
+		
+		<target name="createkeygenjar" depends="createcorejar" description="creating the keygen.jar">
+			<echo>Creating the jar file for messagedata.jar</echo>
+			<jar destfile="${lib.dir}/${keygen.jar.name}" basedir="${bin.dir}" includes="TestKeyGenerator.class">
+				<manifest>
+					<attribute name="Specification-Title"			value="Security Key Gen Specification" />
+					<attribute name="Specification-Version"			value="1.0" />
+					<attribute name="Implementation-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Specification-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Main-Class"					value="TestKeyGenerator" />
+					<attribute name="Class-Path"					value="${classpath}" />
+					<attribute name="Sealed"						value="true" />
+					<attribute name="Author"						value="Debadatta Mishra" />
+					<attribute name="Built-By"						value="Debadatta Mishra"/>
+			  </manifest>
+			</jar>
+		</target>
+<!--
+######################################################################################
+	creating the encrypt jar file
+######################################################################################
+-->
+		<target name="createencryptjar" depends="createkeygenjar" description="creating the keygen.jar">
+			<echo>Creating the jar file for messagedata.jar</echo>
+			<jar destfile="${lib.dir}/${encrypter.jar.name}" basedir="${bin.dir}" includes="FileEncrypter.class">
+				<manifest>
+					<attribute name="Specification-Title"			value="Security Key Gen Specification" />
+					<attribute name="Specification-Version"			value="1.0" />
+					<attribute name="Implementation-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Specification-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Main-Class"					value="FileEncrypter" />
+					<attribute name="Class-Path"					value="${classpath}" />
+					<attribute name="Sealed"						value="true" />
+					<attribute name="Author"						value="Debadatta Mishra" />
+					<attribute name="Built-By"						value="Debadatta Mishra"/>
+			  </manifest>
+			</jar>
+		</target>
+<!--
+######################################################################################
+	creating the decrypt jar file
+######################################################################################
+-->
+		<target name="createdecryptjar" depends="createencryptjar" description="creating the keygen.jar">
+			<echo>Creating the jar file for messagedata.jar</echo>
+			<jar destfile="${lib.dir}/${decrypter.jar.name}" basedir="${bin.dir}" includes="FileDecrypter.class">
+				<manifest>
+					<attribute name="Specification-Title"			value="Security Key Gen Specification" />
+					<attribute name="Specification-Version"			value="1.0" />
+					<attribute name="Implementation-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Specification-Vendor"			value="Ideal Invent Technologies" />
+					<attribute name="Main-Class"					value="FileDecrypter" />
+					<attribute name="Class-Path"					value="${classpath}" />
+					<attribute name="Sealed"						value="true" />
+					<attribute name="Author"						value="Debadatta Mishra" />
+					<attribute name="Built-By"						value="Debadatta Mishra"/>
+			  </manifest>
+			</jar>
+		</target>
+
+<!--
+######################################################################################
+	Creating the windows distribution
+######################################################################################
+-->
+		<target name="windows.dist" depends="createdecryptjar" description="creating windows distribution">
+			<echo>Copying the files and folder</echo>
+
+			<!-- Deleting and creating directories for Windows-->
+			<delete		dir="${windows.dist.dir}"/>
+			<mkdir		dir="${windows.dist.dir}"/>
+			<mkdir		dir="${windows.dist.dir}/original"/>
+
+			<!-- Coying the related jar files -->
+			<copy todir="${windows.dist.dir}/lib">
+				<fileset dir="${lib.dir}"/>
+			</copy>
+
+			<!-- Copying the related configuration files -->
+			<copy todir="${windows.dist.dir}">
+				<fileset dir="${config.dir}" excludes="*.sh"/>
+			</copy>
+			
+		</target>
+<!--
+######################################################################################
+	Creating the unix distribution
+######################################################################################
+-->
+		<target name="unix.dist" depends="createdecryptjar" description="creating the unix distribution">
+			<echo>Copying the files and folder</echo>
+
+			<!-- Deleting and creating directories for Unix -->
+			<delete		dir="${unix.dist.dir}"/>
+			<mkdir		dir="${unix.dist.dir}"/>
+			<mkdir		dir="${windows.dist.dir}/original"/>
+	
+			<!-- Coying the related jar files -->
+			<copy todir="${unix.dist.dir}/lib">
+				<fileset dir="${lib.dir}"/>
+			</copy>
+
+			<!-- Copying the related configuration files -->
+			<copy todir="${unix.dist.dir}">
+				<fileset dir="${config.dir}" includes="*.sh"/>
+			</copy>
+			
+		</target>
+<!--
+######################################################################################
+	Creating the all distributions
+######################################################################################
+-->
+
+		<target name="dist" depends="windows.dist,unix.dist" description="creating both distribution">
+			<!-- Deleting the server jar file -->
+			<delete file="${basedir}/${serverjar.name}"/>
+		</target>
+
+</project>

@@ -1,0 +1,1518 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:29 2002">
+<title>A J2EE(TM) Application that Uses the JMS API with an Entity Bean </title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="j2eeapp2.html">Prev</a> |
+    <a href="j2eeapp4.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >9 &nbsp;&nbsp; A J2EE<sup><font size="-2">TM</font></sup> Application that Uses the JMS API with an Entity Bean </font>
+</h1>
+
+
+  <p> <a name="1023386"> </a><font ><b>T</b>his chapter explains how to write, 
+    compile, package, deploy, and run a J2EE<font size="-2"><sup>TM</sup></font> 
+    application that uses the JMS API with an entity bean. The application uses 
+    the following components:</font> </p>
+
+<ul>
+  <li ><font ><a name="1061206"> </a>An application client that both sends and receives messages</font>
+  <li ><font ><a name="1061207"> </a>Three message-driven beans</font>
+  <font ><li ><a name="1061208"> </a>An entity bean that uses container-managed persistence</font>
+</ul>
+
+<p>
+  <a name="1038278"> </a><font >The chapter covers the following topics:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1038294">An overview of the application</a></font>
+  <li ><font ><a href="#1042481">Writing and compiling the application components</a></font>
+  <li ><font ><a href="#1023764">Creating and packaging the application</a></font>
+  <font ><li ><a href="#1028835">Deploying and running the application</a></font>
+</ul>
+
+  <p> <a name="1081968"> </a><font >If you downloaded the tutorial examples as 
+    described in the preface, you will find the source code files for this chapter 
+    in <code>jms_tutorial/examples/client_mdb_ent</code> (on UNIX&#174; systems) 
+    or <code>jms_tutorial\examples\client_mdb_ent</code> (on Microsoft Windows 
+    systems). The directory <code>ear_files</code> in the <code>examples</code> 
+    directory contains a built application called <code>SampleNewHireApp.ear</code>. 
+    If you run into difficulty at any time, you can open this file in the deploytool 
+    and compare that file to your own version. </font> </p>
+
+<h3>
+  <a name="1038294"> </a><font color="#666699" >9.1&nbsp;&nbsp; Overview of the Human Resources Application</font>
+</h3>
+
+
+<p>
+  <a name="1042482"> </a><font >This application simulates, in a simplified way, the work flow of a company's human resources (HR) department when it processes a new hire. This application also demonstrates how to use the J2EE platform to accomplish a task that many JMS client applications perform. </font>
+</p>
+
+
+  <p> <a name="1082011"> </a><font >A JMS client must often wait for several messages 
+    from various sources. It then uses the information in all these messages to 
+    assemble a message that it then sends to another destination. (The common 
+    term for this process is<i> </i><i>joining messages</i>.) Such a task must 
+    be transactional, with all the receives and the send as a single transaction. 
+    If all the messages are not received successfully, the transaction can be 
+    rolled back. For a client example that illustrates this task, see <a href="client_samples.html#1022517">Section 
+    A.2, "Transactions."</a></font> </p>
+
+
+<p>
+  <a name="1065268"> </a><font >A message-driven bean can process only one message at a time in a transaction. To provide the ability to join messages, a J2EE application can have the message-driven bean store the interim information in an entity bean. The entity bean can then determine whether all the information has been received; when it has, the entity bean can create and send the message to the other destination. Once it has completed its task, the entity bean can be removed.</font>
+</p>
+
+
+<p>
+  <a name="1065207"> </a><font >The basic steps of the application are as follows.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1042488"> </a>The HR department's application client generates an employee ID for each new hire and then publishes a message containing the new hire's name and employee ID. The client then creates a temporary queue with a message listener that waits for a reply to the message.</font>
+  <li  value="2"><font ><a name="1042493"> </a>Two message-driven beans process each message: One bean assigns the new hire's office number, and one bean assigns the new hire's equipment. The first bean to process the message creates an entity bean to store the information it has generated. The second bean locates the existing entity bean and adds its information. </font>
+  <li  value="3"><font ><a name="1060760"> </a>When both the office and the equipment have been assigned, the entity bean sends to the reply queue a message describing the assignments. The application client's message listener retrieves the information. The entity bean also sends to a Schedule queue a message that contains a reference to the entity bean.</font>
+  <font ><li  value="4"><a name="1060638"> </a>The Schedule message-driven bean receives the message from the entity bean. This message serves as a notification that the entity bean has finished joining all messages. The message contains the primary key to look up the entity bean instance that aggregates the data of the joined messages. The message-driven bean accesses information from the entity bean to complete its task and then removes the entity bean instance. </font>
+</ol>
+
+<p>
+  <a name="1042501"> </a><font ><a href="j2eeapp3.html#1042583">Figure 9.1</a> illustrates the structure of this application. An actual HR application would have more components, of course; other beans could set up payroll and benefits records, schedule orientation, and so on.</font>
+</p>
+
+
+<p>
+  <a name="1088844"> </a><img src="images/Fig9.1.gif" border="0" hspace="0" vspace="0">
+</p>
+
+<a name="1042583"> </a><i>Figure 9.1&nbsp;&nbsp; A J2EE Application: Client to Message-Driven Beans to Entity Beans</i><br>
+
+<h3>
+  <a name="1042481"> </a><font color="#666699" >9.2&nbsp;&nbsp; Writing and Compiling the Application Components</font>
+</h3>
+
+
+<p>
+  <a name="1038290"> </a><font >Writing and compiling the components of the application involve</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1038078">Coding the application client</a></font>
+  <li ><font ><a href="#1040891">Coding the message-driven beans</a></font>
+  <li ><font ><a href="#1054442">Coding the entity bean</a></font>
+  <font ><li ><a href="#1024278">Compiling the source files</a></font>
+</ul>
+
+<h4>
+  <a name="1038078"> </a><font color="#666699" >9.2.1&nbsp;&nbsp; Coding the Application Client: <code>HumanResourceClient.java</code></font>
+</h4>
+
+
+  <p> <a name="1038079"> </a><font >The application client program, <a href="../examples/client_mdb_ent/HumanResourceClient.java"><code>HumanResourceClient.java</code></a>, 
+    performs the following steps:</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1042606"> </a>Uses the Java<font size="-2"><sup>TM</sup></font> 
+      Naming and Directory Interface<font size="-2"><sup>TM</sup></font> (JNDI) 
+      API naming context <code>java:comp/env</code> to look up a <code>TopicConnectionFactory</code>, 
+      a <code>QueueConnectionFactory</code>, and a topic</font> 
+    <li  value="2"><font ><a name="1052368"> </a>Creates a <code>TemporaryQueue</code> 
+      to receive notification of processing that occurs, based on new-hire events 
+      it has published</font> 
+    <li  value="3"><font ><a name="1042619"> </a>Creates a <code>QueueReceiver</code> 
+      for the <code>TemporaryQueue</code>, sets the <code>QueueReceiver</code>'s 
+      message listener, and starts the connection</font> 
+    <li  value="4"><font ><a name="1052395"> </a>Creates a <code>TopicPublisher</code> 
+      and a <code>MapMessage</code></font> 
+    <font ><li  value="5"><a name="1042607"> </a>Creates five new employees with randomly generated names, positions, and ID numbers (in sequence) and publishes five messages containing this information</font>
+</ol>
+
+  <p> <a name="1042721"> </a><font >The message listener, <code>HRListener</code>, 
+    waits for messages that contain the assigned office and equipment for each 
+    employee. When a message arrives, the message listener displays the information 
+    received and checks to see whether all five messages have arrived yet. When 
+    they have, the message listener notifies the main program, which then exits.</font> 
+  </p>
+
+<h4>
+  <a name="1040891"> </a><font color="#666699" >9.2.2&nbsp;&nbsp; Coding the Message-Driven Beans</font>
+</h4>
+
+
+  <p> <a name="1041013"> </a><font >This example uses three message-driven beans. 
+    Two of them, <a href="../examples/client_mdb_ent/ReserveEquipmentMsgBean.java"><code>ReserveEquipmentMsgBean.java</code></a> 
+    and <a href="../examples/client_mdb_ent/ReserveOfficeMsgBean.java"><code>ReserveOfficeMsgBean.java</code></a>, 
+    take the following steps.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1042751"> </a>The <code>ejbCreate</code> method 
+      gets a handle to the home interface of the entity bean.</font> 
+    <li  value="2"><font ><a name="1042784"> </a>The <code>onMessage</code> method 
+      retrieves the information in the message. The <code>ReserveEquipmentMsgBean</code>'s 
+      <code>onMessage</code> method chooses equipment, based on the new hire's 
+      position; the <code>ReserveOfficeMsgBean</code>'s <code>onMessage</code> 
+      method randomly generates an office number.</font> 
+    <li  value="3"><font ><a name="1042785"> </a>After a slight delay to simulate 
+      real-world processing hitches, the <code>onMessage</code> method calls a 
+      helper method, <code>compose</code>.</font> 
+    <font >
+    <li  value="4"><a name="1042786"> </a>The <code>compose</code> method either 
+      creates or finds, by primary key, the <code>SetupOffice</code> entity bean 
+      and uses it to store the equipment or the office information in the database.
+    </font>
+</ol>
+
+  <p> <a name="1059178"> </a><font >The third message-driven bean, <a href="../examples/client_mdb_ent/ScheduleMsgBean.java"><code>ScheduleMsgBean.java</code></a>, 
+    is notified when the <code>SetupOfficeBean</code> entity bean instance has 
+    aggregated data from all messages needed to set up an office. The message 
+    contains the primary key to look up the correct composite entity bean instance. 
+    The <code>ScheduleMsgBean</code>'s <code>onMessage</code> method then schedules 
+    the office setup, based on the information aggregated in the entity bean instance. 
+    Finally, the <code>ScheduleMsgBean</code>'s <code>onMessage</code> method 
+    removes the entity bean instance. </font> </p>
+
+<h4>
+  <a name="1054442"> </a><font color="#666699" >9.2.3&nbsp;&nbsp; Coding the Entity Bean</font>
+</h4>
+
+
+  <p> <a name="1042954"> </a><font >The <code>SetupOffice</code> bean is an entity 
+    bean that uses a local interface. The local interface allows the entity bean 
+    and the message-driven beans to be packaged in the same EJB<font size="-2"><sup>TM</sup></font> 
+    JAR file for maximum efficiency. The entity bean has these components:</font> 
+  </p>
+
+<ul>
+    <li ><font ><a name="1042962"> </a>The local home interface, <code>SetupOfficeLocalHome.java</code></font> 
+    <li ><font ><a name="1042956"> </a>The local interface, <code>SetupOffice.java</code></font> 
+    <font >
+    <li ><a name="1042957"> </a>The bean class, <code>SetupOfficeBean.java</code>
+    </font>
+</ul>
+
+<h5>
+  <a name="1041760"> </a><i><font color="#666699" >9.2.3.1&nbsp;&nbsp; The Local Home Interface: <code>SetupOfficeLocalHome.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1074647"> </a><font >The local home interface source file is <a href="../examples/client_mdb_ent/SetupOfficeLocalHome.java"><code>SetupOfficeLocalHome.java</code></a>. 
+    It declares the create method, called <code>createLocal</code> for a bean 
+    that uses a local interface, and one finder method, <code>findByPrimaryKey</code>. 
+    </font> </p>
+
+<h5>
+  <a name="1074993"> </a><i><font color="#666699" >9.2.3.2&nbsp;&nbsp; The Local Interface: <code>SetupOffice.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1028760"> </a><font >The local interface, <a href="../examples/client_mdb_ent/SetupOffice.java"><code>SetupOffice.java</code></a>, 
+    declares several business methods that get and manipulate new-hire data.</font> 
+  </p>
+
+<h5>
+  <a name="1023875"> </a><i><font color="#666699" >9.2.3.3&nbsp;&nbsp; The Bean Class: <code>SetupOfficeBean.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1060666"> </a><font >The bean class, <a href="../examples/client_mdb_ent/SetupOfficeBean.java"><code>SetupOfficeBean.java</code></a>, 
+    implements the business methods and their helper method, <code>checkIfSetupComplete</code>. 
+    The bean class also implements the required methods <code>ejbCreateLocal</code>, 
+    <code>ejbPostCreateLocal</code>, <code>setEntityContext</code>, <code>unsetEntityContext</code>, 
+    <code>ejbRemove</code>, <code>ejbActivate</code>, <code>ejbPassivate</code>, 
+    <code>ejbLoad</code>, and <code>ejbStore</code>. The <code>ejbFindByPrimaryKey</code> 
+    method is generated automatically. </font> </p>
+
+
+  <p> <a name="1060682"> </a><font >The only methods called by the message-driven 
+    beans are the business methods declared in the local interface, the <code>findByPrimaryKey</code> 
+    method, and the <code>createLocal</code> method. The entity bean uses container-managed 
+    persistence, so all database calls are generated automatically.</font> </p>
+
+<h4>
+  <a name="1024278"> </a><font color="#666699" >9.2.4&nbsp;&nbsp; Compiling the Source Files</font>
+</h4>
+
+
+  <p> <a name="1024279"> </a><font >To compile all the files in the application, 
+    go to the directory <code>client_mdb_ent</code> and do the following.</font> 
+  </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1061239"> </a>Make sure that you have set the 
+      environment variables shown in <a href="client.html#1025256">Table 4.1</a>: 
+      <code>JAVA_HOME</code>, <code>J2EE_HOME</code>, <code>CLASSPATH</code>, 
+      and <code>PATH</code>.</font> 
+    <li  value="2"><font ><a name="1044115"> </a>At a command line prompt, compile the source files:</font>
+<pre>
+javac *.java
+</pre>
+</ol>
+
+<h3>
+  <a name="1023764"> </a><font color="#666699" >9.3&nbsp;&nbsp; Creating and Packaging the Application</font>
+</h3>
+
+
+<p>
+  <a name="1028949"> </a><font >Creating and packaging this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1043077">Starting the J2EE server and the deploytool*</a></font>
+  <li><font ><a href="#1036351">Creating a queue</a></font>
+  <li><font ><a href="#1043131">Starting the Cloudscape database server</a></font>
+  <li><font ><a href="#1036357">Creating the J2EE application</a></font>
+  <li><font ><a href="#1043178">Packaging the application client</a></font>
+  <li><font ><a href="#1043368">Packaging the Equipment message-driven bean</a></font>
+  <li><font ><a href="#1043559">Packaging the Office message-driven bean</a></font>
+  <li><font ><a href="#1059313">Packaging the Schedule message-driven bean</a></font>
+  <li><font ><a href="#1024382">Packaging the entity bean</a></font>
+  <li><font ><a href="#1025781">Specifying the entity bean deployment settings</a></font>
+  <font ><li><a href="#1052176">Specifying the JNDI API names ("JNDI names")</a></font>
+</ol>
+
+<p>
+  <a name="1082950"> </a><font >Step 1, marked with an asterisk (*), is not needed if the server and the deploytool are running.</font>
+</p>
+
+<h4>
+  <a name="1043077"> </a><font color="#666699" >9.3.1&nbsp;&nbsp; Starting the J2EE Server and the Deploytool</font>
+</h4>
+
+
+<p>
+  <a name="1043078"> </a><font >Before you can create and package the application, you must start the J2EE server and the deploytool. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043082"> </a>At the command line prompt, start the J2EE server: </font>
+<pre>
+j2ee -verbose
+</pre>
+
+<p>
+  <a name="1043084"> </a><font >Wait until the server displays the message "J2EE server startup complete."</font>
+</p>
+
+<p> <a name="1043085"> </a><font >(To stop the server, type <code>j2ee -stop</code>.)</font> 
+</p>
+</li>
+  <li  value="2"><font ><a name="1043088"> </a>At another command line prompt, start the deploytool: </font>
+<pre>
+deploytool
+</pre>
+<p>
+  <a name="1043094"> </a><font >(To access the tool's context-sensitive help, press F1.)</font>
+</p>
+</li>
+</ol>
+
+<h4>
+  <a name="1036351"> </a><font color="#666699" >9.3.2&nbsp;&nbsp; Creating a Queue</font>
+</h4>
+
+
+<p>
+  <a name="1057623"> </a><font >For this application, you publish messages by using one of the topics that the J2EE server creates automatically. You create a queue to process the notification that the composite entity bean has aggregated the group of related messages that it was joining. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1061375"> </a>In the deploytool, select the Tools menu.</font>
+  <li  value="2"><font ><a name="1061376"> </a>From the Tools menu, choose Server Configuration.</font>
+  <li  value="3"><font ><a name="1061377"> </a>Under the JMS folder, select Destinations.</font>
+  <li  value="4"><font ><a name="1061378"> </a>In the JMS Queue Destinations area, click Add.</font>
+    <li  value="5"><font ><a name="1061385"> </a>In the text field, enter <code>jms/ScheduleQueue</code>. 
+      </font> 
+    <li  value="6"><font ><a name="1061390"> </a>Click OK.</font>
+  <li  value="7"><font ><a name="1043045"> </a>If you wish, you can verify that the queue was created:</font>
+<pre>
+j2eeadmin -listJmsDestination
+</pre>
+</ol>
+
+<h4>
+  <a name="1043131"> </a><font color="#666699" >9.3.3&nbsp;&nbsp; Starting the Cloudscape Database Server</font>
+</h4>
+
+
+<p>
+  <a name="1043132"> </a><font >The Cloudscape software is included with the J2EE SDK download bundle. You may also run this example with databases provided by other vendors. </font>
+</p>
+
+
+<p>
+  <a name="1043133"> </a><font >From the command line prompt, run the Cloudscape database server:</font>
+</p>
+
+<pre>
+cloudscape -start
+</pre>
+
+<h4>
+  <a name="1036357"> </a><font color="#666699" >9.3.4&nbsp;&nbsp; Creating the J2EE Application</font>
+</h4>
+
+
+  <p> <a name="1043100"> </a><font >Create a new J2EE application, called <code>NewHireApp</code>, 
+    and store it in the file named<code> NewHireApp.ear</code>. Follow these steps.</font> 
+  </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043101"> </a>In the deploytool, select the File menu. </font>
+  <li  value="2"><font ><a name="1043102"> </a>From the File menu, choose New -> Application.</font>
+    <li  value="3"><font ><a name="1043103"> </a>Click Browse next to the Application 
+      File Name field, and use the file chooser to locate the directory <code>client_mdb_ent</code>. 
+      </font> 
+    <li  value="4"><font ><a name="1043104"> </a>In the File Name field, enter 
+      <code>NewHireApp</code>.</font> 
+    <li  value="5"><font ><a name="1043105"> </a>Click New Application.</font>
+  <font ><li  value="6"><a name="1043106"> </a>Click OK. </font>
+</ol>
+
+  <p> <a name="1043107"> </a><font >A diamond icon labeled <code>NewHireApp</code> 
+    appears in the tree view on the left side of the deploytool window. The full 
+    path name of <code>NewHireApp.ear</code> appears in the General tabbed pane 
+    on the right side.</font> </p>
+
+<h4>
+  <a name="1043178"> </a><font color="#666699" >9.3.5&nbsp;&nbsp; Packaging the Application Client</font>
+</h4>
+
+
+<p>
+  <a name="1043179"> </a><font >In this section, you will run the New Application Client Wizard of the deploytool to package the application client. To start the New Application Client Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043191"> </a>In the tree view, select <code>NewHireApp</code>.</font> 
+    <font ><li  value="2"><a name="1043192"> </a>From the File menu, choose New -> Application Client. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1043204"> </a><i><font color="#666699" >9.3.5.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043206"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1043220"> </a><i><font color="#666699" >9.3.5.2&nbsp;&nbsp; JAR File Contents Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043221"> </a>In the combo box labeled Create 
+      Archive Within Application, select <code>NewHireApp</code>.</font> 
+    <li  value="2"><font ><a name="1043222"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1043210"> </a>In the dialog box Edit Contents 
+      of &lt;Application Client&gt;, choose the <code>client_mdb_ent</code> directory. 
+      If the directory is not already in the Starting Directory field, type it 
+      in the field, or locate it by browsing through the Available Files tree. 
+      </font> 
+    <li  value="4"><font ><a name="1043211"> </a>Select <code>HumanResourceClient.class</code> 
+      and <code>HumanResourceClient$HRListener.class</code> from the Available 
+      Files tree area and click Add. </font> 
+    <li  value="5"><font ><a name="1043212"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1043213"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1043241"> </a><i><font color="#666699" >9.3.5.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043242"> </a>In the Application Client combo 
+      box, select <code>HumanResourceClient</code> in the Main Class field, and 
+      enter <code>HumanResourceClient</code> in the Display Name field.</font> 
+    <li  value="2"><font ><a name="1043243"> </a>In the Callback Handler Class combo box, verify that container-managed authentication is selected.</font>
+  <font ><li  value="3"><a name="1043244"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043264"> </a><i><font color="#666699" >9.3.5.4&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043265"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043266"> </a><i><font color="#666699" >9.3.5.5&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043267"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043271"> </a><i><font color="#666699" >9.3.5.6&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1043272"> </a><font >In this dialog box, you associate the JNDI 
+    API context names for the connection factories in the <code>HumanResourceClient.java</code> 
+    source file with the names of the <code>TopicConnectionFactory</code> and 
+    the <code>QueueConnectionFactory</code>. You also specify container authentication 
+    for the connection factory resources, defining the user name and the password 
+    that the user must enter in order to be able to create a connection. Follow 
+    these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043274"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1043275"> </a>In the Coded Name field, enter 
+      <code>jms/TopicConnectionFactory</code>--the logical name referenced by 
+      <code>HumanResourceClient</code>.</font> 
+    <li  value="3"><font ><a name="1043276"> </a>In the Type field, select <code>javax.jms.TopicConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1043277"> </a>In the Authentication field, select Container.</font>
+  <li  value="5"><font ><a name="1043278"> </a>In the Sharable field, make sure that the checkbox is selected. This allows the container to optimize connections.</font>
+    <li  value="6"><font ><a name="1043279"> </a>In the JNDI Name field, enter <code>jms/TopicConnectionFactory</code>.</font> 
+    <li  value="7"><font ><a name="1043280"> </a>In the User Name field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="8"><font ><a name="1043281"> </a>In the Password field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="9"><font ><a name="1059199"> </a>Click Add. </font>
+    <li  value="10"><font ><a name="1059200"> </a>In the Coded Name field, enter 
+      <code>jms/QueueConnectionFactory</code>--the logical name referenced by 
+      <code>HumanResourceClient</code>. </font> 
+    <li  value="11"><font ><a name="1059202"> </a>In the Type field, select<code> 
+      javax.jms.QueueConnectionFactory</code>. </font> 
+    <li  value="12"><font ><a name="1059203"> </a>In the Authentication field, select Container. </font>
+  <li  value="13"><font ><a name="1059204"> </a>In the Sharable field, make sure that the checkbox is selected. </font>
+    <li  value="14"><font ><a name="1059422"> </a>In the JNDI Name field, enter 
+      <code>jms/QueueConnectionFactory</code>. </font> 
+    <li  value="15"><font ><a name="1063973"> </a>In the User Name field, enter 
+      <code>j2ee</code>. (If the user name and the password appear to be filled 
+      in already, make sure that you follow the instructions at the end of <a href="j2eeapp3.html#1043352">Section 
+      9.3.5.8</a> after you exit the Wizard.)</font> 
+    <li  value="16"><font ><a name="1059197"> </a>In the Password field, enter 
+      <code>j2ee</code>. </font> 
+    <font ><li  value="17"><a name="1043282"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043302"> </a><i><font color="#666699" >9.3.5.7&nbsp;&nbsp; JMS Destination References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1043303"> </a><font >In this dialog box, you associate the JNDI API 
+    context name for the topic in the <code>HumanResourceClient.java</code> source 
+    file with the name of the default topic. You do not specify the queue, because 
+    it is a temporary queue created programmatically rather than administratively 
+    and does not have to be specified in the deployment descriptor. Follow these 
+    steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043304"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1043305"> </a>In the Coded Name field, enter 
+      <code>jms/NewHireTopic</code>--the logical name for the publisher topic 
+      referenced by <code>HumanResourceClient</code>.</font> 
+    <li  value="3"><font ><a name="1043306"> </a>In the Type field, select <code>javax.jms.Topic</code>.</font> 
+    <li  value="4"><font ><a name="1043307"> </a>In the JNDI Name field, enter 
+      <code>jms/Topic</code> (the default topic).</font> 
+    <font ><li  value="5"><a name="1043308"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043352"> </a><i><font color="#666699" >9.3.5.8&nbsp;&nbsp; Review Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043353"> </a>Check the settings for the deployment descriptor.</font>
+  <font ><li  value="2"><a name="1043354"> </a>Click Finish.</font>
+</ol>
+
+<p>
+  <a name="1063959"> </a><font >After you exit the Wizard, do the following.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1063960"> </a>Select the <code>HumanResourceClient</code> 
+      node in the tree.</font> 
+    <li  value="2"><font ><a name="1063961"> </a>Select the Resource Refs tabbed pane.</font>
+    <li  value="3"><font ><a name="1063962"> </a>Select the second entry in the 
+      table, <code>jms/QueueConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1063963"> </a>See whether the User Name and 
+      Password fields are filled in. If they are blank, enter <code>j2ee</code> 
+      in each field.</font> 
+    <font ><li  value="5"><a name="1065323"> </a>Choose Save from the File menu to save the application.</font>
+</ol>
+
+<h4>
+  <a name="1043368"> </a><font color="#666699" >9.3.6&nbsp;&nbsp; Packaging the Equipment Message-Driven Bean</font>
+</h4>
+
+
+<p>
+  <a name="1043369"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the first message-driven bean. To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043381"> </a>In the tree view, select <code>NewHireApp</code>.</font> 
+    <font ><li  value="2"><a name="1043382"> </a>From the File menu, choose New -> Enterprise Bean. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1043393"> </a><i><font color="#666699" >9.3.6.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043394"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1043395"> </a><i><font color="#666699" >9.3.6.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043396"> </a>In the combo box labeled JAR File 
+      Location, verify that Create New JAR File in Application and <code>NewHireApp</code> 
+      are selected.</font> 
+    <li  value="2"><font ><a name="1043397"> </a>In the JAR Display Name field, 
+      verify that the name is <code>Ejb1</code>, the default display name. Representing 
+      the enterprise bean JAR file that contains the bean, this name will be displayed 
+      in the tree view. </font> 
+    <li  value="3"><font ><a name="1043398"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="4"><font ><a name="1043399"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the <code>client_mdb_ent</code> directory. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="5"><font ><a name="1043400"> </a>Select the <code>ReserveEquipmentMsgBean.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="6"><font ><a name="1043401"> </a>Click OK. </font>
+  <font ><li  value="7"><a name="1043418"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1043419"> </a><i><font color="#666699" >9.3.6.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1061313"> </a>In the Bean Type combo box, select the Message-Driven radio button. </font>
+    <li  value="2"><font ><a name="1061314"> </a>Under Enterprise Bean Class, select 
+      <code>ReserveEquipmentMsgBean</code>. </font> 
+    <li  value="3"><font ><a name="1061315"> </a>In the Enterprise Bean Name field, 
+      enter <code>EquipmentMDB</code>. </font> 
+    <font ><li  value="4"><a name="1061320"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1043449"> </a><i><font color="#666699" >9.3.6.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043451"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1043452"> </a>In the Transaction Attribute field 
+      opposite the <code>onMessage</code> method, verify that Required is selected.</font> 
+    <font ><li  value="3"><a name="1043453"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043463"> </a><i><font color="#666699" >9.3.6.5&nbsp;&nbsp; Message-Driven Bean Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043465"> </a>In the Destination Type combo box, select Topic.</font>
+    <li  value="2"><font ><a name="1043466"> </a>In the Destination field, select 
+      <code>jms/Topic</code>.</font> 
+    <li  value="3"><font ><a name="1043467"> </a>In the Connection Factory field, 
+      select <code>jms/TopicConnectionFactory</code>.</font> 
+    <font ><li  value="4"><a name="1043468"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043484"> </a><i><font color="#666699" >9.3.6.6&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+<p>
+  <a name="1043485"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043496"> </a><i><font color="#666699" >9.3.6.7&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043497"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1043498"> </a>In the Coded Name column, enter 
+      <code>ejb/MyEjbReference</code>. </font> 
+    <li  value="3"><font ><a name="1043499"> </a>In the Type column, select Entity. </font>
+  <li  value="4"><font ><a name="1043500"> </a>In the Interfaces column, select Local.</font>
+    <li  value="5"><font ><a name="1043501"> </a>In the Home Interface column, enter 
+      <code>SetupOfficeLocalHome</code>. </font> 
+    <li  value="6"><font ><a name="1043502"> </a>In the Local/Remote Interface 
+      column, enter <code>SetupOffice</code>. </font> 
+    <li  value="7"><font ><a name="1043506"> </a>In the Deployment Settings combo 
+      box, select Enterprise Bean Name. In the Enterprise Bean Name field, enter 
+      <code>SetupOfficeEJB</code>.</font> 
+    <font ><li  value="8"><a name="1061324"> </a>Click Finish. You do not need to enter anything in the other dialog boxes.</font>
+</ol>
+
+<h4>
+  <a name="1043559"> </a><font color="#666699" >9.3.7&nbsp;&nbsp; Packaging the Office Message-Driven Bean</font>
+</h4>
+
+
+<p>
+  <a name="1043560"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the second message-driven bean. To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043562"> </a>In the tree view, select <code>NewHireApp</code>.</font> 
+    <font ><li  value="2"><a name="1043563"> </a>From the File menu, choose New -> Enterprise Bean. </font>
+</ol>
+
+<h5>
+  <a name="1043644"> </a><i><font color="#666699" >9.3.7.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043565"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1043566"> </a><i><font color="#666699" >9.3.7.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043567"> </a>In the combo box labeled JAR File Location, select Add to Existing JAR File and select Ejb1 (NewHireApp).</font>
+  <li  value="2"><font ><a name="1043569"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1043570"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the directory <code>client_mdb_ent</code>. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="4"><font ><a name="1043571"> </a>Select the <code>ReserveOfficeMsgBean.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="5"><font ><a name="1043572"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1043573"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1043574"> </a><i><font color="#666699" >9.3.7.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043575"> </a>In the Bean Type combo box, select the Message-Driven radio button. </font>
+    <li  value="2"><font ><a name="1043576"> </a>Under Enterprise Bean Class, select 
+      <code>ReserveOfficeMsgBean</code>. The combo boxes for the local and remote 
+      interfaces are grayed out.</font> 
+    <li  value="3"><font ><a name="1043577"> </a>In the Enterprise Bean Name field, 
+      enter <code>OfficeMDB</code>. This name will represent the message-driven 
+      bean in the tree view. </font> 
+    <font ><li  value="4"><a name="1043578"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1061494"> </a><i><font color="#666699" >9.3.7.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1061495"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1061496"> </a>In the Transaction Attribute field 
+      opposite the <code>onMessage</code> method, verify that Required is selected.</font> 
+    <font ><li  value="3"><a name="1043589"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043592"> </a><i><font color="#666699" >9.3.7.5&nbsp;&nbsp; Message-Driven Bean Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043594"> </a>In the Destination Type combo box, select Topic.</font>
+    <li  value="2"><font ><a name="1043595"> </a>In the Destination field, select 
+      <code>jms/Topic</code>.</font> 
+    <li  value="3"><font ><a name="1043596"> </a>In the Connection Factory field, 
+      select <code>jms/TopicConnectionFactory</code>.</font> 
+    <font ><li  value="4"><a name="1043597"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043598"> </a><i><font color="#666699" >9.3.7.6&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043599"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043602"> </a><i><font color="#666699" >9.3.7.7&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043603"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1043604"> </a>In the Coded Name column, enter 
+      <code>ejb/MyEjbReference</code>. </font> 
+    <li  value="3"><font ><a name="1043605"> </a>In the Type column, select Entity. </font>
+  <li  value="4"><font ><a name="1043606"> </a>In the Interfaces column, select Local.</font>
+    <li  value="5"><font ><a name="1043607"> </a>In the Home Interface column, enter 
+      <code>SetupOfficeLocalHome</code>. </font> 
+    <li  value="6"><font ><a name="1043608"> </a>In the Local/Remote Interface 
+      column, enter <code>SetupOffice</code>. </font> 
+    <li  value="7"><font ><a name="1043609"> </a>In the Deployment Settings combo 
+      box, select Enterprise Bean Name. In the Enterprise Bean Name field, enter 
+      <code>SetupOfficeEJB</code>.</font> 
+    <font ><li  value="8"><a name="1061336"> </a>Click Finish. You do not need to enter anything in the other dialog boxes.</font>
+</ol>
+
+<h4>
+  <a name="1059313"> </a><font color="#666699" >9.3.8&nbsp;&nbsp; Packaging the Schedule Message-Driven Bean</font>
+</h4>
+
+
+<p>
+  <a name="1059314"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the third message-driven bean. To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1059316"> </a>In the tree view, select <code>NewHireApp</code>.</font> 
+    <font ><li  value="2"><a name="1059317"> </a>From the File menu, choose New -> Enterprise Bean. </font>
+</ol>
+
+<h5>
+  <a name="1059318"> </a><i><font color="#666699" >9.3.8.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1059319"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1059320"> </a><i><font color="#666699" >9.3.8.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1059321"> </a>In the combo box labeled JAR File Location, select Add to Existing JAR File and select Ejb1 (NewHireApp).</font>
+  <li  value="2"><font ><a name="1059322"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1059323"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the directory <code>client_mdb_ent</code>. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="4"><font ><a name="1059324"> </a>Select the <code>ScheduleMsgBean.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="5"><font ><a name="1059325"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1059326"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1059327"> </a><i><font color="#666699" >9.3.8.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1059328"> </a>In the Bean Type combo box, select the Message-Driven radio button. </font>
+    <li  value="2"><font ><a name="1059329"> </a>Under Enterprise Bean Class, select 
+      <code>ScheduleMsgBean</code>. The combo boxes for the local and remote interfaces 
+      are grayed out.</font> 
+    <li  value="3"><font ><a name="1059330"> </a>In the Enterprise Bean Name field, 
+      enter <code>ScheduleMDB</code>. This name will represent the message-driven 
+      bean in the tree view. </font> 
+    <font ><li  value="4"><a name="1059331"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1059338"> </a><i><font color="#666699" >9.3.8.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1059339"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1059340"> </a>In the Transaction Attribute field 
+      opposite the <code>onMessage</code> method, verify that Required is selected.</font> 
+    <font ><li  value="3"><a name="1059341"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1059344"> </a><i><font color="#666699" >9.3.8.5&nbsp;&nbsp; Message-Driven Bean Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1059345"> </a>In the Destination Type combo box, select Queue.</font>
+    <li  value="2"><font ><a name="1059346"> </a>In the Destination field, select 
+      <code>jms/ScheduleQueue</code>.</font> 
+    <li  value="3"><font ><a name="1059347"> </a>In the Connection Factory field, 
+      select <code>jms/QueueConnectionFactory</code>.</font> 
+    <font ><li  value="4"><a name="1059348"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1059349"> </a><i><font color="#666699" >9.3.8.6&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1059350"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1059353"> </a><i><font color="#666699" >9.3.8.7&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1059354"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1059355"> </a>In the Coded Name column, enter 
+      <code>ejb/CompositeEjbReference</code>. </font> 
+    <li  value="3"><font ><a name="1059356"> </a>In the Type column, select Entity. </font>
+  <li  value="4"><font ><a name="1059357"> </a>In the Interfaces column, select Local.</font>
+    <li  value="5"><font ><a name="1059358"> </a>In the Home Interface column, enter 
+      <code>SetupOfficeLocalHome</code>. </font> 
+    <li  value="6"><font ><a name="1059359"> </a>In the Local/Remote Interface 
+      column, enter <code>SetupOffice</code>. </font> 
+    <li  value="7"><font ><a name="1059360"> </a>In the Deployment Settings combo 
+      box, select Enterprise Bean Name. In the Enterprise Bean Name field, enter 
+      <code>SetupOfficeEJB</code>.</font> 
+    <font ><li  value="8"><a name="1061344"> </a>Click Finish. You do not need to enter anything in the other dialog boxes.</font>
+</ol>
+
+<h4>
+  <a name="1024382"> </a><font color="#666699" >9.3.9&nbsp;&nbsp; Packaging the Entity Bean</font>
+</h4>
+
+
+<p>
+  <a name="1059404"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the entity bean. To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1059406"> </a>In the tree view, select <code>NewHireApp</code>.</font> 
+    <font ><li  value="2"><a name="1059407"> </a>From the File menu, choose New -> Enterprise Bean. </font>
+</ol>
+
+<h5>
+  <a name="1059408"> </a><i><font color="#666699" >9.3.9.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1059409"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1024617"> </a><i><font color="#666699" >9.3.9.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043674"> </a>In the combo box labeled JAR File Location, select Add to Existing JAR File and select Ejb1 (NewHireApp).</font>
+  <li  value="2"><font ><a name="1043675"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1043676"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the directory <code>client_mdb_ent</code>. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="4"><font ><a name="1043677"> </a>Select the following files from 
+      the Available Files tree area and click Add: <code>SetupOfficeLocalHome.class</code>, 
+      <code>SetupOffice.class</code>, and <code>SetupOfficeBean.class</code>. 
+      </font> 
+    <li  value="5"><font ><a name="1043678"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1043679"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1043707"> </a><i><font color="#666699" >9.3.9.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043708"> </a>In the Bean Type combo box, select the Entity radio button. </font>
+    <li  value="2"><font ><a name="1043709"> </a>In the Enterprise Bean Class combo 
+      box, select <code>SetupOfficeBean</code>. </font> 
+    <li  value="3"><font ><a name="1043710"> </a>In the Enterprise Bean Name field, 
+      enter <code>SetupOfficeEJB</code>. </font> 
+    <li  value="4"><font ><a name="1043711"> </a>In the Local Interfaces combo 
+      box, select <code>SetupOfficeLocalHome</code> for Local Home Interface and 
+      <code>SetupOffice</code> for Local Interface. </font> 
+    <font ><li  value="5"><a name="1044027"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043736"> </a><i><font color="#666699" >9.3.9.4&nbsp;&nbsp; Entity Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043737"> </a>Select the radio button labeled Container managed persistence (2.0).</font>
+    <li  value="2"><font ><a name="1052170"> </a>Select the checkboxes next to 
+      all six fields in the Fields To Be Persisted area: <code>employeeId</code>, 
+      <code>employeeName</code>, <code>equipmentList</code>, <code>officeNumber</code>, 
+      <code>serializedReplyDestination</code>, and <code>replyCorrelationMsgId</code>.</font> 
+    <li  value="3"><font ><a name="1061181"> </a>In the Abstract Schema Name field, 
+      enter <code>SetupOfficeSchema</code>.</font> 
+    <li  value="4"><font ><a name="1043738"> </a>In the Primary Key Class field, 
+      enter <code>java.lang.String</code>.</font> 
+    <li  value="5"><font ><a name="1052171"> </a>In the Primary Key Field Name 
+      field, select <code>employeeId</code>.</font> 
+    <font ><li  value="6"><a name="1044026"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043744"> </a><i><font color="#666699" >9.3.9.5&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043745"> </a>Select the Container-Managed radio button.</font>
+  <li  value="2"><font ><a name="1043746"> </a>For all methods, verify that Required is set in the Transaction Attribute column opposite the Local and Local Home radio buttons. </font>
+  <font ><li  value="3"><a name="1043813"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043797"> </a><i><font color="#666699" >9.3.9.6&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043798"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043799"> </a><i><font color="#666699" >9.3.9.7&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043808"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043792"> </a><i><font color="#666699" >9.3.9.8&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043770"> </a><font >In this dialog box, you specify the connection factory for the Schedule queue and for the reply. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043785"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1024939"> </a>In the Coded Name field, enter 
+      <code>jms/QueueConnectionFactory</code>.</font> 
+    <li  value="3"><font ><a name="1024940"> </a>In the Type field, select <code>javax.jms.QueueConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1024941"> </a>In the Authentication field, select Container.</font>
+  <li  value="5"><font ><a name="1059425"> </a>In the Sharable field, make sure that the checkbox is selected. </font>
+    <li  value="6"><font ><a name="1024942"> </a>In the JNDI Name field, enter <code>jms/QueueConnectionFactory</code>.</font> 
+    <li  value="7"><font ><a name="1024943"> </a>In the User Name field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="8"><font ><a name="1043776"> </a>In the Password field, enter 
+      <code>j2ee</code>.</font> 
+    <font ><li  value="9"><a name="1024944"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1038992"> </a><i><font color="#666699" >9.3.9.9&nbsp;&nbsp; Resource Environment References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1038993"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1044030"> </a>In the Coded Name field, enter 
+      <code>jms/ScheduleQueue</code>--the logical name referenced by <code>SetupOfficeBean</code>.</font> 
+    <li  value="3"><font ><a name="1038994"> </a>In the Type field, select <code>javax.jms.Queue</code>.</font> 
+    <li  value="4"><font ><a name="1038995"> </a>In the JNDI Name field, enter 
+      <code>jms/ScheduleQueue</code>.</font> 
+    <font ><li  value="5"><a name="1044031"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1043826"> </a><i><font color="#666699" >9.3.9.10&nbsp;&nbsp; Security Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1043827"> </a><font >Use the default Security Identity setting for a session or entity bean, Use Caller ID. Click Next.</font>
+</p>
+
+<h5>
+  <a name="1043835"> </a><i><font color="#666699" >9.3.9.11&nbsp;&nbsp; Review Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043836"> </a>Check the settings for the deployment descriptor.</font>
+  <font ><li  value="2"><a name="1043837"> </a>Click Finish.</font>
+</ol>
+
+<h4>
+  <a name="1025781"> </a><font color="#666699" >9.3.10&nbsp;&nbsp; Specifying the Entity Bean Deployment Settings</font>
+</h4>
+
+
+<p>
+  <a name="1052177"> </a><font >Generate the SQL for the entity bean and create the table. Follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1052179"> </a>In the tree view, select the <code>SetupOfficeEJB</code> 
+      entity bean.</font> 
+    <li  value="2"><font ><a name="1052180"> </a>Select the Entity tabbed pane.</font>
+  <li  value="3"><font ><a name="1052182"> </a>Click Deployment Settings.</font>
+  <li  value="4"><font ><a name="1052185"> </a>In the Deployment Settings dialog box, perform these steps.</font>
+  <ol type="a">
+    <li ><font ><a name="1052191"> </a>In the Database Table combo box, select the two checkboxes labeled Create table on deploy and Delete table on undeploy.</font>
+    <li ><font ><a name="1052195"> </a>Click Database Settings.</font>
+        <li ><font ><a name="1052196"> </a>In the Deployment Settings dialog box that 
+          appears, enter <code>jdbc/Cloudscape</code> in the Database JNDI Name 
+          field. Do not enter a user name or a password.</font> 
+        <li ><font ><a name="1090097"> </a>Click OK.</font>
+    <li ><font ><a name="1065326"> </a>Click Generate Default SQL.</font>
+    <li ><font ><a name="1052202"> </a>When the SQL Generation Complete dialog appears, click OK.</font>
+    <font ><li ><a name="1052203"> </a>Click OK in the dialog box.</font>
+  </ol>
+  <font ><li  value="5"><a name="1052227"> </a>Choose Save from the File menu to save the application.</font>
+</ol>
+
+<h4>
+  <a name="1052176"> </a><font color="#666699" >9.3.11&nbsp;&nbsp; Specifying the JNDI Names</font>
+</h4>
+
+
+  <p> <a name="1025814"> </a><font >Verify that the JNDI names are correct, and 
+    add one for the <code>SetupOfficeEJB</code> component. Follow these steps.</font> 
+  </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025791"> </a>In the tree view, select the <code>NewHireApp</code> 
+      application. </font> 
+    <li  value="2"><font ><a name="1027768"> </a>Select the JNDI Names tabbed pane.</font>
+  <font >
+    <li  value="3"><a name="1081730"> </a>Make sure that the JNDI names appear 
+      as shown in <a href="j2eeapp3.html#1081735">Table 9.1</a> and <a href="j2eeapp3.html#1081761">Table 
+      9.2</a>. You will need to enter <code>SetupOfficeEJB</code> as the JNDI 
+      name for the <code>SetupOfficeEJB</code> component. 
+    </font></ol><font >
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1081735"> </a><font >Table 9.1: &nbsp;&nbsp; Application Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1081741"> </a><font >Component Type<br></font>
+
+</font></div></th>
+    <th>
+        <div align="left"><font face="" color="#666699"> <a name="1081743"> </a><font ><b>Component</b><br>
+          </font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1081745"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081747"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081749"> </a><font ><code>SetupOfficeEJB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081751"> </a><font ><code>SetupOfficeEJB</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081753"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081755"> </a><font ><code>EquipmentMDB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081757"> </a><font ><code>jms/Topic</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081818"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081820"> </a><font ><code>OfficeMDB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081822"> </a><font ><code>jms/Topic</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081812"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081814"> </a><font ><code>ScheduleMDB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081816"> </a><font ><code>jms/ScheduleQueue</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+<p></p>
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1081761"> </a><font >Table 9.2: &nbsp;&nbsp; References Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1081769"> </a><font >Ref. Type<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1081771"> </a><font >Referenced By<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1081773"> </a><font >Reference Name<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1081775"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081777"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081779"> </a><font ><code>SetupOfficeEJB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081781"> </a><font ><code>jms/QueueConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081897"> </a><font ><code>jms/QueueConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081785"> </a><font >Env Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081787"> </a><font ><code>SetupOfficeEJB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081903"> </a><font ><code>jms/ScheduleQueue</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081907"> </a><font ><code>jms/ScheduleQueue</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081793"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081795"> </a><font ><code>HumanResourceClient</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081915"> </a><font ><code>jms/TopicConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081921"> </a><font ><code>jms/TopicConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081864"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081866"> </a><font ><code>HumanResourceClient</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081927"> </a><font ><code>jms/QueueConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081933"> </a><font ><code>jms/QueueConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081856"> </a><font >Env Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081858"> </a><font ><code>HumanResourceClient</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081860"> </a><font ><code>jms/NewHireTopic</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081862"> </a><font ><code>jms/Topic</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1081848"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081850"> </a><font ><code>EJB1[CMP]</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1081852"> </a><font ><br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1081854"> </a><font ><code>jdbc/Cloudscape</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+</font>
+
+<h3>
+  <a name="1028835"> </a><font color="#666699" >9.4&nbsp;&nbsp; Deploying and Running the Application</font>
+</h3>
+
+
+<p>
+  <a name="1043888"> </a><font >Deploying and running the application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1043906">Adding the server, if necessary</a></font>
+  <li><font ><a href="#1043921">Deploying the application</a></font>
+  <li><font ><a href="#1043948">Running the client</a></font>
+  <li><font ><a href="#1043982">Undeploying the application</a></font>
+  <font ><li><a href="#1043994">Removing the application and stopping the server</a></font>
+</ol>
+
+<h4>
+  <a name="1043906"> </a><font color="#666699" >9.4.1&nbsp;&nbsp; Adding the Server</font>
+</h4>
+
+
+  <p> <a name="1043907"> </a><font >Before you can deploy the application, you 
+    must make available to the deploytool the J2EE server you started in <a href="j2eeapp3.html#1043077">Section 
+    9.3.1, "Starting the J2EE Server and the Deploytool."</a> Because you started 
+    the J2EE server before you started the deploytool, the server, named <code>localhost</code>, 
+    probably appears in the tree under <code>Servers</code>. If it does not, do 
+    the following.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043912"> </a>From the File menu, choose Add Server.</font>
+    <li  value="2"><font ><a name="1043913"> </a>In the Add Server dialog box, enter 
+      <code>localhost</code> in the Server Name field.</font> 
+    <font >
+    <li  value="3"><a name="1043914"> </a>Click OK. A <code>localhost</code> node 
+      appears under <code>Servers</code> in the tree view.
+    </font>
+</ol>
+
+<h4>
+  <a name="1043921"> </a><font color="#666699" >9.4.2&nbsp;&nbsp; Deploying the Application</font>
+</h4>
+
+
+<p>
+  <a name="1043922"> </a><font >To deploy the application, perform the following steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043923"> </a>From the File menu, choose Save to save the application.</font>
+  <li  value="2"><font ><a name="1043924"> </a>From the Tools menu, choose Deploy. </font>
+    <li  value="3"><font ><a name="1043925"> </a>In the Introduction dialog box, 
+      verify that the Object to Deploy selection is <code>NewHireApp</code> and 
+      that the Target Server selection is <code>localhost</code>. </font> 
+    <li  value="4"><font ><a name="1043926"> </a>Click Next.</font>
+  <li  value="5"><font ><a name="1043927"> </a>In the JNDI Names dialog box, verify that the JNDI names are correct.</font>
+  <li  value="6"><font ><a name="1043928"> </a>Click Next.</font>
+  <li  value="7"><font ><a name="1043929"> </a>Click Finish.</font>
+  <li  value="8"><font ><a name="1043930"> </a>In the Deployment Progress dialog box, click OK when the "Deployment of NewHireApp is complete" message appears.</font>
+  <font >
+    <li  value="9"><a name="1043931"> </a>In the tree view, expand <code>Servers</code> 
+      and select <code>localhost</code>. Verify that <code>NewHireApp</code> is 
+      deployed.
+    </font>
+</ol>
+
+<h4>
+  <a name="1043948"> </a><font color="#666699" >9.4.3&nbsp;&nbsp; Running the Client</font>
+</h4>
+
+
+<p>
+  <a name="1025967"> </a><font >To run the client, perform the following steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1043962"> </a>At the command line prompt, enter the following:</font>
+<pre>
+runclient -client <code><font >NewHireApp</font></code>.ear -name HumanResourceClient -textauth
+</pre>
+</li>
+    <li  value="2"><font ><a name="1043964"> </a>At the login prompts, enter <code>j2ee</code> 
+      as the user name and <code>j2ee</code> as the password. </font> 
+    <font ><li  value="3"><a name="1043965"> </a>Click OK.</font>
+</ol>
+
+<p>
+  <a name="1060700"> </a><font >The client program runs in the command window, and output from the application appears in the window in which you started the J2EE server. </font>
+</p>
+
+<h4>
+  <a name="1043982"> </a><font color="#666699" >9.4.4&nbsp;&nbsp; Undeploying the Application</font>
+</h4>
+
+
+<p>
+  <a name="1043983"> </a><font >To undeploy the J2EE application, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043984"> </a>In the tree view, select <code>localhost</code>.</font> 
+    <li  value="2"><font ><a name="1043985"> </a>Select <code>NewHireApp</code> 
+      in the Deployed Objects area.</font> 
+    <li  value="3"><font ><a name="1043986"> </a>Click Undeploy. </font>
+  <font ><li  value="4"><a name="1043987"> </a>Answer Yes in the confirmation dialog.</font>
+</ol>
+
+<h4>
+  <a name="1043994"> </a><font color="#666699" >9.4.5&nbsp;&nbsp; Removing the Application and Stopping the Server</font>
+</h4>
+
+
+<p>
+  <a name="1061528"> </a><font >To remove the application from the deploytool, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1043996"> </a>Select <code>NewHireApp</code> 
+      in the tree view.</font> 
+    <font ><li  value="2"><a name="1043997"> </a>Select Close from the File menu.</font>
+</ol>
+
+<p>
+  <a name="1044000"> </a><font >To delete the queue you created, enter the following at the command line prompt:</font>
+</p>
+
+<pre>
+j2eeadmin -removeJmsDestination jms/ScheduleQueue
+</pre>
+
+<p>
+  <a name="1044005"> </a><font >To stop the J2EE server, use the following command:</font>
+</p>
+
+<pre>
+j2ee -stop
+</pre>
+
+<p>
+  <a name="1044007"> </a><font >To stop the Cloudscape database server, use the following command:</font>
+</p>
+
+<pre>
+cloudscape -stop
+</pre>
+
+<p>
+  <a name="1061200"> </a><font >To exit the deploytool, choose Exit from the File menu.</font>
+</p>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="j2eeapp2.html">Prev</a> |
+  <a href="j2eeapp4.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

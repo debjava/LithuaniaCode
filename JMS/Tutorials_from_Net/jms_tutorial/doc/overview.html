@@ -1,0 +1,218 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:09 2002">
+<title>Overview</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="jms_tutorialTOC.html">Prev</a> |
+    <a href="basics.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >1 &nbsp;&nbsp; Overview</font>
+</h1>
+
+
+<p>
+  <a name="1027279"> </a>This overview of the 
+  Java<font size="-2"><sup>TM</sup></font> Message Service Application Programming Interface (the JMS API) answers the following questions.
+</p>
+
+<ul>
+  <li ><font ><a href="#1027335">What is messaging?</a></font>
+  <li ><font ><a href="#1100542">What is the JMS API?</a></font>
+  <li ><font ><a href="#1023396">When can you use the JMS API?</a></font>
+  <font ><li ><a href="#1023407">How does the JMS API work with the Java 2 Platform, Enterprise Edition 
+  (J2EE<font size="-2"><sup>TM</sup></font> platform)?</a></font>
+</ul>
+<div align="left">
+<h3>
+  <a name="1027335"> </a><font color="#666699" >1.1&nbsp;&nbsp; What Is Messaging?</font>
+</h3>
+
+
+<p>
+  <a name="1027341"> </a><font >Messaging is a method of communication between software components or applications. A messaging system is a peer-to-peer facility: A messaging client can send messages to, and receive messages from, any other client. Each client connects to a messaging agent that provides facilities for creating, sending, receiving, and reading messages.</font>
+</p>
+
+
+  <p> <a name="1027692"> </a><font >Messaging enables distributed communication 
+    that is <i>loosely coupled</i>. A component sends a message to a destination, 
+    and the recipient can retrieve the message from the destination. However, 
+    the sender and the receiver do not have to be available at the same time in 
+    order to communicate. In fact, the sender does not need to know anything about 
+    the receiver; nor does the receiver need to know anything about the sender. 
+    The sender and the receiver need to know only what message format and what 
+    destination to use. In this respect, messaging differs from tightly coupled 
+    technologies, such as Remote Method Invocation (RMI), which require an application 
+    to know a remote application's methods.</font> </p>
+
+
+<p>
+  <a name="1027720"> </a><font >Messaging also differs from electronic mail (e-mail), which is a method of communication between people or between software applications and people. Messaging is used for communication between software applications or software components.</font>
+</p>
+
+<div align="left">
+<h3>
+  <a name="1100542"> </a><font color="#666699" >1.2&nbsp;&nbsp; What Is the JMS API?</font>
+</h3>
+
+
+<p>
+  <a name="1027205"> </a><font >The Java Message Service is a Java API that allows applications to create, send, receive, and read messages. Designed by Sun and several partner companies, the JMS API defines a common set of interfaces and associated semantics that allow programs written in the Java programming language to communicate with other messaging implementations.</font>
+</p>
+
+
+<p>
+  <a name="1027423"> </a><font >The JMS API minimizes the set of concepts a programmer must learn to use messaging products but provides enough features to support sophisticated messaging applications. It also strives to maximize the portability of JMS applications across JMS providers in the same messaging domain.</font>
+</p>
+
+
+<p>
+  <a name="1027473"> </a><font >The JMS API enables communication that is not only loosely coupled but also</font>
+</p>
+
+<ul>
+    <li ><font ><a name="1027474"> </a><b>Asynchronous.</b> A JMS provider can deliver 
+      messages to a client as they arrive; a client does not have to request messages 
+      in order to receive them.</font> 
+    <font >
+    <li ><a name="1027475"> </a><b>Reliable.</b> The JMS API can ensure that a 
+      message is delivered once and only once. Lower levels of reliability are 
+      available for applications that can afford to miss messages or to receive 
+      duplicate messages.
+    </font>
+</ul>
+
+  <p> <a name="1027580"> </a><font >The JMS Specification was first published in 
+    August 1998. The latest version of the JMS Specification is Version 1.0.2b, 
+    which was released in August 2001. You can download a copy of the Specification 
+    from the JMS Web site, <a href="http://java.sun.com/products/jms/"> <code>http://java.sun.com/products/jms/</code></a>.</font> 
+  </p>
+
+<h3>
+  <a name="1023396"> </a><font color="#666699" >1.3&nbsp;&nbsp; When Can You Use the JMS API?</font>
+</h3>
+
+
+<p>
+  <a name="1027688"> </a><font >An enterprise application provider is likely to choose a messaging API over a tightly coupled API, such as Remote Procedure Call (RPC), under the following circumstances.</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1100802"> </a>The provider wants the components not to depend on information about other components' interfaces, so that components can be easily replaced.</font>
+  <li ><font ><a name="1100824"> </a>The provider wants the application to run whether or not all components are up and running simultaneously.</font>
+  <font ><li ><a name="1100807"> </a>The application business model allows a component to send information to another and to continue to operate without receiving an immediate response.</font>
+</ul>
+
+<p>
+  <a name="1100797"> </a><font >For example, components of an enterprise application for an automobile manufacturer can use the JMS API in situations like these.</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1100708"> </a>The inventory component can send a message to the factory component when the inventory level for a product goes below a certain level, so the factory can make more cars.</font>
+  <li ><font ><a name="1100712"> </a>The factory component can send a message to the parts components so that the factory can assemble the parts it needs.</font>
+  <li ><font ><a name="1100704"> </a>The parts components in turn can send messages to their own inventory and order components to update their inventories and to order new parts from suppliers. </font>
+  <li ><font ><a name="1100734"> </a>Both the factory and the parts components can send messages to the accounting component to update their budget numbers.</font>
+  <font ><li ><a name="1100732"> </a>The business can publish updated catalog items to its sales force.</font>
+</ul>
+
+<p>
+  <a name="1103727"> </a><font >Using messaging for these tasks allows the various components to interact with one another efficiently, without tying up network or other resources. 
+  <a href="overview.html#1103709">Figure 1.1</a> illustrates how this simple example might work.</font>
+</p>
+
+
+<a name="1105191"> </a>
+<img src="images/Fig1.1.gif" border="0" hspace="0" vspace="0">
+<br>
+
+<a name="1103709"> </a><i>Figure 1.1.&nbsp;&nbsp;Messaging in an Enterprise Application</i>
+
+
+<p>
+  <a name="1100756"> </a><font >Manufacturing is only one example of how an enterprise can use the JMS API. Retail applications, financial services applications, health services applications, and many others can make use of messaging. </font>
+</p>
+
+<h3>
+  <a name="1023407"> </a><font color="#666699" >1.4&nbsp;&nbsp; How Does the JMS API Work with the J2EE Platform?</font>
+</h3>
+
+
+<p>
+  <a name="1027262"> </a><font >When the JMS API was introduced in 1998, its most important purpose was to allow Java applications to access existing messaging-oriented middleware (MOM) systems, such as MQSeries from IBM. Since that time, many vendors have adopted and implemented the JMS API, so that a JMS product can now provide a complete messaging capability for an enterprise. </font>
+</p>
+
+
+<p>
+  <a name="1027264"> </a><font >At the 1.2 release of the J2EE platform, a service provider based on J2EE technology ("J2EE provider") was required to provide the JMS API interfaces but was not required to implement them. Now, with the 1.3 release of the J2EE platform ("the J2EE 1.3 platform"), the JMS API is an integral part of the platform, and application developers can use messaging with components using J2EE APIs ("J2EE components").</font>
+</p>
+
+
+<p>
+  <a name="1027569"> </a><font >The JMS API in the J2EE 1.3 platform has the following features.</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1027585"> </a>Application clients, Enterprise 
+  JavaBeans<font size="-2"><sup>TM</sup></font> 
+  (EJB<font size="-2"><sup>TM</sup></font>) components, and Web components can send or synchronously receive a JMS message. Application clients can in addition receive JMS messages asynchronously. (Applets, however, are not required to support the JMS API.)</font>
+  <li ><font ><a name="1027599"> </a>A new kind of enterprise bean, the message-driven bean, enables the asynchronous consumption of messages. A JMS provider may optionally implement concurrent processing of messages by message-driven beans.</font>
+  <font ><li ><a name="1027602"> </a>Message sends and receives can participate in distributed transactions.</font>
+</ul>
+
+<p>
+  <a name="1027614"> </a><font >The addition of the JMS API enhances the J2EE platform by simplifying enterprise development, allowing loosely coupled, reliable, asynchronous interactions among J2EE components and legacy systems capable of messaging. A developer can easily add new behavior to an application based on J2EE technology ("J2EE application") with existing business events by adding a new message-driven bean to operate on specific business events. The J2EE platform's EJB container architecture, moreover, enhances the JMS API by providing support for distributed transactions and allowing for the concurrent consumption of messages.</font>
+</p>
+
+
+<p>
+  <a name="1100579"> </a><font >Another technology new to the J2EE 1.3 platform, the J2EE Connector Architecture, provides tight integration between J2EE applications and existing Enterprise Information (EIS) systems. The JMS API, on the other hand, allows for a very loosely coupled interaction between J2EE applications and existing EIS systems.</font>
+</p>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="jms_tutorialTOC.html">Prev</a> |
+  <a href="basics.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0071)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqsyncjms.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2004  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqsyncjms                                                 */
+/*                                                                         */
+/* Description: Sample java program that shows jms syncpointing of         */
+/*              messages during put requests                               */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program is a variation of the mqsync.c program that can be found  */
+/*  on the MQSeries sample code section of the web at:                     */
+/*                                                                         */
+/*    http://www.developer.ibm.com/tech/sampmq.html                        */
+/*                                                                         */
+/*  This program is written in java and shows the use of the jms objects   */
+/*  and methods to put messages in syncpoint by checking the message       */
+/*  buffer for the following text:                                         */
+/*                                                                         */
+/*      SYNC or sync: the message is to be put in syncpoint                */
+/*      CMIT or cmit: the syncpointed messages are to be committed         */
+/*      BACK or back: the syncpointed messages are to be backed out        */
+/*                                                                         */
+/* The text must be in all upper case or all lower case and can be found   */
+/* anywhere in the message text.                                           */
+/*                                                                         */
+/* If both backout and commit are specified, the backout will be done.     */
+/* The best way to run this program is in conjunction with the amqsget     */
+/* sample program.  The mqsyncjms program can be run in one window while   */
+/* the amqsget program can be run in another.  A sample execution of the   */
+/* mqsyncjms program might be:                                             */
+/*                                                                         */
+/*     java mqsyncjms                                                      */
+/*     message 1                                                           */
+/*     message 2 sync                                                      */
+/*     message 3                                                           */
+/*     message 4 sync                                                      */
+/*     message 5 cmit                                                      */
+/*     message 6 sync                                                      */
+/*     message 7                                                           */
+/*     message 8 back                                                      */
+/*     message 9                                                           */
+/*                                                                         */
+/* The amqsget program would then run as follows:                          */
+/*                                                                         */
+/*     amqsget SYSTEM.DEFAULT.LOCAL.QUEUE                                  */
+/*     message 1                                                           */
+/*     message 3                                                           */
+/*     message 5 cmit                 shows up here because not in sync    */
+/*     message 2 SYNC                                                      */
+/*     message 4 sync                                                      */
+/*     message 7                                                           */
+/*     message 8 back                 this caused message 6 to be disarded */
+/*     message 9                                                           */
+/*                                                                         */
+/* Note: While running amqsget, if the MQGET ends with a reason code of    */
+/*       2080, then it will be necessary to alter the JMS queue being      */
+/*       used so that the RFH2 header is not put on the message:           */
+/*                                                                         */
+/*       alter q(myQueue) targclient(MQ)                                   */
+/*                                                                         */
+/***************************************************************************/
+/*  This program is run as follows:                                        */
+/*                                                                         */
+/*     java mqsyncjms -icf ..... -url ... -qcf .... -q ....                */
+/*                                                                         */
+/*  where                                                                  */
+/*     -icf is the classname of the initial context factory.               */
+/*     -url is the JNDI location of the administered objects.              */
+/*     -qcf is the queue connection factory.                               */
+/*     -q   is the queue.                                                  */
+/*                                                                         */
+/* This program has been tested with WebSphere MQ V5.3 FixPack 7 and       */
+/* java 1.4.2.                                                             */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* The queue connection factory and queue parameters to this program need  */
+/* to be setup so that they can be found.  This is done via the JMS Admin- */
+/* istration tool that is described in the Using Java manual.  This        */
+/* program was tested using a file system context set up in a              */
+/* jmsadmin.config as folllows:                                            */
+/*                                                                         */
+/*    INITIAL_CONTEXT_FACTORY=com.sun.jndi.fscontext.RefFSContextFactory   */
+/*    PROVIDER_URL=file:c://support//jms//sample                           */
+/*    SECURITY_AUTHENTICATION=none                                         */
+/*                                                                         */
+/* The actual JMSAdmin utility was run with the following definitions:     */
+/*                                                                         */
+/*    def qcf(sampleQCF) qmanager(pubsub.qmgr)                             */
+/*    def q(sampleQ) qu(SYSTEM.DEFAULT.LOCAL.QUEUE)                        */
+/*                                                                         */
+/* The actual program execution would then be:                             */
+/*                                                                         */
+/*    java mqsyncjms -icf com.sun.jndi.fscontext.RefFSContextFactory       */
+/*      -url file:c://support//jms//sample                                 */
+/*      -qcf sampleQCF                                                     */
+/*      -q   sampleQ                                                       */
+/*                                                                         */
+/* An alternate method of running this program is to create a file named   */
+/* mqsyncjms.properties that contains the following:                       */
+/*                                                                         */
+/*   icf=com.sun.jndi.fscontext.RefFSContextFactory                        */
+/*   url=file:c://support//jms//sample                                     */
+/*   qcf=sampleQCF                                                         */
+/*   q=sampleQ                                                             */
+/*                                                                         */
+/***************************************************************************/
+
+import java.io.*;
+
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Properties;
+
+public class mqsyncjms {
+
+	private static String icf = null;
+	private static String url = null;
+	private static String qcfLookup = null;
+	private static String qLookup = null;
+
+	public mqsyncjms() {
+		url = System.getProperty("url");
+		icf = System.getProperty("icf");
+		qcfLookup = System.getProperty("qcf");
+		qLookup = System.getProperty("q");
+
+		try {
+			Properties props = new Properties(System.getProperties());
+			props.load(
+				new BufferedInputStream(
+					new FileInputStream("mqsyncjms.properties")));
+			System.setProperties(props);
+		} catch (Exception e) {
+			System.out.println(
+				"Warning on mqsyncjms.properties: " + e.getMessage());
+		}
+
+		if (url == null) {
+			url = System.getProperty("url");
+		}
+		if (icf == null) {
+			icf = System.getProperty("icf");
+		}
+		if (qcfLookup == null) {
+			qcfLookup = System.getProperty("qcf");
+		}
+		if (qLookup == null) {
+			qLookup = System.getProperty("q");
+		}
+
+	}
+
+	public mqsyncjms(String[] args) {
+
+		this();
+
+		/**********************************/
+		/* Get the command-line arguments */
+		/**********************************/
+		for (int i = 0; i &lt; args.length; i++) {
+			String arg = args[i].toLowerCase();
+
+			if (arg.equals("-url")) {
+				if (i + 1 &lt; args.length) {
+					url = args[++i];
+				} else {
+					System.out.println("didn't specify url, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-icf")) {
+				if (i + 1 &lt; args.length) {
+					icf = args[++i];
+				} else {
+					System.out.println("didn't specify icf, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-qcf")) {
+				if (i + 1 &lt; args.length) {
+					qcfLookup = args[++i];
+				} else {
+					System.out.println("didn't specify qcf, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-q")) {
+				if (i + 1 &lt; args.length) {
+					qLookup = args[++i];
+				} else {
+					System.out.println("didn't specify queue, exiting");
+					return;
+				}
+
+			} else {
+				System.out.println("Unknown argument: " + arg);
+			}
+		}
+
+	}
+
+	public void myPut() {
+
+		QueueConnectionFactory factory;
+		QueueConnection connection;
+		QueueSession session;
+		QueueSession sessionSP;
+		QueueSender sender;
+		QueueSender senderSP;
+		Queue ioQueue;
+		TextMessage message;
+		Context ctx = null;
+		boolean bUOW = false;
+
+		try {
+			/*************************************************************/
+			/* This program is hard-coded to use a file system context.  */
+			/* If you wanted to use something else, you could pass it in */
+			/* as a parameter and put it in the hash table below.        */
+			/*************************************************************/
+			java.util.Hashtable env = new java.util.Hashtable();
+			env.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+			env.put(Context.PROVIDER_URL, url);
+			env.put(Context.REFERRAL, "throw");
+
+			ctx = new InitialDirContext(env);
+		} catch (NamingException e) {
+			System.err.println(
+				"Error during lookup of Context Factory " + e.getMessage());
+			return;
+		}
+
+		try {
+			factory = (QueueConnectionFactory) ctx.lookup(qcfLookup);
+		} catch (Exception e) {
+			System.out.println("Error during lookup of QCF " + e.getMessage());
+			return;
+		}
+
+		try {
+			ioQueue = (Queue) ctx.lookup(qLookup);
+		} catch (Exception e) {
+			System.out.println(
+				"Error during lookup of Queue " + e.getMessage());
+			return;
+		}
+
+		try {
+			connection = factory.createQueueConnection();
+			/*********************************************************/
+			/* This program creates two sessions/senders.  One pair  */
+			/* is used to put messages in a unit of work.  The other */
+			/* pair is used to put the messages out immediately.     */
+			/*********************************************************/
+
+			session =
+				connection.createQueueSession(true, Session.AUTO_ACKNOWLEDGE);
+			sessionSP =
+				connection.createQueueSession(true, Session.CLIENT_ACKNOWLEDGE);
+
+			sender = session.createSender(ioQueue);
+			senderSP = sessionSP.createSender(ioQueue);
+
+			InputStreamReader isr = new InputStreamReader(System.in);
+			BufferedReader br = new BufferedReader(isr);
+			String sInput;
+
+			System.out.println(
+				"Use SYNC or sync in message text for syncpoint'ed message");
+			System.out.println(
+				"Use CMIT or cmit in message text to commit messages");
+			System.out.println(
+				"Use BACK or back in message text to backout (discard) messages");
+
+			/****************************************************/
+			/* As long as the user doesn't enter an empty line, */
+			/* we'll put messages on the queue.  When directed  */
+			/* to commit or roll back the messages, the program */
+			/* will either perform a commit or a rollback.      */
+			/****************************************************/
+			do {
+				sInput = br.readLine();
+				if (sInput.length() &gt; 0) {
+
+					/*********************************************************/
+					/* Check to see if the message is part of a unit of work */
+					/* or if it can be put immediately.                      */
+					/*********************************************************/
+					if ((sInput.indexOf("SYNC") &gt;= 0)
+						|| (sInput.indexOf("sync") &gt;= 0)) {
+						bUOW = true; /* at least one message in unit of work */
+						message = sessionSP.createTextMessage();
+						message.setText(sInput);
+						senderSP.send(message);
+					} else {
+						message = session.createTextMessage();
+						message.setText(sInput);
+						sender.send(message);
+						session.commit();
+					}
+
+					/*************************************************/
+					/* See if the message indicates to commit or     */
+					/* rollback the messages in the unit of work     */
+					/*************************************************/
+					if ((sInput.indexOf("BACK") &gt;= 0)
+						|| (sInput.indexOf("back") &gt;= 0)) {
+						sessionSP.rollback();
+						bUOW = false; /* UOW now empty */
+					} else if (
+						(sInput.indexOf("CMIT") &gt;= 0)
+							|| (sInput.indexOf("cmit") &gt;= 0)) {
+						sessionSP.commit();
+						bUOW = false; /* UOW now empty */
+					}
+				}
+			} while (sInput.length() &gt; 0);
+
+			/***************************************************/
+			/* At least one message was left in the UOW, this  */
+			/* program will roll back any uncomitted messages. */
+			/***************************************************/
+			if (bUOW) {
+				System.out.println(
+					"No commit issued, message being rolled back");
+				sessionSP.rollback();
+			}
+
+			/**********************************/
+			/* Close down all of the objects. */
+			/**********************************/
+			senderSP.close();
+			sessionSP.close();
+			sender.close();
+			session.close();
+			connection.close();
+			ctx.close();
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			if (e instanceof JMSException) {
+				Exception le = ((JMSException) e).getLinkedException();
+				if (le != null) {
+					System.err.println(le);
+				}
+			}
+			System.exit(1);
+		}
+	}
+
+	public static void main(String args[]) {
+		mqsyncjms app = new mqsyncjms(args);
+		if ((icf == null)
+			|| (url == null)
+			|| (qcfLookup == null)
+			|| (qLookup == null)) {
+			System.out.println("Usage:");
+			System.out.println(
+				"java mqsyncjms -icf ... -url ... -qcf ... -q ...");
+			System.out.println(
+				"where -icf is the classname of the initial context factory");
+			System.out.println(
+				"      -url is the JNDI location of the administered objects");
+			System.out.println("      -qcf is the queue connection factory");
+			System.out.println("      -q   is the queue");
+			System.exit(-1);
+		} else {
+			app.myPut();
+		}
+	}
+
+}
+
+</PRE></BODY></HTML>

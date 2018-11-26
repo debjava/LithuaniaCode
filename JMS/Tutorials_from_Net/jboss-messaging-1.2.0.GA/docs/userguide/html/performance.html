@@ -1,0 +1,123 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;10.&nbsp;Generating Performance Benchmark Results</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.65.1"><link rel="home" href="index.html" title="JBoss Messaging 1.2 User's Guide"><link rel="up" href="index.html" title="JBoss Messaging 1.2 User's Guide"><link rel="previous" href="c_configuration.html" title="Chapter&nbsp;9.&nbsp;JBoss Messaging Clustering Configuration"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter&nbsp;10.&nbsp;Generating Performance Benchmark Results</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="c_configuration.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;</td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="performance"></a>Chapter&nbsp;10.&nbsp;Generating Performance Benchmark Results</h2></div></div><div></div></div><p>
+      As we discussed in <a href="about.html" title="Chapter&nbsp;1.&nbsp;Introducing JBoss Messaging Release 1.2.0.GA">Chapter&nbsp;1, <i>Introducing JBoss Messaging Release 1.2.0.GA</i></a>, the key advantage of JBoss Messaging is
+      its superior performance. In fact, the JBoss Messaging comes with a set of standard
+      performance test. You can run them on your server and generate your own performance
+      benchmark results. In this chapter, we will show you how to run a JBoss Messaging server
+      and a JBossMQ server side-by-side on a single machine, and compare their performance.
+      To get the performance tests, you have to obtain the JBoss Messaging source code from SVN
+      as described in <a href="gettingstarted.html" title="Chapter&nbsp;4.&nbsp;Download Software">Chapter&nbsp;4, <i>Download Software</i></a>.
+  </p><p>
+    To get the performance tests, you first need to check out the source code and build the project. The location of the framework's source code will be
+    referred to as $PERF_HOME throughout the rest of the document.
+  </p><pre class="programlisting">
+svn co https://svn.jboss.org/repos/messaging/projects/perf/trunk messaging-perf
+cd $PERF_HOME
+ant
+  </pre><p>The test consists in sending bursts of 1000 0 Kilobytes non-persistent messages to both JBoss Messaging and JBossMQ instances while gradually increasing the send rate (200 messages/sec, 400 messages/sec, etc) and measuring the receive rate. At the end, the framework generates the graph representing the receive rate as function of the send rate for two executions (JBoss Messaging and JBossMQ).</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e2210"></a>10.1.&nbsp;Run JBoss Messaging and JBossMQ Side-by-side</h2></div></div><div></div></div><p>
+        To run performance tests side-by-side on the same machine, we assume that you create
+        two JBoss AS configurations with the JBoss Messaging and JBossMQ modules respectively.
+        We assume that the JBoss Messaging module is installed in the
+        <tt class="literal">server/messaging</tt> directory (see <a href="installation.html" title="Chapter&nbsp;5.&nbsp;JBoss Messaging Non-Clustered Installation">Chapter&nbsp;5, <i>JBoss Messaging Non-Clustered Installation</i></a>),
+        and the default JBossMQ module is installed in <tt class="literal">server/jbossmq</tt>
+        directory (just copy the original <tt class="literal">default</tt> directory that comes with
+        the server).</p><p>Now, if you run the two configurations on the same server, there will be port conflicts. To avoid that, we use the JBoss <tt class="literal">ServiceBindingManager</tt> to increase the port numbers in the <tt class="literal">jbossmq</tt> configuration by 100 (i.e., the JNDI service will be available at port 1199 instead of 1099). To do that, un-comment the following line in <tt class="literal">server/jbossmq/conf/jboss-service.xml</tt></p><pre class="programlisting">
+&lt;mbean code="org.jboss.services.binding.ServiceBindingManager"
+       name="jboss.system:service=ServiceBindingManager"&gt;
+
+  &lt;attribute name="ServerName"&gt;ports-01&lt;/attribute&gt;WWWr
+  &lt;attribute name="StoreURL"&gt;
+    ../docs/examples/binding-manager/sample-bindings.xml
+  &lt;/attribute&gt;
+  &lt;attribute name="StoreFactoryClassName"&gt;
+    org.jboss.services.binding.XMLServicesStoreFactory
+  &lt;/attribute&gt;
+&lt;/mbean&gt;
+    </pre><p>Now, you can start the <tt class="literal">messaging</tt> and <tt class="literal">jbossmq</tt> configurations side-by-side for testing.</p><pre class="programlisting">
+run -c messaging
+run -c jbossmq
+    </pre></div>
+sssssssssssd
+  <div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e2249"></a>10.2.&nbsp;Setup the Tests</h2></div></div><div></div></div><p>The performance framework relies on distributed executors to send messages into the providers being tested. The executors can run standalone in their own VM and act as "remote" JMS connections, or colocated, in which case they are deployed as JBoss services and simulate "colocated" JMS connections.</p><p>In order to correctly deploy the colocated executors, the framework relies on the <tt class="literal">JBOSS_HOME</tt> environment variable. It assumes directories <tt class="literal">$JBOSS_HOME/server/messaging</tt> and <tt class="literal">$JBOSS_HOME/server/jbossmq</tt> exist.</p><pre class="programlisting">
+ant sar
+ant start-executors
+    </pre><p>Next, we need to deploy test message destinations. They are in the <tt class="literal">messaging-destinations-service.xml</tt>, <tt class="literal">jbossmq-destinations-service.xml</tt> files. Feel free to add your own destinations (must add equivalent ones in both files) and then deploy them via the following command.</p><pre class="programlisting">
+ant deploy-destinations
+    </pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e2277"></a>10.3.&nbsp;Configure Test Runs</h2></div></div><div></div></div><p>The <tt class="literal">etc/perf.xml</tt> file is used to configure tests. In our setting (i.e., <tt class="literal">jbossmq</tt> runs in +100 port range from default), the <tt class="literal">&lt;providers&gt;</tt> section should look like the following. We can easily run the two JMS server configurations on different machines or in other port ranges. You just need to change the host and port numbers here for tests.</p><pre class="programlisting">
+&lt;provider name="JBossMessaging"&gt;
+  &lt;factory&gt;org.jnp.interfaces.NamingContextFactory&lt;/factory&gt;
+  &lt;url&gt;jnp://localhost:1099&lt;/url&gt;
+  &lt;pkg&gt;org.jboss.naming:org.jnp.interfaces&lt;/pkg&gt;
+  &lt;executor name="REMOTE" url="rmi://localhost:7777/standalone"/&gt;
+  &lt;executor name="REMOTE2" url="rmi://localhost:7777/standalone2"/&gt;
+  &lt;executor name="COLOCATED" url="rmi://localhost:7777/local-messaging"/&gt;
+  &lt;executor name="COLOCATED2" url="rmi://localhost:7777/local-messaging2"/&gt;
+&lt;/provider&gt;
+
+&lt;provider name="JBossMQ"&gt;
+  &lt;factory&gt;org.jnp.interfaces.NamingContextFactory&lt;/factory&gt;
+  &lt;url&gt;jnp://localhost:1199&lt;/url&gt;
+  &lt;pkg&gt;org.jboss.naming:org.jnp.interfaces&lt;/pkg&gt;
+  &lt;executor name="REMOTE" url="rmi://localhost:7777/standalone"/&gt;
+  &lt;executor name="REMOTE2" url="rmi://localhost:7777/standalone2"/&gt;
+  &lt;executor name="COLOCATED" url="rmi://localhost:7777/local-jbossmq"/&gt;
+  &lt;executor name="COLOCATED2" url="rmi://localhost:7777/local-jbossmq2"/&gt;
+&lt;/provider&gt;
+    </pre><p>The performance configuration section configures how to ramp up the load from 200 messages / sec to 3000 message / sec. We will gather statistics on the number of processed messages versus the number of sent messages.</p><pre class="programlisting">
+&lt;performance-test name="Throughput O KB Message
+   Non-Persistent Non-Transactional, 1 sender, 1 receiver"&gt;
+
+  &lt;message-size&gt;0&lt;/message-size&gt;
+  &lt;messages&gt;10000&lt;/messages&gt;
+
+  &lt;drain/&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="200" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="400" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="800" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="1000" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="1500" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="2000" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="2500" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;parallel&gt;
+    &lt;send rate="3000" executor="COLOCATED"/&gt;
+    &lt;receive executor="COLOCATED2"/&gt;
+  &lt;/parallel&gt;
+
+  &lt;execution provider="JBossMessaging"/&gt;
+  &lt;execution provider="JBossMQ"/&gt;
+
+&lt;/performance-test&gt;
+    </pre></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e2297"></a>10.4.&nbsp;Run the Tests</h2></div></div><div></div></div><p>To run the tests, simply execute <tt class="literal">ant run</tt> from the command line. You can access the benchmark result graphs from <tt class="literal">output/results/benchmark-results.html</tt>.</p><p>After running the test, you can clean up the executors and test destinations using the following commands.</p><pre class="programlisting">
+ant stop-executors
+ant undeploy-destinations
+    </pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="c_configuration.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right">&nbsp;</td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;9.&nbsp;JBoss Messaging Clustering Configuration&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;</td></tr></table></div></body></html>

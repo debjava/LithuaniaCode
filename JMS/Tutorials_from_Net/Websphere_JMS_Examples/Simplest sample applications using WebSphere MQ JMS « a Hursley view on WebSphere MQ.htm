@@ -1,0 +1,924 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd">
+<!-- saved from url=(0097)http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/ -->
+<HTML lang=en dir=ltr xmlns="http://www.w3.org/1999/xhtml"><HEAD 
+profile=http://gmpg.org/xfn/11><TITLE>Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=UTF-8">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR>
+<META content=all name=robots>
+<META content="A place to talk with people who work on WebSphere MQ" 
+name=description><LINK href="http://hursleyonwmq.wordpress.com/xmlrpc.php" 
+rel=pingback><LINK media=screen,projection 
+href="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/style.css" 
+type=text/css rel=stylesheet><LINK media=print 
+href="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/print.css" 
+type=text/css rel=stylesheet><LINK title="Comments feed" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/feed/" 
+type=application/rss+xml rel=alternate><LINK 
+title="a Hursley view on WebSphere MQ feed" 
+href="http://hursleyonwmq.wordpress.com/feed/" type=application/rss+xml 
+rel=alternate><LINK 
+title="a Hursley view on WebSphere MQ » Simplest sample applications using WebSphere MQ&nbsp;JMS Comments Feed" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/feed/" 
+type=application/rss+xml rel=alternate>
+<SCRIPT type=text/javascript>
+/* <![CDATA[ */
+function addLoadEvent(func) {
+	var oldonload = window.onload;
+	if (typeof window.onload != 'function') {
+		window.onload = func;
+	} else {
+		window.onload = function() { oldonload(); func(); }
+	}
+}
+/* ]]> */
+</SCRIPT>
+<LINK 
+href="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/global.css" 
+type=text/css rel=stylesheet>
+<SCRIPT 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/comment-reply.js" 
+type=text/javascript></SCRIPT>
+<LINK title=RSD href="http://hursleyonwmq.wordpress.com/xmlrpc.php?rsd" 
+type=application/rsd+xml rel=EditURI><LINK 
+href="http://hursleyonwmq.wordpress.com/wp-includes/wlwmanifest.xml" 
+type=application/wlwmanifest+xml rel=wlwmanifest>
+<SCRIPT 
+type=text/javascript>
+	window.google_analytics_uacct = "UA-52447-2";
+</SCRIPT>
+<LINK title="Atom API" href="http://hursleyonwmq.wordpress.com/wp-app.php" 
+type=application/atomserv+xml rel=introspection><LINK 
+href="http://www.gravatar.com/blavatar/0396d6e3af10ab5332d9a464cd99f842?s=16&amp;d=http://s.wordpress.com/favicon.ico" 
+type=image/x-icon rel="shortcut icon"><LINK 
+href="http://www.gravatar.com/blavatar/0396d6e3af10ab5332d9a464cd99f842?s=16&amp;d=http://s.wordpress.com/favicon.ico" 
+type=image/x-icon rel=icon><LINK 
+href="http://www.gravatar.com/blavatar/770d842b8638c0e497e5408f33b17e39?s=158&amp;d=http://s.wordpress.com/wp-content/themes/h4/i/webclip.png" 
+rel=apple-touch-icon><LINK 
+href="http://hursleyonwmq.wordpress.com/?openidserver=1" rel=openid.server><LINK 
+href="http://hursleyonwmq.wordpress.com/" rel=openid.delegate><!--
+	generated in 0.415 seconds
+	51776 bytes batcached for 300 seconds
+--></HEAD>
+<BODY class="center  single">
+<DIV id=wrapper>
+<DIV id=header>
+<DIV id=header-image><A title="Return to front page" 
+href="http://hursleyonwmq.wordpress.com/"><IMG alt="Header image" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/banner1.gif"></A> 
+</DIV>
+<DIV id=title><A title="Return to front page" 
+href="http://hursleyonwmq.wordpress.com/">
+<P id=blog-title>a Hursley view on WebSphere MQ</P></A>
+<P id=tagline>A place to talk with people who work on WebSphere MQ</P></DIV>
+<DIV id=navigation>
+<UL id=nav-1>
+  <LI><A title="Return to front page" 
+  href="http://hursleyonwmq.wordpress.com/">Home</A> 
+  <LI class="page_item page-item-41"><A title=Disclaimer 
+  href="http://hursleyonwmq.wordpress.com/disclaimer/">Disclaimer</A> 
+  <LI class="page_item page-item-2"><A title="About this&nbsp;blog" 
+  href="http://hursleyonwmq.wordpress.com/about/">About this&nbsp;blog</A> 
+  <LI class="page_item page-item-40"><A title="New to&nbsp;WordPress?" 
+  href="http://hursleyonwmq.wordpress.com/new-to-wordpress/">New 
+  to&nbsp;WordPress?</A> </LI></UL>
+<UL id=nav-2>
+  <LI><A class=feed title="Subscribe to the a Hursley view on WebSphere MQ feed" 
+  href="http://hursleyonwmq.wordpress.com/feed/">Subscribe to feed</A> 
+</LI></UL></DIV></DIV>
+<DIV id=content>
+<DIV id=primary>
+<DIV class=entry>
+<DIV class=post-meta>
+<H1 class=post-title id=post-90>Simplest sample applications using WebSphere 
+MQ&nbsp;JMS</H1>
+<P class=post-metadata>May 29, 2007 in <A title="View all posts in API" 
+href="http://en.wordpress.com/tag/api/" rel="category tag">API</A>, <A 
+title="View all posts in JMS" href="http://en.wordpress.com/tag/jms/" 
+rel="category tag">JMS</A>, <A title="View all posts in clients" 
+href="http://en.wordpress.com/tag/clients/" rel="category tag">clients</A>, <A 
+title="View all posts in webspheremq" 
+href="http://en.wordpress.com/tag/webspheremq/" 
+rel="category tag">webspheremq</A> | by <A title="Posts by Saket Rungta" 
+href="http://hursleyonwmq.wordpress.com/author/srungta/">Saket Rungta</A> 
+</P></DIV>
+<DIV class=post-content>
+<DIV class=snap_preview>
+<P>Here are some simple sample applications for WebSphere MQ JMS that you may 
+find useful. You may use them to verify your installation or to learn more about 
+WebSphere MQ JMS semantics.</P>
+<P>Both applications use client bindings rather than local bindings; and do not 
+make use of JNDI for simplicity. They can be run as standalone J2SE/JSE 
+programs.</P>
+<P>Note: Applications need minor tweak in the config section and destination 
+names according to your setup.</P>
+<P>Author: Saket Rungta, <A 
+href="http://wastedmonkeys.com/">wastedmonkeys.com</A></P>
+<P><SPAN id=more-90></SPAN><STRONG>Simple Point-to-point application using 
+WebSphere MQ JMS</STRONG></P><PRE><CODE>package my.samples;
+
+import javax.jms.JMSException;
+import javax.jms.Session;
+
+import com.ibm.jms.JMSMessage;
+import com.ibm.jms.JMSTextMessage;
+import com.ibm.mq.jms.JMSC;
+import com.ibm.mq.jms.MQQueue;
+import com.ibm.mq.jms.MQQueueConnection;
+import com.ibm.mq.jms.MQQueueConnectionFactory;
+import com.ibm.mq.jms.MQQueueReceiver;
+import com.ibm.mq.jms.MQQueueSender;
+import com.ibm.mq.jms.MQQueueSession;
+
+/**
+ * SimplePTP: A minimal and simple testcase for Point-to-point messaging (1.02 style).
+ *
+ * Assumes that the queue is empty before being run.
+ *
+ * Does not make use of JNDI for ConnectionFactory and/or Destination definitions.
+ *
+ * @author saket
+ */
+public class SimplePTP {
+  /**
+   * Main method
+   *
+   * @param args
+   */
+  public static void main(String[] args) {
+    try {
+      MQQueueConnectionFactory cf = new MQQueueConnectionFactory();
+
+      // Config
+      cf.setHostName("localhost");
+      cf.setPort(1414);
+      cf.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+      cf.setQueueManager("QM_thinkpad");
+      cf.setChannel("SYSTEM.DEF.SVRCONN");
+
+      MQQueueConnection connection = (MQQueueConnection) cf.createQueueConnection();
+      MQQueueSession session = (MQQueueSession) connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
+      MQQueue queue = (MQQueue) session.createQueue("queue:///Q1");
+      MQQueueSender sender =  (MQQueueSender) session.createSender(queue);
+      MQQueueReceiver receiver = (MQQueueReceiver) session.createReceiver(queue);      
+
+      long uniqueNumber = System.currentTimeMillis() % 1000;
+      JMSTextMessage message = (JMSTextMessage) session.createTextMessage("SimplePTP "+ uniqueNumber);     
+
+      // Start the connection
+      connection.start();
+
+      sender.send(message);
+      System.out.println("Sent message:\\n" + message);
+
+      JMSMessage receivedMessage = (JMSMessage) receiver.receive(10000);
+      System.out.println("\\nReceived message:\\n" + receivedMessage);
+
+      sender.close();
+      receiver.close();
+      session.close();
+      connection.close();
+
+      System.out.println("\\nSUCCESS\\n");
+    }
+    catch (JMSException jmsex) {
+      System.out.println(jmsex);
+      System.out.println("\\nFAILURE\\n");
+    }
+    catch (Exception ex) {
+      System.out.println(ex);
+      System.out.println("\\nFAILURE\\n");
+    }
+  }
+}</CODE></PRE>
+<P><STRONG>Simple Publish/Subscribe application using WebSphere MQ 
+JMS</STRONG></P><PRE><CODE>package my.samples;
+
+import javax.jms.JMSException;
+import javax.jms.Session;
+
+import com.ibm.jms.JMSMessage;
+import com.ibm.jms.JMSTextMessage;
+import com.ibm.mq.jms.JMSC;
+import com.ibm.mq.jms.MQTopic;
+import com.ibm.mq.jms.MQTopicConnection;
+import com.ibm.mq.jms.MQTopicConnectionFactory;
+import com.ibm.mq.jms.MQTopicPublisher;
+import com.ibm.mq.jms.MQTopicSession;
+import com.ibm.mq.jms.MQTopicSubscriber;
+
+/**
+ * SimplePubSub: A minimal and simple testcase for Publish/Subscribe (1.02 style).
+ *
+ * Topics are dynamically created on the queue manager and need not be pre-defined.
+ *
+ * (The Broker must be enabled on the queue manager and the JMS Publish/Subscribe
+ * queues must be defined manually.)
+ *
+ * Note: These samples are for WMQ Base Broker and incomplete for WebSphere Message Broker)
+ *
+ * Does not make use of JNDI for ConnectionFactory and/or Destination definitions.
+ *
+ * @author saket
+ */
+public class SimplePubSub {
+  /**
+   * Main method.
+   *
+   * @param args
+   */
+  public static void main(String[] args) {
+    try {
+      MQTopicConnectionFactory cf = new MQTopicConnectionFactory();
+
+      // Config
+      cf.setHostName("localhost");
+      cf.setPort(1414);
+      cf.setTransportType(JMSC.MQJMS_TP_CLIENT_MQ_TCPIP);
+      cf.setQueueManager("QM_thinkpad");
+      cf.setChannel("SYSTEM.DEF.SVRCONN");
+
+      MQTopicConnection connection = (MQTopicConnection) cf.createTopicConnection();
+      MQTopicSession session = (MQTopicSession) connection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+      MQTopic topic = (MQTopic) session.createTopic("topic://foo");
+      MQTopicPublisher publisher =  (MQTopicPublisher) session.createPublisher(topic);
+      MQTopicSubscriber subscriber = (MQTopicSubscriber) session.createSubscriber(topic);      
+
+      long uniqueNumber = System.currentTimeMillis() % 1000;
+      JMSTextMessage message = (JMSTextMessage) session.createTextMessage("SimplePubSub "+ uniqueNumber);     
+
+      // Start the connection
+      connection.start();
+
+      publisher.publish(message);
+      System.out.println("Sent message:\\n" + message);
+
+      JMSMessage receivedMessage = (JMSMessage) subscriber.receive(10000);
+      System.out.println("\\nReceived message:\\n" + receivedMessage);
+
+      publisher.close();
+      subscriber.close();
+      session.close();
+      connection.close();
+
+      System.out.println("\\nSUCCESS\\n");
+    }
+    catch (JMSException jmsex) {
+      System.out.println(jmsex);
+      System.out.println("\\nFAILURE\\n");
+    }
+    catch (Exception ex) {
+      System.out.println(ex);
+      System.out.println("\\nFAILURE\\n");
+    }
+  }
+}</CODE></PRE>
+<DIV class=possibly-related style="MARGIN-TOP: 1em">
+<HR>
+
+<P><STRONG>Possibly related posts: (automatically generated)</STRONG></P>
+<UL>
+  <LI><A style="FONT-WEIGHT: bold" 
+  href="http://hursleyonwmq.wordpress.com/2007/03/08/custom-sslsocketfactory-with-wmq-base-java/" 
+  rel=related>Custom SSLSocketFactory with WMQ Base 
+Java</A></LI></UL></DIV></DIV></DIV></DIV></DIV>
+<DIV id=secondary>
+<DIV class=widgets>
+<DIV class="widget widget_search" id=search>
+<DIV class=searchbox>
+<FORM id=searchform action=/ method=get>
+<FIELDSET><INPUT id=s tabIndex=21 name=s> <INPUT id=searchsubmit tabIndex=22 type=submit value=Search> 
+</FIELDSET></FORM></DIV></DIV>
+<DIV class="widget widget_categories" id=categories-1>
+<H3>a</H3><SELECT class=postform id=cat name=cat> <OPTION value=-1 
+  selected>Select Category</OPTION> <OPTION class=level-0 
+  value=674093>webspheremq&nbsp;&nbsp;(59)</OPTION> <OPTION class=level-1 
+  value=276>&nbsp;&nbsp;&nbsp;administration&nbsp;&nbsp;(23)</OPTION> <OPTION 
+  class=level-1 value=4276>&nbsp;&nbsp;&nbsp;API&nbsp;&nbsp;(7)</OPTION> <OPTION 
+  class=level-1 value=7735>&nbsp;&nbsp;&nbsp;clients&nbsp;&nbsp;(5)</OPTION> 
+  <OPTION class=level-1 
+  value=20099>&nbsp;&nbsp;&nbsp;clustering&nbsp;&nbsp;(2)</OPTION> <OPTION 
+  class=level-1 value=6279>&nbsp;&nbsp;&nbsp;Explorer&nbsp;&nbsp;(6)</OPTION> 
+  <OPTION class=level-1 
+  value=32684>&nbsp;&nbsp;&nbsp;install&nbsp;&nbsp;(2)</OPTION> <OPTION 
+  class=level-1 value=254692>&nbsp;&nbsp;&nbsp;JMS&nbsp;&nbsp;(7)</OPTION> 
+  <OPTION class=level-1 
+  value=1158>&nbsp;&nbsp;&nbsp;migration&nbsp;&nbsp;(2)</OPTION> <OPTION 
+  class=level-1 value=1930>&nbsp;&nbsp;&nbsp;performance&nbsp;&nbsp;(2)</OPTION> 
+  <OPTION class=level-1 
+  value=801>&nbsp;&nbsp;&nbsp;security&nbsp;&nbsp;(8)</OPTION> <OPTION 
+  class=level-1 value=1981>&nbsp;&nbsp;&nbsp;tools&nbsp;&nbsp;(10)</OPTION> 
+  <OPTION class=level-1 
+  value=674263>&nbsp;&nbsp;&nbsp;triggering&nbsp;&nbsp;(2)</OPTION></SELECT>
+<SCRIPT type=text/javascript>
+/* <![CDATA[ */
+	var dropdown = document.getElementById("cat");
+	function onCatChange() {
+		if ( dropdown.options[dropdown.selectedIndex].value > 0 ) {
+			location.href = "http://hursleyonwmq.wordpress.com/?cat="+dropdown.options[dropdown.selectedIndex].value;
+		}
+	}
+	dropdown.onchange = onCatChange;
+/* ]]> */
+</SCRIPT>
+ </DIV>
+<DIV class="widget widget_archive" id=archives>
+<H3>Archives</H3>
+<UL>
+  <LI><A title="February 2008" 
+  href="http://hursleyonwmq.wordpress.com/2008/02/">February 2008</A> 
+  <LI><A title="January 2008" 
+  href="http://hursleyonwmq.wordpress.com/2008/01/">January 2008</A> 
+  <LI><A title="December 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/12/">December 2007</A> 
+  <LI><A title="November 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/11/">November 2007</A> 
+  <LI><A title="October 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/10/">October 2007</A> 
+  <LI><A title="August 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/08/">August 2007</A> 
+  <LI><A title="July 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/07/">July 2007</A> 
+  <LI><A title="June 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/06/">June 2007</A> 
+  <LI><A title="May 2007" href="http://hursleyonwmq.wordpress.com/2007/05/">May 
+  2007</A> 
+  <LI><A title="April 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/04/">April 2007</A> 
+  <LI><A title="March 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/03/">March 2007</A> 
+  <LI><A title="February 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/02/">February 2007</A> 
+  <LI><A title="January 2007" 
+  href="http://hursleyonwmq.wordpress.com/2007/01/">January 2007</A> 
+</LI></UL></DIV>
+<DIV class="widget widget_links" id=linkcat-2200>
+<H3>Links</H3>
+<UL class="xoxo blogroll">
+  <LI><A title="developerWorks section for WebSphere MQ" 
+  href="http://www-128.ibm.com/developerworks/websphere/zones/businessintegration/wmq.html">developerWorks</A> 
+
+  <LI><A title="Where we work" 
+  href="http://www-5.ibm.com/uk/locations/hursley_details.html">IBM Hursley</A> 
+  <LI><A title="Official site for WebSphere MQ" 
+  href="http://www-306.ibm.com/software/integration/wmq/">IBM WebSphere MQ</A> 
+  <LI><A title="Archives of mailing list for WebSphere MQ discussion" 
+  href="http://listserv.meduniwien.ac.at/cgi-bin/wa?A0=mqser-l">LISTSERV mailing 
+  list</A> 
+  <LI><A 
+  title="Discussion forums focusing on IBM’s Websphere MQ family of products" 
+  href="http://www.mqseries.net/">MQSeries.net</A> 
+  <LI><A title="Tips ‘n’ Tricks from the world of IBM WebSphere SOA Products" 
+  href="http://soatipsntricks.wordpress.com/">SOA Tips ‘n’ Tricks</A> 
+  <LI><A title="developerWorks hosted forum" 
+  href="http://www-128.ibm.com/developerworks/forums/dw_forum.jsp?forum=280&amp;cat=9">WebSphere 
+  MQ Newsgroup</A> </LI></UL></DIV>
+<DIV class="widget widget_meta" id=meta>
+<H3>Meta</H3>
+<UL>
+  <LI><A href="http://hursleyonwmq.wordpress.com/wp-login.php">Log in</A> 
+  <LI><A title="Syndicate this site using RSS 2.0" 
+  href="http://hursleyonwmq.wordpress.com/feed/">Entries <ABBR 
+  title="Really Simple Syndication">RSS</ABBR></A> 
+  <LI><A title="The latest comments to all posts in RSS" 
+  href="http://hursleyonwmq.wordpress.com/comments/feed/">Comments <ABBR 
+  title="Really Simple Syndication">RSS</ABBR></A> 
+  <LI><A 
+  title="Powered by WordPress, state-of-the-art semantic personal publishing platform." 
+  href="http://wordpress.com/">WordPress.com</A> </LI></UL></DIV></DIV></DIV>
+<DIV class=commentlist id=comments>
+<DIV id=comments-meta>
+<H2 class=comments-title>20 comments</H2>
+<P class=comments-feed><A 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/feed/">Comments 
+feed for this article</A></P></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-1493>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1493">June 
+4, 2007 at 4:32 pm</A></P>
+<P class=comment-author><STRONG class=fn>Anonymous</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/avatar.png" 
+width=32> 
+<P>I like the format of this WMQ blog. It is pleasant to the eye and also to 
+actually read English again. I hope it becomes as popular and as much used as 
+the mqseries.net site. The mqseries.net site is such a zoo and the search 
+engines give you everything under the sun no matter what you put in for query 
+arguments, which makes them not useless but close. </P>
+<P>You might want to advertise this site a bit more… I completely inadvertently 
+stumbled upon it. A Google search found an interesting looking xml file that I 
+decided I wanted to go to the origin site of where it came from. Not exactly a 
+high hit path to get new users… I don’t think.</P>
+<P>Thanks for taking the lead on creating this site content!!</P>
+<P>Regards,<BR>GTC</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-1511>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1511">June 
+7, 2007 at 5:50 pm</A></P>
+<P class=comment-author><STRONG class=fn>Khang</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/8427cd936379b95885defaf9ca067473.png" 
+width=32> 
+<P>I am using MQ 6.0.2, with support pac for Topic, do not touch the JMS 
+Administrated Objects.</P>
+<P>I already run “strmqbrk -m QMA”, create topic “XYZ”.</P>
+<P>Run MQ Explorer, right-click on topic “XYZ”, click “Test Publication”, 
+everything is running well</P>
+<P>However, when I run the above code, SimplePubSub, connect to topic XYZ. (all 
+on the same machine)</P>
+<P>error: javax.jms.JMSException: MQJMS1111: JMS1.1 The required Queues/Publish 
+Subscribe services are not set up {0}<BR>JMSException nFAILUREn</P>
+<P>Could you help me what other things I need to run before above java code 
+running</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-1743>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1743">June 
+18, 2007 at 4:13 pm</A></P>
+<P class=comment-author><STRONG class=fn>Sergio</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/avatar.png" 
+width=32> 
+<P>Hi Saket,</P>
+<P>First of all - thank you for starting this site. I much appreciated it 
+clear-cut style, and concise yet complete examples. Great work!</P>
+<P>I would like to correct a small bug in your sample code:</P>
+<P>The following line:<BR>MQQueue queue = (MQQueue) 
+session.createQueue(”queue://Q1″);</P>
+<P>Should actually be:<BR>MQQueue queue = (MQQueue) 
+session.createQueue(”queue:///Q1″);</P>
+<P>Note three forward slashes are required (not two) to account for a default 
+queue manager name.</P>
+<P>Best regards, and keep posting!<BR>Sergio</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-srungta bypostauthor odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-1746>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1746">June 
+18, 2007 at 4:40 pm</A></P>
+<P class=comment-author><STRONG class=fn><A class=url 
+href="http://wastedmonkeys.com/" rel="external nofollow">Saket 
+Rungta</A></STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/d545c6e9439b957439662147925ca29e.png" 
+width=32> 
+<P>@Sergio<BR>Thanks Sergio for the kind words and yes, you spotted it well! 
+I’ve fixed the original post.</P>
+<P>@Khang<BR>Apologies, I couldn’t help you with debugging. It is difficult 
+without sufficient information.</P>
+<P>@GTC<BR>Many thanks for the kind words.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-1764>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1764">June 
+19, 2007 at 8:46 am</A></P>
+<P class=comment-author><STRONG class=fn>Anonymous</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/avatar.png" 
+width=32> 
+<P>Hi Saket,</P>
+<P>This line also needs to be fixed - I forgot to put it in my first post:</P>
+<P>MQTopic topic = (MQTopic) session.createTopic(”topic://foo”);</P>
+<P>should be:</P>
+<P>MQTopic topic = (MQTopic) session.createTopic(”topic:///foo”);</P>
+<P>Thanks!</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-srungta bypostauthor odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-1766>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1766">June 
+19, 2007 at 9:23 am</A></P>
+<P class=comment-author><STRONG class=fn><A class=url 
+href="http://wastedmonkeys.com/" rel="external nofollow">Saket 
+Rungta</A></STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/d545c6e9439b957439662147925ca29e.png" 
+width=32> 
+<P>I’m not sure I agree with that. Two forward slashes is correct for topics. 
+Please see ‘Using Java’ book for more details. thanks for your interest.</P>
+<P>Topic name syntax:</P>
+<P>topic://TopicName[?property=value[&amp;property=value]*]</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-1768>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1768">June 
+19, 2007 at 9:35 am</A></P>
+<P class=comment-author><STRONG class=fn>Anonymous</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/avatar.png" 
+width=32> 
+<P>Apologies!</P>
+<P>You are right - only two slashes are required.</P>
+<P>S.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-1930>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1930">July 
+5, 2007 at 3:49 am</A></P>
+<P class=comment-author><STRONG class=fn>Joseph</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/de4de03b93c0dacf3d0091cbe62377d6.png" 
+width=32> 
+<P>Hi,</P>
+<P>I’m trying to connect to a remote Websphere MQ Server, which was setup by 
+another team in our company. I tried to use your first example (with little 
+modifications) and got this error:</P>
+<P>javax.jms.JMSSecurityException: MQJMS2013: invalid security authentication 
+supplied for MQQueueManager</P>
+<P>I was wondering if you guys know how to resolve this…</P>
+<P>thanks,</P>
+<P>-J</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-1953>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-1953">July 
+7, 2007 at 1:06 pm</A></P>
+<P class=comment-author><STRONG class=fn>FJ</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/5d11a7bfab4aa58731be849b339e4d64.png" 
+width=32> 
+<P>@saket<BR>I am not sure I like the example that much. Does it expect to use a 
+channel table? I always believed that in a client connection you needed 3 
+things:<BR>host — present and catered for<BR>port — present and catered 
+for<BR>channel — conspicuously absent from your setup<BR>qmgr name — optional 
+(present here)</P>
+<P>@Joseph<BR>In the simple JMS setup we have here you would 
+use<BR>cf.createQueueConnection(userid, passwd) or 
+cf.createTopicConnection(userid,passwd) to specify a user for the use of the 
+connection. Ususally this is obfuscated by the use of a JAAS alias in the JNDI 
+setup. Now if you need to go SSL you better read the manuals. I believe there is 
+a whole book about SSL.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-srungta bypostauthor odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-2071>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-2071">July 
+23, 2007 at 11:59 am</A></P>
+<P class=comment-author><STRONG class=fn><A class=url 
+href="http://wastedmonkeys.com/" rel="external nofollow">Saket 
+Rungta</A></STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/d545c6e9439b957439662147925ca29e.png" 
+width=32> 
+<P>@FJ<BR>Thanks. You’re right, I’ve added channel information.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-2077>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-2077">July 
+24, 2007 at 3:42 am</A></P>
+<P class=comment-author><STRONG class=fn>Joseph</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="C:\Documents and Settings\ab39850\Desktop\Websphere_JMS_Examples\Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files\de4de03b93c0dacf3d0091cbe62377d6(1).png" 
+width=32> 
+<P>@Saket,</P>
+<P>Things went well after adding channel. Would you happen to know how to 
+implement session id of some sort? I think it has something to do with 
+correlation id…</P>
+<P>regards,</P>
+<P>-J</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-andypiper odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-2920>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-2920">October 
+19, 2007 at 1:57 pm</A></P>
+<P class=comment-author><STRONG class=fn><A class=url 
+href="http://andypiper.wordpress.com/" rel="external nofollow">Andy 
+Piper</A></STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/1526dcb784188b422544c6344ef223c2.jpeg" 
+width=32> 
+<P>@Khang you need to run MQJMS_PSQ.mqsc from the \Java\bin directory on your 
+Queue Manager in order for the JMS stuff to work.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-2981>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-2981">October 
+26, 2007 at 11:32 am</A></P>
+<P class=comment-author><STRONG class=fn>Balakumar</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/799cdf523a5efd26f212964c52dcb305.png" 
+width=32> 
+<P>Websphere MQ JMS code is working fine… Can anyone help me in pooling the 
+connection factory… It will be of great use to me.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-3421>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-3421">November 
+29, 2007 at 9:02 pm</A></P>
+<P class=comment-author><STRONG class=fn>Jose R Padilla</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/41427641231520ce2347049ad6e475c1.png" 
+width=32> 
+<P>How do you use Pubsub using WAS definition for:<BR>WebSphere MQ connection 
+factory collection?</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-4168>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-4168">January 
+24, 2008 at 10:25 am</A></P>
+<P class=comment-author><STRONG class=fn>Ashish Shekhar</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/b70487e98e4f7bcae4ab3ffbdc3d6842.png" 
+width=32> 
+<P>Hi Saket, </P>
+<P>I was going through your blog and its a commendable effort I must say.<BR>I 
+had a question that I was searching about.<BR>How do we find out which queue 
+manager is a remote queue manager pointing to? Basically how to read the 
+properties of a queue through Java.</P>
+<P>Please see if you can help me with this.</P>
+<P>Regards,<BR>Ashish</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-srungta bypostauthor odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-4169>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-4169">January 
+24, 2008 at 5:52 pm</A></P>
+<P class=comment-author><STRONG class=fn><A class=url 
+href="http://wastedmonkeys.com/" rel="external nofollow">Saket 
+Rungta</A></STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/d545c6e9439b957439662147925ca29e.png" 
+width=32> 
+<P>@Ashish,</P>
+<P>To read properties of a queue in the Java language is feasible by using the 
+PCF classes. These are available as a downloadable add-on (aka SupportPac) 
+at:</P>
+<P><A 
+href="http://www-1.ibm.com/support/docview.wss?rs=171&amp;uid=swg24000668&amp;loc=en_US&amp;cs=utf-8&amp;lang=en" 
+rel=nofollow>http://www-1.ibm.com/support/docview.wss?rs=171&amp;uid=swg24000668&amp;loc=en_US&amp;cs=utf-8&amp;lang=en</A></P>
+<P>I’m not aware of how a client application can query a qmgr for another 
+connected qmgr properties, but it may be feasible. Try exploring the 
+functionality offered by the PCF classes.</P>
+<P>thanks.</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment even thread-even depth-1 vcard" id=comment-4186>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-4186">January 
+28, 2008 at 6:18 am</A></P>
+<P class=comment-author><STRONG class=fn>Ashish Shekhar</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/b70487e98e4f7bcae4ab3ffbdc3d6842.png" 
+width=32> 
+<P>I tried the PCF classes and i’m usign the following code to check for the 
+queue attributes which is working fine for local queues but not for remote 
+definitions. could you suggest something on this?</P>
+<P>code:<BR>package com.anz.MQ;<BR>// 
+==================================================================<BR>//<BR>// 
+Program Name<BR>// MQAttr<BR>//<BR>// Last date of modification<BR>// 1 Oct 
+2000<BR>//<BR>// Description<BR>// This java class will output the attributes of 
+a queue.<BR>//<BR>// Sample Command Line Parameters<BR>// -h 127.0.0.1 -p 1414 
+-c CLIENT.CHANNEL -m MQA1 -q TEST.QUEUE<BR>//<BR>// Copyright(C), Roger Lacroix, 
+Capitalware<BR>//<BR>// ——————————————————————</P>
+<P>import com.ibm.mq.*;<BR>import com.ibm.mq.pcf.PCFConstants;</P>
+<P>import java.io.IOException;<BR>import java.util.Hashtable;<BR>import 
+java.io.*;<BR>import java.util.GregorianCalendar;<BR>import 
+java.util.Calendar;</P>
+<P>public class MQAttr<BR>{<BR>private MQQueueManager _queueManager = 
+null;<BR>private Hashtable params = null;<BR>public int port = 1414;<BR>public 
+String hostname = “127.0.0.1″;<BR>//public String channel = 
+“CLIENT.TO.MQA1″;<BR>public String channel = “SYSTEM.DEF.SVRCONN”;<BR>//public 
+String qManager = “MQA1″;<BR>public String qManager = “INDASHISH.MQ”;<BR>public 
+String inputQName = “SYSTEM.DEFAULT.LOCAL.QUEUE”;</P>
+<P>public MQAttr()<BR>{<BR>super();<BR>}<BR>private boolean 
+allParamsPresent()<BR>{<BR>boolean b = params.containsKey(”-h”) 
+&amp;&amp;<BR>params.containsKey(”-p”) &amp;&amp;<BR>params.containsKey(”-c”) 
+&amp;&amp;<BR>params.containsKey(”-m”) 
+&amp;&amp;<BR>params.containsKey(”-q”);<BR>if (b)<BR>{<BR>try<BR>{<BR>port = 
+Integer.parseInt((String) params.get(”-p”));<BR>}<BR>catch 
+(NumberFormatException e)<BR>{<BR>b = false;<BR>}<BR>// Set up MQ 
+environment<BR>hostname = (String) params.get(”-h”);<BR>channel = (String) 
+params.get(”-c”);<BR>qManager = (String) params.get(”-m”);<BR>inputQName = 
+(String) params.get(”-q”);<BR>}<BR>return b;<BR>}<BR>private void getAttr() 
+throws MQException<BR>{<BR>// int openOptions = MQC.MQOO_INQUIRE + 
+MQC.MQOO_FAIL_IF_QUIESCING + MQC.MQOO_INPUT_SHARED;<BR>int openOptions = 
+MQC.MQOO_INQUIRE + MQC.MQOO_FAIL_IF_QUIESCING;<BR>int InhibitGet;</P>
+<P>String dType=”Nothing”;<BR>String qType=”Nothing”;<BR>String 
+iPut=”Nothing”;<BR>String iGet=”Nothing”;<BR>String share=”Nothing”;<BR>String 
+tControl = “Nothing”;<BR>String tType = “Nothing”;<BR>int qTypeNum=0;<BR>// 
+GregorianCalendar DateTime;<BR>String Date;<BR>String Time;</P>
+<P>MQQueue queue = _queueManager.accessQueue( 
+inputQName,<BR>openOptions,<BR>null, // default q manager<BR>null, // no dynamic 
+q name<BR>null ); // no alternate user id</P>
+<P>System.out.println(”MQAttr v1.0 connected.\n”);</P>
+<P>try<BR>{</P>
+<P>qTypeNum = queue.getQueueType();<BR>System.out.println(”Found queue type: ” + 
+qTypeNum);<BR>switch (qTypeNum)<BR>{<BR>case MQC.MQQT_LOCAL:<BR>qType = 
+“Local”;<BR>break;</P>
+<P>case MQC.MQQT_MODEL:<BR>qType = “Model”;<BR>break;</P>
+<P>case MQC.MQQT_ALIAS:<BR>qType = “Alias”;<BR>break;</P>
+<P>case MQC.MQQT_REMOTE:<BR>qType = “Remote”;<BR>break;</P>
+<P>// case MQC.MQQT_CLUSTER:<BR>case 7:<BR>qType = “Cluster”;<BR>break;</P>
+<P>default :<BR>qType = “Unknown”;<BR>break;<BR>}</P>
+<P>if ( (qTypeNum == MQC.MQQT_LOCAL ) ||<BR>(qTypeNum == MQC.MQQT_MODEL ) 
+||<BR>(qTypeNum == MQC.MQQT_REMOTE ) ||<BR>(qTypeNum == MQC.MQQT_ALIAS ) 
+)<BR>{<BR>if (queue.getInhibitPut() == MQC.MQQA_PUT_ALLOWED)<BR>iPut = 
+“Allowed”;<BR>else<BR>iPut = “Inhibited”;<BR>}</P>
+<P>if ( (qTypeNum == MQC.MQQT_LOCAL ) ||<BR>(qTypeNum == MQC.MQQT_MODEL ) 
+||<BR>(qTypeNum == MQC.MQQT_ALIAS ) )</P>
+<P>{<BR>if (queue.getInhibitGet() == MQC.MQQA_GET_ALLOWED)<BR>iGet = 
+“Allowed”;<BR>else<BR>iGet = “Inhibited”;<BR>}</P>
+<P>System.out.println(”Queue Name: ” + inputQName);<BR>System.out.println(”Queue 
+Type: ” + qType );</P>
+<P>if ( (qTypeNum == MQC.MQQT_LOCAL) || (qTypeNum == MQC.MQQT_MODEL) 
+)<BR>{<BR>switch (queue.getDefinitionType())<BR>{<BR>case MQC.MQQDT_PREDEFINED 
+:<BR>dType = “Predefined”;<BR>break;<BR>case MQC.MQQDT_PERMANENT_DYNAMIC 
+:<BR>dType = “Permanent”;<BR>break;<BR>case MQC.MQQDT_TEMPORARY_DYNAMIC 
+:<BR>dType = “Temporary”;<BR>break;<BR>default :<BR>dType = 
+“Unknown”;<BR>break;<BR>}</P>
+<P>if (queue.getShareability() == MQC.MQQA_SHAREABLE )<BR>share = 
+“Shareable”;<BR>else<BR>share = “Not Shareable”;</P>
+<P>if (queue.getTriggerControl() == MQC.MQTC_OFF )<BR>tControl = 
+“OFF”;<BR>else<BR>tControl = “ON”;</P>
+<P>switch (queue.getTriggerType())<BR>{<BR>case MQC.MQTT_NONE :<BR>tType = 
+“None”;<BR>break;<BR>case MQC.MQTT_FIRST:<BR>tType = “First”;<BR>break;<BR>case 
+MQC.MQTT_EVERY:<BR>tType = “Every”;<BR>break;<BR>case MQC.MQTT_DEPTH:<BR>tType = 
+“Depth”;<BR>break;<BR>default :<BR>tType = “Unknown”;<BR>break;<BR>}</P>
+<P>System.out.println(”Definition Type: ” + dType 
+);<BR>System.out.println(”Current Depth: ” + queue.getCurrentDepth() 
+);<BR>System.out.println(”Get Messages: ” + iGet );<BR>System.out.println(”Put 
+Messages: ” + iPut );<BR>System.out.println(”Maximum Depth: ” + 
+queue.getMaximumDepth() );<BR>System.out.println(”Maximum Message Length: ” + 
+queue.getMaximumMessageLength() );<BR>System.out.println(”Open Input Count: ” + 
+queue.getOpenInputCount() );<BR>System.out.println(”Open Output Count: ” + 
+queue.getOpenOutputCount() );<BR>System.out.println(”Shareability: ” + share 
+);<BR>System.out.println(”Trigger Control: ” + tControl 
+);<BR>System.out.println(”Trigger Type: ” + tType 
+);<BR>System.out.println(”Trigger Data: ” + queue.getTriggerData() 
+);<BR>System.out.println(”Trigger Depth: ” + queue.getTriggerDepth() 
+);<BR>System.out.println(”Trigger Message Priority: ” + 
+queue.getTriggerMessagePriority() );</P>
+<P>} // if</P>
+<P>if (qTypeNum == MQC.MQQT_REMOTE)<BR>{<BR>System.out.println(”Put Messages: ” 
++ iPut );<BR>}</P>
+<P>if (qTypeNum == MQC.MQQT_ALIAS)<BR>{<BR>System.out.println(”Get Messages: ” + 
+iGet );<BR>System.out.println(”Put Messages: ” + iPut );<BR>}</P>
+<P>} // try</P>
+<P>catch (MQException e)<BR>{<BR>if ( (e.completionCode == 1 ) &amp;&amp; 
+(e.reasonCode == 2068) )<BR>{</P>
+<P>}<BR>else<BR>{<BR>System.out.println(”MQ Error:Completion code:” + 
+e.completionCode + ” reason code: ” + e.reasonCode 
+);<BR>System.exit(1);<BR>}<BR>}</P>
+<P>queue.close();<BR>_queueManager.disconnect();<BR>}<BR>private void 
+init(String[] args) throws IllegalArgumentException<BR>{<BR>params = new 
+Hashtable(5);<BR>if (args.length &gt; 0 &amp;&amp; (args.length % 2) == 
+0)<BR>{<BR>for (int i = 0; i &lt; args.length; i+=2)<BR>{<BR>params.put(args[i], 
+args[i+1]);<BR>}<BR>}<BR>else<BR>{<BR>throw new 
+IllegalArgumentException();<BR>}<BR>if (allParamsPresent())<BR>{<BR>// Set up MQ 
+environment<BR>MQEnvironment.hostname = hostname;<BR>MQEnvironment.channel = 
+channel;<BR>MQEnvironment.port = port;</P>
+<P>}<BR>else<BR>{<BR>throw new IllegalArgumentException();<BR>}<BR>}<BR>public 
+static void main(String[] args)<BR>{</P>
+<P>MQAttr mqattr = new MQAttr();</P>
+<P>try<BR>{<BR>mqattr.init(args);<BR>mqattr.selectQMgr();<BR>mqattr.getAttr();<BR>}<BR>catch 
+(IllegalArgumentException e)<BR>{<BR>System.out.println(”Usage: java MQAttr 
+“);<BR>System.exit(1);<BR>}<BR>catch (MQException 
+e)<BR>{<BR>System.out.println(e + “: ” + PCFConstants.lookupReasonCode 
+(e.reasonCode));<BR>System.exit(1);<BR>}<BR>}<BR>private void selectQMgr() 
+throws MQException<BR>{<BR>_queueManager = new 
+MQQueueManager(qManager);<BR>}</P>
+<P>}</P>
+<P>This is being run with the appropriate command line agruments.</P>
+<P>Regards,<BR>Ashish</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class="comment odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-4187>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-4187">January 
+28, 2008 at 10:18 am</A></P>
+<P class=comment-author><STRONG class=fn>Ethan</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="C:\Documents and Settings\ab39850\Desktop\Websphere_JMS_Examples\Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files\avatar(1).png" 
+width=32> 
+<P>I got the following error when I tried the above code in two different boxes, 
+MQ server in one box (linux) while the program runs in another (Sun).</P>
+<P>I have make the user found in both boxes and belongs to the same group. </P>
+<P>What else could have caused the exception?</P>
+<P>javax.jms.JMSException: MQJMS2007: failed to send message to MQ 
+queue<BR>javax.jms.JMSException: MQJMS2007: failed to send message to MQ 
+queue<BR>at 
+com.ibm.mq.jms.services.ConfigEnvironment.newException(ConfigEnvironment.java:553)<BR>at 
+com.ibm.mq.jms.MQMessageProducer.sendInternal(MQMessageProducer.java:1598)<BR>at 
+com.ibm.mq.jms.MQMessageProducer.send(MQMessageProducer.java:1022)<BR>at 
+com.ibm.mq.jms.MQMessageProducer.send(MQMessageProducer.java:1056)<BR>at 
+SimplePTP.main(SimplePTP.java:58)</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-hananafci even thread-even depth-1 vcard" 
+id=comment-4255>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-4255">May 
+26, 2008 at 11:00 am</A></P>
+<P class=comment-author><STRONG class=fn>hananafci</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/a422c2514da954397c7c626399c52cb3.png" 
+width=32> 
+<P>hello ,<BR>i have a task to make java program (jms) that will listen to mq 
+queue and whenever a new message is added to the queue the program should print 
+it so as long as the program is running ,any message added to the queue must be 
+printed by the program and now am searching for any one to help me how to make 
+this .<BR>thanks alot</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV 
+class="comment byuser comment-author-krishanka odd alt thread-odd thread-alt depth-1 vcard" 
+id=comment-4273>
+<DIV class=comment-metadata>
+<P class=comment-permalink><A title="Permalink to this comment" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#comment-4273">January 
+6, 2009 at 1:08 pm</A></P>
+<P class=comment-author><STRONG class=fn>krishanka</STRONG></P></DIV>
+<DIV class=comment-content><IMG class="avatar avatar-32" height=32 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/93c18bba67ef8d98a8d55289d80544fb.png" 
+width=32> 
+<P>Can anyone tell me how to send an XML file using JMS in an IBM MQ</P></DIV>
+<DIV class=reply></DIV></DIV>
+<DIV class=navigation>
+<DIV class=alignleft></DIV>
+<DIV class=alignright></DIV></DIV><BR></DIV>
+<DIV id=respond>
+<DIV id=cancel-comment-reply><SMALL><A id=cancel-comment-reply-link 
+style="DISPLAY: none" 
+href="http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/#respond" 
+rel=nofollow>Click here to cancel reply.</A></SMALL></DIV>
+<P>You must be <A 
+href="http://hursleyonwmq.wordpress.com/wp-login.php?redirect_to=http://hursleyonwmq.wordpress.com/2007/05/29/simplest-sample-applications-using-websphere-mq-jms/">logged 
+in</A> to post a comment.</P></DIV></DIV>
+<DIV id=footer>
+<DIV id=miscellany>
+<DIV class=widgets>
+<DIV class=searchbox>
+<FORM id=searchform action=/ method=get>
+<FIELDSET><INPUT id=s tabIndex=21 name=s> <INPUT id=searchsubmit tabIndex=22 type=submit value=Search> 
+</FIELDSET></FORM></DIV></DIV></DIV>
+<DIV id=about>
+<DIV class=navigation>
+<DIV class=left></DIV>
+<DIV class=right></DIV></DIV></DIV>
+<DIV id=theme-info>
+<DIV class="primary content">
+<P><A href="http://tarskitheme.com/">Theme by Ben Eastaugh and Chris 
+Sternal-Johnson.</A> Get a free blog at <A 
+href="http://wordpress.com/">WordPress.com</A>.</P></DIV>
+<DIV class=secondary>
+<P><A class=feed title="Subscribe to the a Hursley view on WebSphere MQ feed" 
+href="http://hursleyonwmq.wordpress.com/feed/">Subscribe to 
+feed.</A></P></DIV></DIV></DIV></DIV>
+<SCRIPT type=text/javascript>
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</SCRIPT>
+
+<SCRIPT type=text/javascript>
+var wpcomPageTracker = _gat._getTracker("UA-52447-2");
+wpcomPageTracker._setDomainName("wordpress.com");
+wpcomPageTracker._initData();
+wpcomPageTracker._trackPageview();
+</SCRIPT>
+
+<SCRIPT 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/quant.js" 
+type=text/javascript></SCRIPT>
+
+<SCRIPT type=text/javascript>_qoptions = { labels:"adt.0,language.en" };_qacct="p-18-mFEk4J448M";quantserve();</SCRIPT>
+<NOSCRIPT>
+<P><IMG style="DISPLAY: none" height=1 alt="" 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/p-18-mFEk4J448M.gif" 
+width=1></P></NOSCRIPT>
+<SCRIPT 
+src="Simplest sample applications using WebSphere MQ JMS « a Hursley view on WebSphere MQ_files/w.js" 
+type=text/javascript></SCRIPT>
+
+<SCRIPT type=text/javascript>
+st_go({'blog':'673735','v':'wpcom','user_id':'0','post':'90','subd':'hursleyonwmq'});
+ex_go({'crypt':'D6%7C%2CY1mqvHvXZ%7Eo9%2BqN%5Dt_auCUUjJpFeUIec8W7ugfoET%2CQnOgEQieEj5z%2F6yi%5By9iDm9abbepk%5Dp9sNDL8a%2CNB9j5%3D%26xXN6fYbVzNDmy5QKmYm7OB31H0EWZDGU7zSROEH%7CX4J%5BQlOgS6GnLcx%7Esh1%5DNnCU7xE9QC%25Z%25yQULbsdQwWz%2F%3DptfPTApCB%2BuVHOR8EKh9snG5%2F'});
+re_go({'v':'sph','b':'673735','p':'90','d[hursleyonwmq.wordpress.com]':'1'});
+addLoadEvent(function(){linktracker_init('673735',90);});
+</SCRIPT>
+</BODY></HTML>

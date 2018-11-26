@@ -1,0 +1,411 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqjmssub.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2004  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Program name: mqjmssub.java                                               */
+/*                                                                           */
+/* Description: Sample Java program that uses JMS to perform the role of the */
+/*              subscriber in a publish/subscribe environment.               */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Function:                                                                 */
+/*                                                                           */
+/*   This program uses the JMS API to perform the role of a subscriber in a  */
+/*   publish/subscrie environment.  It looks up the TopicConnectionFactory   */
+/*   and Topic that it will use for subscribing.  This program also allows   */
+/*   the user to specify whether or not the subscriber is durable by passing */
+/*   in a durable subscriber id.  This allows for multiple copies of the     */
+/*   program to be run as different subscribers.  If a durable subscriber is */
+/*   being used, the program will ask the user before ending whether or not  */
+/*   to remove the subscriber.                                               */
+/*                                                                           */
+/* This program is run as follows:                                           */
+/*                                                                           */
+/*     java mqjmssub -icf ... -url ... -tcf ... -t ... -d ...                */
+/*                                                                           */
+/* where                                                                     */
+/*     -icf is the classname of the initial context factory                  */
+/*     -url is the URL of the session's initial context                      */
+/*     -tcf is the topic connection factory                                  */
+/*     -t   is the topic on which to subscribe                               */
+/*     -d   is the durable subscriber id (optional parameter)                */
+/*                                                                           */
+/* An alternate method is to run the program with an mqjmssub.properties     */
+/* that contains the icf, url, tcf, t and d definitions:                     */
+/*                                                                           */
+/*    icf=com.sun.jndi.fscontext.RefFSContextFactory                         */
+/*    url=file:c://support//jms//jmsadmin                                    */
+/*    tcf=\\pubsub\\ma0cTCF                                                  */
+/*    t=\\pubsub\\ma0cTopic                                                  */
+/*    d=durableID                                                            */
+/*                                                                           */
+/* Detailed information on the execution of this program can be found at:    */
+/*    http://www.developer.ibm.com/tech/faq/individual?oid=2:83352           */
+/*                                                                           */
+/* This program has been tested with WebSphere MQ 5.3 CSD5, SupportPac MA0C  */
+/* as a broker, and JDK 1.4.1.                                               */
+/*                                                                           */
+/* This program is a companion to the mqjmspub.java sample.  mqjmspub.java   */
+/* contains instructions on using JMSAdmin to run these samples.             */
+/*                                                                           */
+/*****************************************************************************/
+import java.lang.*;
+import java.io.*;
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Hashtable;
+import java.util.Properties;
+
+public class mqjmssub implements MessageListener {
+
+    private static Context   ctx = null;
+    private static String    icf = null;
+    private static String    url = null;
+    private static String    lookupTCF = null;
+    private static String    lookupTopic = null;
+    private static String    durableID   = null;
+
+   public mqjmssub() {
+
+      /***********************************************/
+      /* We'll get anything with the -D syntax first */
+      /***********************************************/
+      url = System.getProperty("url");
+      icf = System.getProperty("icf");
+      lookupTopic = System.getProperty("t");
+      lookupTCF   = System.getProperty("tcf");
+      durableID   = System.getProperty("d");
+
+      /*************************************************/
+      /* Now go and get the mqjmssub.properties file.  */
+      /*************************************************/
+      try {
+         Properties props = new Properties(System.getProperties());
+         props.load(new BufferedInputStream(new FileInputStream("mqjmssub.properties")));
+         System.setProperties(props);
+      } catch (Exception e) {
+         System.out.println("Unable to read mqjmssub.properties:");
+         System.out.println(" " + e);
+         System.err.println(e);
+      }
+ 
+      /******************************************************/
+      /* If any of the necessary properties are null, we'll */
+      /* take the value from the file since they weren't    */
+      /* specified with -D.                                 */
+      /******************************************************/
+      if (url == null)       {url = System.getProperty("url");}
+      if (icf == null)       {icf = System.getProperty("icf");}
+      if (lookupTCF == null) {lookupTCF = System.getProperty("tcf");}
+      if (lookupTopic == null) {lookupTopic = System.getProperty("t");}
+      if (durableID == null) {durableID = System.getProperty("d");}
+
+   }
+
+   public mqjmssub(String[] args) {
+
+      this();
+
+      /**********************************/ 
+      /* Get the command-line arguments */ 
+      /**********************************/ 
+      for( int i=0; i&lt;args.length; i++ ) {
+          String arg = args[i].toLowerCase();
+
+            if( arg.equals("-url") ) {
+                if ( i+1&lt;args.length ) {
+                   url = args[++i];
+                } else {
+                   System.out.println("didn't specify url, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-icf") ) {
+                if ( i+1&lt;args.length ) {
+                   icf = args[++i];
+                } else {
+                   System.out.println("didn't specify icf, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-tcf") ) {
+                if ( i+1&lt;args.length ) {
+                   lookupTCF = args[++i];
+                } else {
+                   System.out.println("didn't specify tcf, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-t") ) {
+                if ( i+1&lt;args.length ) {
+                   lookupTopic = args[++i];
+                } else {
+                   System.out.println("didn't specify topic, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-d") ) {
+                if ( i+1&lt;args.length ) {
+                   durableID = args[++i];
+                } else {
+                   System.out.println("didn't specify durableID, exiting");
+                   return;
+                }
+
+            } else {
+              System.out.println( "Unknown argument: " + arg );
+            }
+      }
+
+   }
+
+   public void mySubscriber() {
+      Topic             topic = null;
+      TopicSession      session = null;
+      TopicConnection   connection = null;
+      TopicConnectionFactory factory = null;
+      String myPublish = null;
+
+      System.out.println("mqjmssub started....");
+
+      /**********************************/ 
+      /* Get the context factory.       */ 
+      /**********************************/ 
+      Hashtable environment = new Hashtable();
+      environment.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+      environment.put(Context.PROVIDER_URL, url);
+      environment.put(Context.REFERRAL, "throw");
+      try {
+         ctx = new InitialDirContext( environment );
+      } catch( Exception e ) {
+         System.err.println("Error during lookup of Context Factory " + e);
+         System.err.println(e);
+         return;
+      }
+
+      /****************************************/ 
+      /* Lookup the topic connection factory. */
+      /****************************************/ 
+      try {
+         factory = (TopicConnectionFactory)ctx.lookup(lookupTCF);
+      } catch( Exception e ) {
+         System.out.println("TCF Lookup error: " + e);
+         System.err.println(e);
+         return;
+      }
+
+      TopicSubscriber tSub = null;
+      try {
+
+         /****************************************************/
+         /* Create a connection.  This will actually connect */
+         /* to WebSphere MQ.                                 */
+         /****************************************************/
+         connection = factory.createTopicConnection();
+
+         /********************************************************/
+         /* All work is done on a session.  We aren't particular */
+         /* about managing transactions ourselves.               */
+         /********************************************************/
+         boolean transacted = false;
+         session = connection.createTopicSession(transacted,
+                                                    Session.AUTO_ACKNOWLEDGE);
+
+         try {
+             /*******************************************************/
+             /* Attempt to retrieve a Topic from the JNDI namespace */
+             /*******************************************************/
+             topic = (Topic)ctx.lookup(lookupTopic);
+             System.out.println("topic is: " + topic.toString());
+         } catch( Exception e ) {
+               /******************************************************/ 
+               /* If the lookup of the topic failed, it is possible  */
+               /* that the user entered in the actual topic to which */
+               /* they were interested in subscribing.  We'll create */
+               /* based on this actual name.                         */ 
+               /******************************************************/ 
+               try {
+                  System.out.println("assuming uri topic: " + e);
+                  topic = session.createTopic(lookupTopic);
+                  System.out.println("topic is: " + topic.toString());
+               } catch( Exception e2 ) {
+                  System.out.println("topic Lookup error" + e2);
+                  session.close();
+                  connection.close();
+                  return;
+               }
+         }
+
+         connection.start();
+
+         /*********************************************/
+         /* Now we can actually create the subscriber */
+         /* We know that we are using the JMSIP part  */
+         /* of WMQ Event Broker, so there is no point */
+         /* in creating a durable subscriber.         */
+         /*********************************************/
+         if (durableID == null) {
+            tSub = session.createSubscriber(topic);
+         } else {
+            tSub = session.createDurableSubscriber(topic, durableID);
+         }
+         System.out.println("created subscriber.");
+      } catch( JMSException je ) {
+         System.out.println("tSub creation exception: " + je);
+         Exception le = je.getLinkedException();
+         if (le != null) {
+            System.out.println("Linked exception: " + le);
+         }
+         try {
+            session.close();
+            connection.close();
+         } catch ( JMSException je2) {
+            System.out.println("JMS exception on closing: " + je2);
+            Exception le2 = je2.getLinkedException();
+            if (le2 != null) {
+               System.out.println("Linked exception: " + le2);
+            }
+         }
+         return;
+      }
+
+      try {
+
+         /****************************************************/
+         /* We'll setup an asynchronous message listener and */
+         /* hang waiting on user input.  This will allow the */
+         /* listener to receive messages until we're done.   */
+         /****************************************************/
+         tSub.setMessageListener(this);
+
+         InputStreamReader isr = new InputStreamReader(System.in);
+         BufferedReader    br  = new BufferedReader(isr);
+         String userInput;
+         System.out.println("Hit enter to end...");
+         userInput = br.readLine();
+
+         tSub.close();
+
+         if (durableID != null) {
+            System.out.println("Remove durable subscriber &lt;any non-blank is yes&gt;?");
+            userInput = br.readLine();
+            if (userInput.length() &gt; 0) {
+               System.out.println("  Removing subscriber!");
+               session.unsubscribe(durableID);
+            }
+         }
+
+         /******************************************/
+         /* We're done.  Close all of our objects. */
+         /******************************************/
+
+         session.close();
+         session = null;
+
+         connection.close();
+         connection = null;
+
+      } catch( JMSException je ) {
+         System.out.println("JMS Exception: " + je);
+         // check for a linked exception
+         Exception le = je.getLinkedException();
+         if (le != null) {
+            System.out.println("Linked exception: " + le);
+         }
+
+      } catch( Exception e ) {
+         System.out.println("Exception: " + e);
+      }
+
+      System.out.println("mqjmssub finished....");
+
+    }
+
+    /**************************************************************/
+    /* This program uses an asynchronous listener to receive the  */
+    /* incoming messages.  It only expects to receive messages    */
+    /* that are text messages.  If a non-TextMessage is received, */
+    /* it will only indicate this fact.                           */
+    /**************************************************************/
+    public void onMessage(Message inMessage) {
+       try {
+          System.out.println("inMessage: ");
+          System.out.println("  " + inMessage.getJMSDestination());
+     
+          if (inMessage instanceof TextMessage) {
+             String replyString = ((TextMessage) inMessage).getText();
+             System.out.println("  Publication: " + replyString);
+          } else {
+             System.out.println("  Non-TextMessage received");
+          }
+       } catch( JMSException je ) {
+           System.out.println("JMS Exception: " + je);
+           // check for a linked exception
+           Exception le = je.getLinkedException();
+           if (le != null) {
+              System.out.println("Linked exception: " + le);
+           }
+       } 
+    }
+
+    /****************************/
+    /* main program entry point */
+    /****************************/
+    public static void main( String[] args )     {
+       mqjmssub app = new mqjmssub(args);
+       
+       /***************************************************************/ 
+       /* Check that all arguments were entered.                      */ 
+       /*   -d is optional; only needed if subscriber will be durable */
+       /***************************************************************/ 
+       if (     (icf==null)  
+             || (url==null) 
+             || ( (lookupTopic==null) &amp;&amp; lookupTCF==null) ) {
+          System.out.println("Usage:");
+          System.out.println("java mqjmssub -icf ... -url ... -t ... -tcf ...");
+          System.out.println("where -icf is the classname of the initial context factory");
+          System.out.println("      -url is the URL of the session's initial context");
+          System.out.println("      -tcf is the topic connection factory");
+          System.out.println("      -t   is the topic");
+          System.out.println("      -d   is the durable id (optional)");
+       } else {
+          app.mySubscriber();
+       }
+    }
+
+}
+
+
+
+
+
+
+</PRE></BODY></HTML>

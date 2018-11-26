@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqdb2log.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2002  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqdb2log                                                  */
+/*                                                                         */
+/* Description: Sample java program that shows MQSeries base java and DB2  */
+/*              jdbc transactions in the same unit of work (ie, two phase  */
+/*              commit)                                                    */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program accepts a user's db update statement.  This statement is  */
+/*  then written to an MQSeries queue and executed against a database in   */
+/*  the same unit of work.  The user is then asked whether this unit of    */
+/*  work should be committed or backed out.                                */
+/*                                                                         */
+/*  This program is run as follows:                                        */
+/*                                                                         */
+/*     java mqdb2log -q ... -m ... -d ...                                  */
+/*                                                                         */
+/*  where                                                                  */
+/*     -q is the queue where messages will be put                          */
+/*     -m is the queue manager (if not specified default qmgr is used)     */
+/*     -d is the database that will be used                                */
+/*                                                                         */
+/*  and possible input would be:                                           */
+/*                                                                         */
+/*    update table set column1 = 'value1' where column2 = 'value2'         */
+/*                                                                         */
+/* The output of this program can be verified by running:                  */
+/*                                                                         */
+/*     amqsbcg &lt;queue name&gt; &lt;qmgr name&gt;                                    */
+/*                                                                         */
+/* If the work was committed, the db command will be on the queue.  If the */
+/* work was backed out, the queue will be empty.                           */
+/* The database can also be checked to confirm whether or not the database */
+/* update was committed or rolled back.                                    */
+/*                                                                         */
+/* This program has been tested with:                                      */
+/*    MQSeries V5.2 CSD 3                                                  */
+/*    JDK 1.3 that ships with WebSphere 4.01                               */
+/*    DB2 V7.2                                                             */
+/*    Windows 2000                                                         */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* In order to use this program, the following must be done:               */
+/*                                                                         */
+/* - An application database must be created using DB2.  This database     */
+/*   will be one of the resources in the two phase commit.                 */
+/* - The MQSeries queue manager must be updated to recognize the database  */
+/*   as a resource.  This can be done by using the MQSeries Services to    */
+/*   look at the queue manager.  The properties of the queue manager are   */
+/*   then selected and updated for this database:                          */
+/*     Name: any name you wish to use                                      */
+/*     SwitcFile: &lt;mq install&gt;\java\lib\jdbc\jdbcdb2.dll                   */
+/*     XAOpenString: database name, userid, password                       */
+/*     ThreadOfControl: PROCESS                                            */
+/*                                                                         */
+/* Note 1: There are quite a few changes to the way things work with java. */
+/* There are details supplied in the Using Java manual Chapter 7.          */
+/*                                                                         */
+/* Note 2: The MQSeries System Administration manual gives additional      */
+/* information on using MQSeries as a transaction manager.                 */
+/*                                                                         */
+/* Note 3: This program is designed to work with update statements only.   */
+/* If you enter select statements, they will throw an exception.           */
+/*                                                                         */
+/***************************************************************************/
+import com.ibm.mq.*;            // Include the MQ package
+import java.io.*;
+import java.lang.*;
+import javax.sql.*;
+import java.sql.*; 
+
+public class mqdb2log {
+
+   private MQQueueManager qMgr;
+   private String         qmgrName;
+   private String         queueName;
+   private String         dbName;
+   private Connection     jdbcConn;
+
+   public static void main (String args[]) {
+        mqdb2log mySample = new mqdb2log(args);
+        mySample.start();
+   }
+
+   public mqdb2log(String[] args) {
+
+        /**********************************/ 
+        /* Get the command-line arguments */ 
+        /**********************************/ 
+        for( int i=0; i&lt;args.length; i++ ) {
+            String arg = args[i].toLowerCase();
+
+            if( arg.equals("-m") ) {
+                if ( i+1&lt;args.length ) {
+                   qmgrName = args[++i];
+                } else {
+                   System.out.println("didn't specify qmgr, exiting");
+                   System.exit(-1);
+                }
+
+            } else if( arg.equals("-q") ) {
+                if ( i+1&lt;args.length ) {
+                   queueName = args[++i];
+                } else {
+                   System.out.println("didn't specify queue, exiting");
+                   System.exit(-1);
+                }
+
+            } else if( arg.equals("-d") ) {
+                if ( i+1&lt;args.length ) {
+                   dbName = args[++i];
+                } else {
+                   System.out.println("didn't specify dbname, exiting");
+                   System.exit(-1);
+                }
+
+            } else {
+              System.out.println( "Unknown argument: " + arg );
+            }
+        }
+
+        /******************************************/ 
+        /* Check that all arguments were entered. */ 
+        /******************************************/ 
+        if ( (queueName==null) 
+             || (dbName==null) ) {
+           System.out.println("java mqdb2log -q ... -m ... -d ...");
+           System.out.println("where -q is the queue");
+           System.out.println("      -m is the qmgr");
+           System.out.println("      -d is the database name");
+           System.exit(-1);
+        }
+   }
+
+   /**********************************************************/
+   /* This program doesn't have any specific initialization. */
+   /* If it did, it could go here.                           */
+   /**********************************************************/
+   public void init() {
+   }
+
+   public void start() {
+      try {
+
+         System.out.println("mqdb2log started...");
+         /******************************************************/
+         /* Create a queue manager object and access the queue */
+         /* that will be used for the putting of messages.     */
+         /******************************************************/
+         qMgr = new MQQueueManager(qmgrName);
+       
+         int openOptions = MQC.MQOO_OUTPUT;
+         MQQueue myQueue = qMgr.accessQueue(queueName, openOptions,
+                                            null, null, null);
+
+         /******************************************************/
+         /* Create a DB2 XA DataSource that we will use as the */
+         /* place to perform database updates.                 */
+         /******************************************************/
+         COM.ibm.db2.jdbc.DB2XADataSource myDataSource = 
+             new COM.ibm.db2.jdbc.DB2XADataSource();
+
+         myDataSource.setDatabaseName(dbName);
+         jdbcConn = qMgr.getJDBCConnection(myDataSource);
+
+         /*****************************************/
+         /* Set up a reader to get the user input */
+         /*****************************************/
+         InputStreamReader isr = new InputStreamReader(System.in);
+         BufferedReader br     = new BufferedReader(isr);
+         String runShow;
+
+         System.out.println("mqdb2log ready for db command");
+         /********************************************/
+         /* As long as the user keeps entering data, */
+         /* process it...                            */
+         /********************************************/
+         do {
+            runShow = br.readLine();
+
+            /************************************/
+            /* See if the user entered anything */
+            /************************************/
+            if (runShow.length() &gt; 0) {
+               qMgr.begin();
+
+               /****************************************************/
+               /* Set up a new message with a format of string and */
+               /* write the user input to it.                      */
+               /****************************************************/
+               MQMessage myMessage = new MQMessage();
+               myMessage.writeString(runShow);
+               myMessage.format = MQC.MQFMT_STRING;
+
+               MQPutMessageOptions pmo = new MQPutMessageOptions();
+               pmo.options = pmo.options | MQC.MQPMO_SYNCPOINT;
+               myQueue.put(myMessage, pmo);
+
+               boolean   validStatement = true;
+               Statement stmt = jdbcConn.createStatement();
+               try {
+                  int rowsUpdated = stmt.executeUpdate(runShow);
+                  System.out.println("Rows updated: " + rowsUpdated);
+               } catch (java.lang.Exception ex) {
+                  validStatement = false;
+                  System.out.println("Java exception: " + ex);
+                  System.out.println("  mqdb2log is designed to work only with update statements.\n");
+               }
+     
+               stmt.close();
+
+               /*************************************************************/
+               /* Ask if the db update, message put should be committed or  */
+               /* backed out (if db command was valid).  If the command     */
+               /* wasn't valid, we'll backout the qmgr update.              */
+               /*************************************************************/
+               if (validStatement) {
+                  System.out.println("Enter C to Commit or R to rollback");
+                  runShow = br.readLine();
+                  if (   (runShow.indexOf("c") &gt;= 0)
+                      || (runShow.indexOf("C") &gt;= 0) ) {
+                     qMgr.commit();
+                  } else {
+                     qMgr.backout();
+                  }
+               } else {
+                  qMgr.backout();
+               } 
+            }
+            System.out.println("mqdb2log ready for db command");
+
+         } while (runShow.length() &gt; 0) ;
+
+         /**********************************************************/
+         /* Before the program ends, we need to close all of our   */
+         /* connections.                                           */
+         /**********************************************************/
+         myQueue.close();
+         jdbcConn.close();
+         qMgr.disconnect();
+      }
+      catch (MQException ex) {
+         System.out.println("An MQ error occurred: " + ex.completionCode + " " +
+                            ex.reasonCode);
+      }
+      catch (java.io.IOException ex) {
+         System.out.println("Java.io exception: " + ex);
+      }
+      catch (java.lang.Exception ex) {
+         System.out.println("Java exception: " + ex);
+      }
+      System.out.println("mqdb2log finished...");
+   }
+
+}
+</PRE></BODY></HTML>

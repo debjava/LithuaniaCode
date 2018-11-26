@@ -1,0 +1,228 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:10 2002">
+<title>Basic JMS API Concepts</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="overview.html">Prev</a> |
+    <a href="prog_model.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >2 &nbsp;&nbsp; Basic JMS API Concepts</font>
+</h1>
+
+<p>
+  <a name="1023431"> </a>This chapter introduces the most basic JMS API concepts, the ones you must know to get started writing simple JMS client applications:
+</p>
+
+<ul>
+  <li ><font ><a href="#1023437">JMS API architecture</a></font>
+  <li ><font ><a href="#1033949">Messaging domains</a></font>
+  <font ><li ><a href="#1023390">Message consumption</a></font>
+</ul>
+
+<p>
+  <a name="1032050"> </a><font >The next chapter introduces the JMS API programming model. Later chapters cover more advanced concepts, including the ones you need to write 
+  J2EE<font size="-2"><sup>TM</sup></font> applications that use message-driven beans.</font>
+</p>
+
+<h3>
+  <a name="1023437"> </a><font color="#666699" >2.1&nbsp;&nbsp; JMS API Architecture</font>
+</h3>
+
+
+<p>
+  <a name="1023438"> </a><font >A JMS application is composed of the following parts.</font>
+</p>
+
+<ul>
+    <li ><font ><a name="1023469"> </a>A <i>JMS provider</i> is a messaging system 
+      that implements the JMS interfaces and provides administrative and control 
+      features. An implementation of the J2EE platform at release 1.3 includes 
+      a JMS provider.</font> 
+    <li ><font ><a name="1023459"> </a><i>JMS clients</i> are the programs or 
+      components, written in the Java<font size="-2"><sup>TM</sup></font> programming 
+      language, that produce and consume messages.</font> 
+    <li ><font ><a name="1023522"> </a><i>Messages</i> are the objects that communicate 
+      information between JMS clients.</font> 
+    <li ><font ><a name="1023489"> </a><i>Administered objects</i> are preconfigured 
+      JMS objects created by an administrator for the use of clients. The two 
+      kinds of administered objects are destinations and connection factories, 
+      which are described in <a href="prog_model.html#1033480">Section 3.1, "Administered 
+      Objects."</a></font> 
+    <font >
+    <li ><a name="1033941"> </a><i>Native clients</i> are programs that use a 
+      messaging product's native client API instead of the JMS API. An application 
+      first created before the JMS API became available and subsequently modified 
+      is likely to include both JMS and native clients.
+    </font>
+</ul>
+
+<p>
+  <a name="1034257"> </a><font ><a href="basics.html#1033422">Figure 2.1</a> illustrates the way these parts interact. Administrative tools allow you to bind destinations and connection factories into a Java Naming and Directory 
+  Interface<font size="-2"><sup>TM</sup></font> (JNDI) API namespace. A JMS client can then look up the administered objects in the namespace and then establish a logical connection to the same objects through the JMS provider.</font>
+</p>
+
+  <a name="1034274"> </a>
+  <img src="images/Fig2.1.gif" border="0" hspace="0" vspace="0">
+<br>
+
+<a name="1033422"> </a><i>Figure 2.1&nbsp;&nbsp; JMS API Architecture</i><br>
+
+<h3>
+  <a name="1033949"> </a><font color="#666699" >2.2&nbsp;&nbsp; Messaging Domains</font>
+</h3>
+
+
+  <p> <a name="1023532"> </a><font >Before the JMS API existed, most messaging 
+    products supported either the <i>point-to-point</i> or the <i>publish/subscribe</i> 
+    approach to messaging. The JMS Specification provides a separate domain for 
+    each approach and defines compliance for each domain. A standalone JMS provider 
+    may implement one or both domains. A J2EE provider must implement both domains.</font> 
+  </p>
+
+
+<p>
+  <a name="1026452"> </a><font >In fact, most current implementations of the JMS API provide support for both the point-to-point and the publish/subscribe domains, and some JMS clients combine the use of both domains in a single application. In this way, the JMS API has extended the power and flexibility of messaging products.</font>
+</p>
+
+<h4>
+  <a name="1023671"> </a><font color="#666699" >2.2.1&nbsp;&nbsp; Point-to-Point Messaging Domain</font>
+</h4>
+
+
+<p>
+  <a name="1023672"> </a><font >A point-to-point (PTP) product or application is built around the concept of message queues, senders, and receivers. Each message is addressed to a specific queue, and receiving clients extract messages from the queue(s) established to hold their messages. Queues retain all messages sent to them until the messages are consumed or until the messages expire.</font>
+</p>
+
+
+<p>
+  <a name="1033965"> </a><font >PTP messaging has the following characteristics and is illustrated in <a href="basics.html#1033967">Figure 2.2</a>.</font>
+</p>
+
+  <a name="1034272"> </a>
+  <img src="images/Fig2.2.gif" border="0" hspace="0" vspace="0">
+<br>
+
+<a name="1033967"> </a><i>Figure 2.2&nbsp;&nbsp; Point-to-Point Messaging</i><br>
+
+<ul>
+  <li ><font ><a name="1023813"> </a>Each message has only one consumer.</font>
+  <li ><font ><a name="1023814"> </a>A sender and a receiver of a message have no timing dependencies. The receiver can fetch the message whether or not it was running when the client sent the message.</font>
+  <font ><li ><a name="1026536"> </a>The receiver acknowledges the successful processing of a message.</font>
+</ul>
+
+<p>
+  <a name="1031085"> </a><font >Use PTP messaging when every message you send must be processed successfully by one consumer.</font>
+</p>
+
+<h4>
+  <a name="1023551"> </a><font color="#666699" >2.2.2&nbsp;&nbsp; Publish/Subscribe Messaging Domain</font>
+</h4>
+
+
+<p>
+  <a name="1031075"> </a><font >In a publish/subscribe (pub/sub) product or application, clients address messages to a topic. Publishers and subscribers are generally anonymous and may dynamically publish or subscribe to the content hierarchy. The system takes care of distributing the messages arriving from a topic's multiple publishers to its multiple subscribers. Topics retain messages only as long as it takes to distribute them to current subscribers. </font>
+</p>
+
+
+<p>
+  <a name="1023823"> </a><font >Pub/sub messaging has the following characteristics.</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1024148"> </a>Each message may have multiple consumers. </font>
+  <font ><li ><a name="1024149"> </a>Publishers and subscribers have a timing dependency. A client that subscribes to a topic can consume only messages published after the client has created a subscription, and the subscriber must continue to be active in order for it to consume messages. </font>
+</ul>
+
+  <p> <a name="1027431"> </a><font >The JMS API relaxes this timing dependency to 
+    some extent by allowing clients to create <i>durable subscriptions</i>. Durable 
+    subscriptions can receive messages sent while the subscribers are not active. 
+    Durable subscriptions provide the flexibility and reliability of queues but 
+    still allow clients to send messages to many recipients. For more information 
+    about durable subscriptions, see <a href="advanced.html#1024758">Section 5.2.1, 
+    "Creating Durable Subscriptions."</a></font> </p>
+
+
+<p>
+  <a name="1031110"> </a><font >Use pub/sub messaging when each message can be processed by zero, one, or many consumers. <a href="basics.html#1023834">Figure 2.3</a> illustrates pub/sub messaging.</font>
+</p>
+
+
+  <a name="1034273"> </a>
+  <img src="images/Fig2.3.gif" border="0" hspace="0" vspace="0">
+<br>
+
+<a name="1023834"> </a><i>Figure 2.3&nbsp;&nbsp; Publish/Subscribe Messaging</i><br>
+
+<h3>
+  <a name="1023390"> </a><font color="#666699" >2.3&nbsp;&nbsp; Message Consumption</font>
+</h3>
+
+
+<p>
+  <a name="1023440"> </a><font >Messaging products are inherently asynchronous in that no fundamental timing dependency exists between the production and the consumption of a message. However, the JMS Specification uses this term in a more precise sense. Messages can be consumed in either of two ways:</font>
+</p>
+
+<ul>
+    <li ><font ><a name="1024191"> </a><b>Synchronously.</b> A subscriber or a 
+      receiver explicitly fetches the message from the destination by calling 
+      the <code>receive</code> method. The <code>receive</code> method can block 
+      until a message arrives or can time out if a message does not arrive within 
+      a specified time limit.</font> 
+    <font >
+    <li ><a name="1024196"> </a><b>Asynchronously.</b> A client can register a 
+      <i>message listener</i> with a consumer. A message listener is similar to 
+      an event listener. Whenever a message arrives at the destination, the JMS 
+      provider delivers the message by calling the listener's <code>onMessage</code> 
+      method, which acts on the contents of the message.
+    </font>
+</ul>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="overview.html">Prev</a> |
+  <a href="prog_model.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<project name="Pagination" basedir="." default="deploy">
+
+	<property name="src.dir"				value="${basedir}/src"/>
+	<property name="bin.dir"				value="${basedir}/bin"/>
+	<property name="lib.dir"				value="${basedir}/lib"/>
+	<property name="web.dir"				value="${basedir}/WEB-INF"/>
+	<property name="classes.dir"			value="${web.dir}/classes"/>
+	<property name="jsps.dir"				value="${basedir}/jsps"/>
+	<property name="deploy.war.dir"			value="${basedir}/DebaPagination.war"/>
+	<!-- In the following value please provide the path of your Jboss application server -->
+	<property name="jboss.deploy.dir"		value="C:/LH/jboss-4.0.5.GA/server/default/deploy"/>
+
+	<!--
+		Setting the classpath for the included libraries
+	-->
+	<path id="libraries">
+		<fileset dir="${lib.dir}">
+			<include name="*.jar"/>
+		</fileset>  
+	</path>   
+
+	<!--
+		Deleting and creating the directories
+	-->
+	<target name="init" description="Creating and Deleting directories">
+		<delete dir="${deploy.war.dir}"/>
+		<delete dir="${classes.dir}"/>
+		<mkdir dir="${deploy.war.dir}"/>
+		<mkdir dir="${classes.dir}"/>
+	</target>
+
+	<!--
+		Compiling the classes in the bin and in the classes directory of WEB-INF
+	-->
+	<target name="compile" description="Compiling java files" depends="init">
+		<javac srcdir="${src.dir}" destdir="${bin.dir}">
+			<classpath refid="libraries"/> 
+		</javac>
+		<javac srcdir="${src.dir}" destdir="${classes.dir}">
+			<classpath refid="libraries"/> 
+		</javac>
+	</target>
+
+	<!--
+		Copying the required files to WEB-INF
+	-->
+	<target name="copy" description="Copying files" depends="compile">
+		<copy file="${basedir}/struts-config.xml"	todir="${web.dir}"/>
+		<copy file="${basedir}/web.xml"				todir="${web.dir}"/>
+
+		<!-- Copying the *.jar files -->
+		<copy todir="${web.dir}/lib">
+			<fileset dir="${lib.dir}" excludes="javax.servlet.jar"/>
+		</copy>
+
+		<!-- Copying the WEB-INF to deployment directory -->
+		<copy todir="${deploy.war.dir}/WEB-INF">
+				<fileset dir="${web.dir}" includes="**/*.*"/>
+		</copy>
+		<!-- Copying the required *.jsp files to deploy directory -->
+		<copy todir="${deploy.war.dir}">
+			<fileset dir="${jsps.dir}" includes="**/*.jsp"/>
+		</copy>
+	</target>
+
+	<!--
+		Making server deployment
+	-->
+	<target name="deploy" description="Deploying into server" depends="copy">
+		<copy todir="${jboss.deploy.dir}/DebaPagination.war">
+			<fileset dir="${deploy.war.dir}" includes="**/*.*"/>
+		</copy>
+	</target>
+
+</project>

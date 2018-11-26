@@ -1,0 +1,1111 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:22 2002">
+<title>A Simple J2EE(TM) Application that Uses the JMS API </title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="jmsj2ee.html">Prev</a> |
+    <a href="j2eeapp2.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1055880"> </a><font color="#666699" >7 &nbsp;&nbsp; A Simple J2EE<sup><font size="-2">TM</font></sup> Application that Uses the JMS API </font>
+</h1>
+
+
+<p>
+  <a name="1055885"> </a>This chapter explains how to write, compile, package, deploy, and run a simple 
+  J2EE<font size="-2"><sup>TM</sup></font> application that uses the JMS API. The application in this chapter uses the following components:
+</p>
+
+<ul>
+  <li ><font ><a name="1055386"> </a>An application client that sends several messages to a queue</font>
+  <font ><li ><a name="1055387"> </a>A message-driven bean that asynchronously receives and processes the messages</font>
+</ul>
+
+<p>
+  <a name="1037843"> </a><font >The chapter covers the following topics:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1023816">Writing and compiling the application components</a></font>
+  <li ><font ><a href="#1023764">Creating and packaging the application</a></font>
+  <font ><li ><a href="#1028835">Deploying and running the application</a></font>
+</ul>
+
+  <p> <a name="1058475"> </a><font >If you downloaded the tutorial examples as 
+    described in the preface, you will find the source code files for this chapter 
+    in <code>jms_tutorial/examples/client_mdb</code> (on UNIX&#174; systems) or 
+    <code>jms_tutorial\examples\client_mdb</code> (on Microsoft Windows systems). 
+    The directory <code>ear_files</code> in the <code>examples</code> directory 
+    contains a built application called <code>SampleMDBApp.ear</code>. If you 
+    run into difficulty at any time, you can open this file in the deploytool 
+    and compare that file to your own version. </font> </p>
+
+
+<h3>
+  <a name="1023816"> </a><font color="#666699" >7.1&nbsp;&nbsp; Writing and Compiling the Application Components</font>
+</h3>
+
+
+<p>
+  <a name="1040527"> </a><font >The first and simplest application contains the following components:</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1040528"> </a>An application client that sends several messages to a queue</font>
+  <font ><li ><a name="1040529"> </a>A message-driven bean that asynchronously receives and processes the messages</font>
+</ul>
+
+<p>
+  <a name="1058662"> </a><font ><a href="j2eeapp1.html#1058664">Figure 7.1</a> illustrates the structure of this application.</font>
+</p>
+
+
+<p>
+  <a name="1063572"> </a><img src="images/Fig7.1.gif" border="0" hspace="0" vspace="0">
+</p>
+
+<a name="1058664"> </a><i>Figure 7.1&nbsp;&nbsp; A Simple J2EE Application: Client to Message-Driven Bean</i><br>
+
+
+  <p> <a name="1058655"> </a><font >The application client sends messages to the 
+    queue, which is created administratively, using the <code>j2eeadmin</code> 
+    command. The JMS provider--in this case, the J2EE server--delivers the messages 
+    to the message-driven bean instances, which then process the messages.</font> 
+  </p>
+
+
+<p>
+  <a name="1058667"> </a><font >Writing and compiling the components of this application involve</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1055859">Coding the application client</a></font>
+  <li ><font ><a href="#1024033">Coding the message-driven bean</a></font>
+  <font ><li ><a href="#1024278">Compiling the source files</a></font>
+</ul>
+
+<h4>
+  <a name="1055859"> </a><font color="#666699" >7.1.1&nbsp;&nbsp; Coding the Application Client: <code>SimpleClient.java</code></font>
+</h4>
+
+
+  <p> <a name="1038205"> </a><font >The application client class, <a href="../examples/client_mdb/SimpleClient.java"><code>SimpleClient.java</code></a>, 
+    is almost identical to <a href="../examples/simple/SimpleQueueSender.java"><code>SimpleQueueSender.java</code></a>. 
+    The only significant differences are as follows.</font> </p>
+
+<ul>
+  <li ><font ><a name="1038306"> </a>You do not specify the queue name on the command line. Instead, the client obtains the queue name through a 
+  Java<font size="-2"><sup>TM</sup></font> Naming and Directory 
+  Interface<font size="-2"><sup>TM</sup></font> (JNDI) API lookup.</font>
+  <li ><font ><a name="1038313"> </a>You do not specify the number of messages on the command line; the number of messages is set at 3 for simplicity, and no end-of-messages message is sent.</font>
+  <font >
+    <li ><a name="1038315"> </a>The JNDI API lookup uses the <code>java:/comp/env/jms 
+      </code>naming context.
+    </font>
+</ul>
+
+<h4>
+  <a name="1024033"> </a><font color="#666699" >7.1.2&nbsp;&nbsp; Coding the Message-Driven Bean: <code>MessageBean.java</code></font>
+</h4>
+
+
+  <p> <a name="1024066"> </a><font >The message-driven bean class, <a href="../examples/client_mdb/MessageBean.java"><code>MessageBean.java</code></a>, 
+    implements the methods <code>setMessageDrivenContext</code>, <code>ejbCreate</code>, 
+    <code>onMessage</code>, and <code>ejbRemove</code>. The <code>onMessage</code> 
+    method, almost identical to that of <a href="../examples/simple/TextListener.java"><code>TextListener.java</code></a>, 
+    casts the incoming message to a <code>TextMessage</code> and displays the 
+    text. The only significant difference is that it calls the <code>MessageDrivenContext.setRollbackOnly</code> 
+    method in case of an exception. This method rolls back the transaction so 
+    that the message will be redelivered.</font> </p>
+
+<h4>
+  <a name="1024278"> </a><font color="#666699" >7.1.3&nbsp;&nbsp; Compiling the Source Files</font>
+</h4>
+
+  <p> <a name="1024279"> </a><font >To compile the files in the application, go 
+    to the <code>client_mdb</code> directory and do the following.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1055438"> </a>Make sure that you have set the 
+      environment variables shown in <a href="client.html#1025256">Table 4.1</a>: 
+      <code>JAVA_HOME</code>, <code>J2EE_HOME</code>, <code>CLASSPATH</code>, 
+      and <code>PATH</code>.</font> 
+    <li  value="2"><font ><a name="1036713"> </a>At a command line prompt, compile the source files:</font>
+<pre>
+javac *.java
+</pre>
+</li>
+</ol>
+
+<h3>
+  <a name="1023764"> </a><font color="#666699" >7.2&nbsp;&nbsp; Creating and Packaging the Application</font>
+</h3>
+
+
+<p>
+  <a name="1028949"> </a><font >Creating and packaging this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1036305">Starting the J2EE server and the Application Deployment Tool</a></font>
+  <li><font ><a href="#1036351">Creating a queue</a></font>
+  <li><font ><a href="#1036357">Creating the J2EE application</a></font>
+  <li><font ><a href="#1055988">Packaging the application client</a></font>
+  <li><font ><a href="#1025061">Packaging the message-driven bean</a></font>
+  <font ><li><a href="#1025781">Checking the JNDI API names ("JNDI names")</a></font>
+</ol>
+
+<h4>
+  <a name="1036305"> </a><font color="#666699" >7.2.1&nbsp;&nbsp; Starting the J2EE Server and the Deploytool</font>
+</h4>
+
+
+<p>
+  <a name="1036347"> </a><font >Before you can create and package the application, you must start the J2EE server and the deploytool. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li><font ><a name="1036326"> </a>At the command line prompt, start the J2EE server: </font>
+<pre>
+j2ee -verbose
+</pre>
+<p>
+  <a name="1037292"> </a><font >Wait until the server displays the message "J2EE server startup complete."</font>
+</p>
+      <p> <a name="1036329"> </a><font >(To stop the server, type <code>j2ee -stop</code>.)</font> 
+      </p>
+</li>
+  <li><font ><a name="1036338"> </a>At another command line prompt, start the deploytool: </font>
+<pre>
+deploytool
+</pre>
+<p>
+  <a name="1036340"> </a><font >(To access the tool's context-sensitive help, press F1.)</font>
+</p>
+</li>
+</ol>
+
+<h4>
+  <a name="1036351"> </a><font color="#666699" >7.2.2&nbsp;&nbsp; Creating a Queue</font>
+</h4>
+
+
+  <p> <a name="1038342"> </a><font >In <a href="client.html#1027237">Section 4.2.4, 
+    "Creating the JMS Administered Objects,"</a> you used the <code>j2eeadmin</code> 
+    command to create a queue. This time, you will create it by using the deploytool, 
+    as follows.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1036621"> </a>In the deploytool, select the Tools menu.</font>
+  <li  value="2"><font ><a name="1055462"> </a>From the Tools menu, choose Server Configuration.</font>
+  <li  value="3"><font ><a name="1055463"> </a>Under the JMS folder, select Destinations.</font>
+  <li  value="4"><font ><a name="1055464"> </a>In the JMS Queue Destinations area, click Add.</font>
+    <li  value="5"><font ><a name="1055467"> </a>In the text field, enter <code>jms/MyQueue</code>. 
+      (We will observe the J2EE convention of placing the queue in the <code>jms</code> 
+      namespace.)</font> 
+    <li  value="6"><font ><a name="1055468"> </a>Click OK.</font>
+  <li  value="7"><font ><a name="1036626"> </a>Verify that the queue was created:</font>
+<pre>
+j2eeadmin -listJmsDestination
+</pre>
+</ol>
+
+<h4>
+  <a name="1036357"> </a><font color="#666699" >7.2.3&nbsp;&nbsp; Creating the J2EE Application</font>
+</h4>
+
+
+  <p> <a name="1024385"> </a><font >Create a new J2EE application called <code>MDBApp</code> 
+    and store it in the file named<code> MDBApp.ear</code>. Follow these steps.</font> 
+  </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1024408"> </a>In the deploytool, select the File menu. </font>
+  <li  value="2"><font ><a name="1024410"> </a>From the File menu, choose New -> Application.</font>
+    <li  value="3"><font ><a name="1024412"> </a>Click Browse next to the Application 
+      File Name field and use the file chooser to locate the directory <code>client_mdb</code>. 
+      </font> 
+    <li  value="4"><font ><a name="1024416"> </a>In the File Name field, enter 
+      <code>MDBApp</code>.</font> 
+    <li  value="5"><font ><a name="1042337"> </a>Click New Application.</font>
+  <font ><li  value="6"><a name="1024393"> </a>Click OK. </font>
+</ol>
+
+  <p> <a name="1036218"> </a><font >A diamond icon labeled <code>MDBApp</code> 
+    appears in the tree view on the left side of the deploytool window. The full 
+    path name of <code>MDBApp.ear</code> appears in the General tabbed pane on 
+    the right side.</font> </p>
+
+<h4>
+  <a name="1055988"> </a><font color="#666699" >7.2.4&nbsp;&nbsp; Packaging the Application Client</font>
+</h4>
+
+
+<p>
+  <a name="1055989"> </a><font >In this section, you will run the New Application Client Wizard of the deploytool to package the application client. The New Application Client Wizard does the following:</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1055991"> </a>Identifies the application toward which the client is targeted</font>
+  <li ><font ><a name="1055992"> </a>Identifies the main class for the application client</font>
+  <font ><li ><a name="1055993"> </a>Identifies the queue and the connection factory referenced by the application client</font>
+</ul>
+
+<p>
+  <a name="1055994"> </a><font >To start the New Application Client Wizard, follow these steps. </font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1055995"> </a>In the tree view, select <code>MDBApp</code>.</font> 
+    <font ><li  value="2"><a name="1055996"> </a>From the File menu, choose New -> Application Client. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1055997"> </a><i><font color="#666699" >7.2.4.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1055998"> </a>Read this explanatory text for an overview of the wizard's features. </font>
+  <font ><li  value="2"><a name="1055999"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1056000"> </a><i><font color="#666699" >7.2.4.2&nbsp;&nbsp; JAR File Contents Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1056001"> </a>In the combo box labeled Create 
+      Archive Within Application, select <code>MDBApp</code>.</font> 
+    <li  value="2"><font ><a name="1056002"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1056003"> </a>In the dialog box Edit Contents 
+      of &lt;Application Client&gt;, choose the <code>client_mdb</code> directory. 
+      If the directory is not already in the Starting Directory field, type it 
+      in the field, or locate it by browsing through the Available Files tree. 
+      </font> 
+    <li  value="4"><font ><a name="1056004"> </a>Select <code>SimpleClient.class</code> 
+      from the Available Files tree area and click Add. </font> 
+    <li  value="5"><font ><a name="1056005"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1056006"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1056007"> </a><i><font color="#666699" >7.2.4.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1056008"> </a>Verify that the Main Class and 
+      the Display Name are both <code>SimpleClient</code>.</font> 
+    <li  value="2"><font ><a name="1056009"> </a>In the Callback Handler Class combo box, verify that container-managed authentication is selected.</font>
+  <font ><li  value="3"><a name="1056010"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1056011"> </a><i><font color="#666699" >7.2.4.4&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1056012"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1056013"> </a><i><font color="#666699" >7.2.4.5&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1056014"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1056016"> </a><i><font color="#666699" >7.2.4.6&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1056017"> </a><font >In this dialog box, you associate the JNDI 
+    API context name for the connection factory in the <code>SimpleClient.java</code> 
+    source file with the name of the <code>QueueConnectionFactory</code>. You 
+    also specify container authentication for the connection factory resource, 
+    defining the user name and the password that the user must enter in order 
+    to be able to create a connection. Follow these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1056019"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1056020"> </a>In the Coded Name field, enter 
+      <code>jms/MyQueueConnectionFactory</code>--the logical name referenced by 
+      <code>SimpleClient</code>.</font> 
+    <li  value="3"><font ><a name="1056021"> </a>In the Type field, select <code>javax.jms.QueueConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1056022"> </a>In the Authentication field, select Container.</font>
+  <li  value="5"><font ><a name="1056023"> </a>In the Sharable field, make sure that the checkbox is checked. This allows the container to optimize connections.</font>
+    <li  value="6"><font ><a name="1056024"> </a>In the JNDI Name field, enter <code>jms/QueueConnectionFactory</code>.</font> 
+    <li  value="7"><font ><a name="1056025"> </a>In the User Name field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="8"><font ><a name="1056026"> </a>In the Password field, enter 
+      <code>j2ee</code>.</font> 
+    <font ><li  value="9"><a name="1056027"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1056030"> </a><i><font color="#666699" >7.2.4.7&nbsp;&nbsp; JMS Destination References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1056031"> </a><font >In this dialog box, you associate the JNDI 
+    API context name for the queue in the <code>SimpleClient.java</code> source 
+    file with the name of the queue you created using <code>j2eeadmin</code>. 
+    Follow these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1056032"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1056033"> </a>In the Coded Name field, enter 
+      <code>jms/QueueName</code>--the logical name referenced by <code>SimpleClient</code>.</font> 
+    <li  value="3"><font ><a name="1056034"> </a>In the Type field, select <code>javax.jms.Queue</code>.</font> 
+    <li  value="4"><font ><a name="1056035"> </a>In the JNDI Name field, enter 
+      <code>jms/MyQueue</code>.</font> 
+    <font ><li  value="5"><a name="1056036"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1056037"> </a><i><font color="#666699" >7.2.4.8&nbsp;&nbsp; Review Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1056038"> </a>Check the settings for the deployment descriptor.</font>
+  <font ><li  value="2"><a name="1056039"> </a>Click Finish.</font>
+</ol>
+
+<h4>
+  <a name="1025061"> </a><font color="#666699" >7.2.5&nbsp;&nbsp; Packaging the Message-Driven Bean</font>
+</h4>
+
+
+<p>
+  <a name="1041439"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to perform these tasks:</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1041440"> </a>Create the bean's deployment descriptor</font>
+  <li ><font ><a name="1041441"> </a>Package the deployment descriptor and the bean class in an enterprise bean JAR file</font>
+  <font >
+    <li ><a name="1041448"> </a>Insert the enterprise bean JAR file into the application's 
+      <code>MDBApp.ear</code> file
+    </font>
+</ul>
+
+<p>
+  <a name="1025089"> </a><font >To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025091"> </a>In the tree view, select <code>MDBApp</code>.</font> 
+    <font ><li  value="2"><a name="1025093"> </a>From the File menu, choose New -> Enterprise Bean. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1025117"> </a><i><font color="#666699" >7.2.5.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1025119"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1025131"> </a><i><font color="#666699" >7.2.5.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025168"> </a>In the combo box labeled JAR File 
+      Location, verify that Create New JAR File in Application and <code>MDBApp</code> 
+      are selected.</font> 
+    <li  value="2"><font ><a name="1041460"> </a>In the JAR Display Name field, 
+      verify that the name is <code>Ejb1</code>, the default display name. Representing 
+      the enterprise bean JAR file that contains the bean, this name will be displayed 
+      in the tree view. </font> 
+    <li  value="3"><font ><a name="1025138"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="4"><font ><a name="1025140"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the <code>client_mdb</code> directory. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="5"><font ><a name="1025145"> </a>Select the <code>MessageBean.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="6"><font ><a name="1025148"> </a>Click OK. </font>
+  <font ><li  value="7"><a name="1025150"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1025263"> </a><i><font color="#666699" >7.2.5.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025265"> </a>In the Bean Type combo box, select the Message-Driven radio button. </font>
+    <li  value="2"><font ><a name="1025267"> </a>Under Enterprise Bean Class, select 
+      <code>MessageBean</code>. The combo boxes for the local and remote interfaces 
+      are grayed out.</font> 
+    <li  value="3"><font ><a name="1025269"> </a>In the Enterprise Bean Name field, 
+      enter <code>MessageBean</code>. This name will represent the message-driven 
+      bean in the tree view. The display name does not have to be different from 
+      the bean class name.</font> 
+    <font ><li  value="4"><a name="1025272"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1042082"> </a><i><font color="#666699" >7.2.5.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1042083"> </a><font >In this dialog box, you specify how transactions 
+    for the <code>onMessage</code> method should be handled. Although an ordinary 
+    enterprise bean has six possible transaction attributes, a message-driven 
+    bean has only two. (The others are meaningful only if there might be a preexisting 
+    transaction context, which doesn't exist for a message-driven bean.) Follow 
+    these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1042084"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1042089"> </a>In the Transaction Attribute field 
+      opposite the <code>onMessage</code> method, verify that Required is selected.</font> 
+    <font ><li  value="3"><a name="1042086"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1025320"> </a><i><font color="#666699" >7.2.5.5&nbsp;&nbsp; Message-Driven Bean Settings Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1027682"> </a><font >In this dialog box, you specify the deployment properties for the bean. Because you are using container-managed transactions, the Acknowledgment field is grayed out. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025322"> </a>In the Destination Type combo box, select Queue.</font>
+    <li  value="2"><font ><a name="1036235"> </a>In the Destination field, select 
+      <code>jms/MyQueue</code>.</font> 
+    <li  value="3"><font ><a name="1036236"> </a>In the Connection Factory field, 
+      select <code>jms/QueueConnectionFactory</code>.</font> 
+    <font ><li  value="4"><a name="1025334"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1025381"> </a><i><font color="#666699" >7.2.5.6&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1025383"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1025385"> </a><i><font color="#666699" >7.2.5.7&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1025387"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1042353"> </a><i><font color="#666699" >7.2.5.8&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1042354"> </a><font >Click Next. (You do not need to specify the connection factory for the message-driven bean, because it is not referred to in the message-driven bean code. You specified the connection factory in the Message-Driven Bean Settings dialog box.)</font>
+</p>
+
+<h5>
+  <a name="1025389"> </a><i><font color="#666699" >7.2.5.9&nbsp;&nbsp; Resource Environment References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1037151"> </a><font >Click Next. (You do not need to specify the queue name here, because it is not referred to in the message-driven bean code. You specified it in the Message-Driven Bean Settings dialog box.)</font>
+</p>
+
+<h5>
+  <a name="1025401"> </a><i><font color="#666699" >7.2.5.10&nbsp;&nbsp; Security Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1036951"> </a><font >Use the default Security Identity setting for a message-driven bean, Run As Specified Role. Click Next.</font>
+</p>
+
+<h5>
+  <a name="1025412"> </a><i><font color="#666699" >7.2.5.11&nbsp;&nbsp; Review Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025414"> </a>Check the settings for the deployment descriptor.</font>
+  <font ><li  value="2"><a name="1025415"> </a>Click Finish.</font>
+</ol>
+
+<h4>
+  <a name="1025781"> </a><font color="#666699" >7.2.6&nbsp;&nbsp; Checking the JNDI Names</font>
+</h4>
+
+
+<p>
+  <a name="1025814"> </a><font >Verify that the JNDI names for the application components are correct.</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1041529"> </a>You give the JNDI name of the destination--in this case, the queue--to the message-driven bean component.</font>
+  <li ><font ><a name="1041538"> </a>You check to make sure that the context names for the connection factory and the destination are correctly matched to their JNDI names.</font>
+    <li  value="1"><font ><a name="1038626"> </a>In the tree view, select the <code>MDBApp</code> 
+      application. </font> 
+    <li  value="2"><font ><a name="1027768"> </a>Select the JNDI Names tabbed pane.</font>
+  <font ><li  value="3"><a name="1058367"> </a>Verify that the JNDI names appear as shown in <a href="j2eeapp1.html#1058296">Table 7.1</a> and <a href="j2eeapp1.html#1058322">Table 7.2</a>.
+</font></ul><font >
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1058296"> </a><font >Table 7.1: &nbsp;&nbsp; Application Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1058302"> </a><font >Component Type<br></font>
+
+</font></div></th>
+    <th>
+        <div align="left"><font face="" color="#666699"> <a name="1058304"> </a><font ><b>Component</b><br>
+          </font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1058306"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1058308"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058310"> </a><font ><code>MessageBean</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058312"> </a><font ><code>jms/MyQueue</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+<p></p>
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1058322"> </a><font >Table 7.2: &nbsp;&nbsp; References Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1058330"> </a><font >Ref. Type<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1058332"> </a><font >Referenced By<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1058334"> </a><font >Reference Name<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1058336"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1058338"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058340"> </a><font ><code>SimpleClient</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058342"> </a><font ><code>jms/MyQueueConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058344"> </a><font ><code>jms/QueueConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1058346"> </a><font >Env Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058348"> </a><font ><code>SimpleClient</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058350"> </a><font ><code>jms/QueueName</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1058352"> </a><font ><code>jms/MyQueue</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+
+
+</font>
+<div align="left">
+<h3>
+  <a name="1028835"> </a><font color="#666699" >7.3&nbsp;&nbsp; Deploying and Running the Application</font>
+</h3>
+
+
+<p>
+  <a name="1028952"> </a><font >Deploying and running this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1028929">Looking at the deployment descriptor</a></font>
+  <li><font ><a href="#1063372">Adding the server, if necessary</a></font>
+  <li><font ><a href="#1036262">Deploying the application</a></font>
+  <li><font ><a href="#1024369">Running the client</a></font>
+  <li><font ><a href="#1026015">Undeploying the application</a></font>
+  <font ><li><a href="#1026043">Removing the application and stopping the server</a></font>
+</ol>
+<div align="left">
+<h4>
+  <a name="1028929"> </a><font color="#666699" >7.3.1&nbsp;&nbsp; Looking at the Deployment Descriptor</font>
+</h4>
+
+
+<p>
+  <a name="1028836"> </a><font >As you package an application, the deploytool creates a deployment descriptor in accordance with the packaging choices you make. To see some of the JMS API-related elements of the enterprise bean deployment descriptor, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1028838"> </a>Select <code>Ejb1</code> in the 
+      tree view.</font> 
+    <li  value="2"><font ><a name="1028839"> </a>Choose Descriptor Viewer from the Tools menu.</font>
+  <font >
+    <li  value="3"><a name="1041997"> </a>Select <code>SimpleClient</code> in 
+      the tree view and repeat step 2.
+    </font>
+</ol>
+
+<p>
+  <a name="1063336"> </a><font >In the Deployment Descriptor Viewer window, click Save As if you want to save the contents as an XML file for future reference. <a href="j2eeapp1.html#1063343">Table 7.3</a> describes the elements that are related to the JMS API.
+</font></p><table border="1" cellpadding="5" cellspacing="0">
+
+<font >
+    <caption><b><i><font face=""> <a name="1063343"> </a>Table 7.3: &nbsp;&nbsp; 
+    JMS API-Related Deployment Descriptor Elements<br>
+</div>
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th>
+        <div align="left"><font face="" color="#666699"> <a name="1063347"> </a>Element 
+          Name<br>
+
+</font></div></th>
+    <th>
+        <div align="left"><font face="" color="#666699"> <a name="1063349"> </a>Description<br>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063352"> </a><code>&lt;message-driven&gt;</code><br>
+          </font></div>
+      </td>
+    <td>
+        <div align="left"><font face=""> <a name="1063354"> </a>Declares a message-driven 
+          bean.<br>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063357"> </a><code>&lt;message-selector&gt;</code><br>
+          </font></div>
+      </td>
+    <td>
+        <div align="left"><font face=""> <a name="1063359"> </a>Specifies the 
+          JMS API message selector to be used in determining which messages a 
+          message-driven bean is to receive.<br>
+
+</font></div></td>
+  </tr>
+
+</font>
+  
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1066431"> </a><font ><code>&lt;message-driven-destination&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1066433"> </a><font >Tells the 
+          Deployer whether a message-driven bean is intended for a queue or a 
+          topic, and if it is intended for a topic, whether the subscription is 
+          durable. Contains the element <code>&lt;destination-type&gt;</code> 
+          and optionally, for topics, <code>&lt;subscription-durability&gt;</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1066436"> </a><font ><code>&lt;destination-type&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1066438"> </a><font >Specifies 
+          the type of the JMS API destination (either <code>javax.jms.Queue</code> 
+          or <code>javax.jms.Topic</code>). In this case, the value is <code>javax.jms.Queue</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063558"> </a><font ><code>&lt;subscription-durability&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1063560"> </a><font >Optionally specifies whether a topic subscription is intended to be durable or nondurable.<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063553"> </a><font ><code>&lt;resource-env-ref&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063555"> </a><font >Declares 
+          an enterprise bean's reference to an administered object associated 
+          with a resource in the enterprise bean's environment--in this case, 
+          a JMS API destination. Contains the elements <code>&lt;resource-env-ref-name&gt;</code> 
+          and <code>&lt;resource-env-ref-type&gt;</code>. <br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063548"> </a><font ><code>&lt;resource-env-ref-name&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063550"> </a><font >Specifies 
+          the name of a resource environment reference; its value is the environment 
+          entry name used in the enterprise bean code--in this case, <code>jms/QueueName</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063543"> </a><font ><code>&lt;resource-env-ref-type&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063545"> </a><font >Specifies 
+          the type of a resource environment reference--in this case, <code>javax.jms.Queue</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063538"> </a><font ><code>&lt;resource-ref&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063540"> </a><font >Contains 
+          a declaration of the enterprise bean's reference to an external resource--in 
+          this case, a JMS API connection factory. Contains the elements <code>&lt;res-ref-name&gt;</code>, 
+          <code>&lt;res-type&gt;</code>, and <code>&lt;res-auth&gt;</code>. <br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063533"> </a><font ><code>&lt;res-ref-name&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063535"> </a><font >Specifies 
+          the name of a resource manager connection factory reference--in this 
+          case, <code>jms/MyQueueConnectionFactory</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063528"> </a><font ><code>&lt;res-type&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063530"> </a><font >Specifies 
+          the type of the data source--in this case, <code>javax.jms.QueueConnectionFactory</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063523"> </a><font ><code>&lt;res-auth&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1063525"> </a><font >Specifies whether the enterprise bean code signs on programmatically to the resource manager (Application) or whether the Container will sign on to the resource manager on behalf of the bean. In the latter case, the Container uses information that is supplied by the Deployer.<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1063518"> </a><font ><code>&lt;res-sharing-scope&gt;</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1063520"> </a><font >Specifies 
+          whether connections obtained through the given resource manager connection 
+          factory reference can be shared. In this case, the value is <code>Shareable</code>.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+
+<h4>
+  <a name="1063372"> </a><font color="#666699" >7.3.2&nbsp;&nbsp; Adding the Server</font>
+</h4>
+
+
+  <p> <a name="1063373"> </a><font >Before you can deploy the application, you 
+    must make available to the deploytool the J2EE server you started in <a href="j2eeapp1.html#1036305">Section 
+    7.2.1, "Starting the J2EE Server and the Deploytool."</a> Because you started 
+    the J2EE server before you started the deploytool, the server, named <code>localhost</code>, 
+    probably appears in the tree under <code>Servers</code>. If it does not, do 
+    the following.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1036268"> </a>From the File menu, choose Add Server.</font>
+    <li  value="2"><font ><a name="1036269"> </a>In the Add Server dialog box, enter 
+      <code>localhost</code> in the Server Name field.</font> 
+    <font >
+    <li  value="3"><a name="1036270"> </a>Click OK. A <code>localhost</code> node 
+      appears under <code>Servers</code> in the tree view.
+    </font>
+</ol>
+
+<h4>
+  <a name="1036262"> </a><font color="#666699" >7.3.3&nbsp;&nbsp; Deploying the Application</font>
+</h4>
+
+
+<p>
+  <a name="1025894"> </a><font >You have now created an application that consists of an application client and a message-driven bean. To deploy the application, perform the following steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025897"> </a>From the File menu, choose Save to save the application.</font>
+  <li  value="2"><font ><a name="1025899"> </a>From the Tools menu, choose Deploy. </font>
+    <li  value="3"><font ><a name="1025901"> </a>In the Introduction dialog box, 
+      verify that the Object to Deploy selection is <code>MDBApp</code> and that 
+      the Target Server selection is <code>localhost</code>. </font> 
+    <li  value="4"><font ><a name="1025904"> </a>Click Next.</font>
+  <li  value="5"><font ><a name="1025906"> </a>In the JNDI Names dialog box, verify that the JNDI names are correct.</font>
+  <li  value="6"><font ><a name="1025908"> </a>Click Next.</font>
+  <li  value="7"><font ><a name="1025910"> </a>Click Finish.</font>
+  <li  value="8"><font ><a name="1025912"> </a>In the Deployment Progress dialog box, click OK when the "Deployment of MDBApp is complete" message appears.</font>
+  <font >
+    <li  value="9"><a name="1027785"> </a>In the tree view, expand <code>Servers</code> 
+      and select <code>localhost</code>. Verify that <code>MDBApp</code> is deployed.
+    </font>
+</ol>
+
+<h4>
+  <a name="1024369"> </a><font color="#666699" >7.3.4&nbsp;&nbsp; Running the Client</font>
+</h4>
+
+
+  <p> <a name="1025967"> </a><font >To run the client, you use the <code>MDBApp.ear</code> 
+    file that you created in <a href="j2eeapp1.html#1036357">Section 7.2.3, "Creating 
+    the J2EE Application."</a> Make sure that you are in the directory <code>client_mdb</code>. 
+    Then perform the following steps.</font> </p>
+
+<ol type="1">
+  <li><font ><a name="1025994"> </a>At the command line prompt, enter the following:</font>
+<pre>
+runclient -client MDBApp.ear -name SimpleClient
+</pre>
+    <li><font ><a name="1025974"> </a>When the Login for user: dialog box appears, 
+      enter <code>j2ee</code> for the user name and <code>j2ee</code> for the 
+      password. </font> 
+    <font ><li><a name="1026152"> </a>Click OK.</font>
+</ol>
+
+<p>
+  <a name="1025977"> </a><font >The client program runs in the command window, generating output that looks like this:</font>
+</p>
+
+<pre>
+Binding name:'java:comp/env/jms/QueueName'
+Binding name:'java:comp/env/jms/MyQueueConnectionFactory'
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Sending message: This is message 1
+Sending message: This is message 2
+Sending message: This is message 3
+Unbinding name:'java:comp/env/jms/QueueName'
+Unbinding name:'java:comp/env/jms/MyQueueConnectionFactory'
+</pre>
+
+  <p> <a name="1038655"> </a><font >Output from the application appears in the window 
+    in which you started the J2EE server. By default, the server creates three 
+    instances of the <code>MessageBean</code> to receive messages.</font> </p>
+
+<pre>
+In MessageBean.MessageBean()
+In MessageBean.setMessageDrivenContext()
+In MessageBean.ejbCreate()
+MESSAGE BEAN: Message received: This is message 1
+In MessageBean.MessageBean()
+In MessageBean.setMessageDrivenContext()
+In MessageBean.ejbCreate()
+In MessageBean.MessageBean()
+In MessageBean.setMessageDrivenContext()
+In MessageBean.ejbCreate()
+MESSAGE BEAN: Message received: This is message 2
+MESSAGE BEAN: Message received: This is message 3
+</pre>
+
+<h4>
+  <a name="1026015"> </a><font color="#666699" >7.3.5&nbsp;&nbsp; Undeploying the Application</font>
+</h4>
+
+
+<p>
+  <a name="1026033"> </a><font >To undeploy the J2EE application, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1026038"> </a>In the tree view, select <code>localhost</code>.</font> 
+    <li  value="2"><font ><a name="1026020"> </a>Select <code>MDBApp</code> in 
+      the Deployed Objects area.</font> 
+    <li  value="3"><font ><a name="1026021"> </a>Click Undeploy. </font>
+  <font ><li  value="4"><a name="1026013"> </a>Answer Yes in the confirmation dialog.</font>
+</ol>
+
+<h4>
+  <a name="1026043"> </a><font color="#666699" >7.3.6&nbsp;&nbsp; Removing the Application and Stopping the Server</font>
+</h4>
+
+
+<p>
+  <a name="1026045"> </a><font >To remove the application from the deploytool, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1026047"> </a>Select <code>MDBApp</code> in the 
+      tree view.</font> 
+    <font ><li  value="2"><a name="1026048"> </a>Select Close from the File menu.</font>
+</ol>
+
+<p>
+  <a name="1055850"> </a><font >To delete the queue you created, enter the following at the command line prompt:</font>
+</p>
+
+<pre>
+j2eeadmin -removeJmsDestination jms/MyQueue
+</pre>
+
+<p>
+  <a name="1055846"> </a><font >To stop the J2EE server, use the following command:</font>
+</p>
+
+<pre>
+j2ee -stop
+</pre>
+
+<p>
+  <a name="1055836"> </a><font >To exit the deploytool, choose Exit from the File menu.</font>
+</p>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="jmsj2ee.html">Prev</a> |
+  <a href="j2eeapp2.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

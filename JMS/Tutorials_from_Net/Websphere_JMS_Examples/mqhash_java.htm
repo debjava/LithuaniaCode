@@ -1,0 +1,143 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0068)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqhash.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2008  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqhash                                                    */
+/*                                                                         */
+/* Description: Sample java program that uses java hash table for the      */
+/*              setting of the WebSphere MQ client environment variables   */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function: This program shows the use of a java hash table to set the    */
+/*   WebSphere MQ environment.  It requires a queue name parameter and     */
+/*   takes an optional queue manager name parameter.  The message that is  */
+/*   put on the queue is hard-coded.  This program has been tested with    */
+/*   WebSphere MQ v7.0.0.0 and Java 1.6.0.                                 */ 
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Note: In order for this program to work, you'll need to change the      */
+/*   MQConstants.CHANNEL_PROPERTY and MQConstants.HOST_NAME_PROPERTY to be */
+/*   the values that are valid for your system.  The                       */
+/*   MQConstants.PORT_PROPERTY value can remain at 1414 if you are using   */
+/*   the default port.                                                     */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/*  mqhash has 2 parameters:                                               */
+/*    queue name (required)                                                */
+/*    queue manager name (optional)                                        */
+/*                                                                         */
+/***************************************************************************/
+import com.ibm.mq.*;                     // Include the MQ package
+import com.ibm.mq.constants.MQConstants; // Include the WMQ constants
+import java.io.*;
+import java.lang.*;
+
+public class mqhash {
+
+   private MQQueueManager qMgr;
+
+   /**********************************************************/
+   /* This program doesn't have any specific initialization. */
+   /* If it did, it could go here.                           */
+   /**********************************************************/
+   public void init() {
+      /* put specific initialization here.... */
+
+   }
+
+   public static void main (String args[]) throws IOException {
+      /****************************************************************/
+      /* Check to make sure that at least the queue name was entered. */
+      /****************************************************************/
+      if (args.length &lt; 1) {
+         System.out.println("Required parameter missing - queue name");
+      } else {
+         mqhash mySample = new mqhash();
+         mySample.init();
+         mySample.start(args);
+      }
+   }
+
+   public void start(String args[]) {
+      try {
+         /*************************************************************/
+         /* Create a hash table to hold the WebSphere MQ environment. */
+         /* Note: Change values to be appropriate.                    */
+         /*************************************************************/
+         java.util.Hashtable env = new java.util.Hashtable();
+         env.put(MQConstants.CHANNEL_PROPERTY, "your channel name");
+         env.put(MQConstants.HOST_NAME_PROPERTY, "your host name");
+         env.put(MQConstants.PORT_PROPERTY, new Integer(1414));
+
+         /********************************************************/
+         /* If a queue manager name was entered, then connect to */
+         /* it.  Otherwise, use the default queue manager.       */
+         /********************************************************/
+         if (args.length &gt; 1) {
+            qMgr  = new MQQueueManager(args[1], env);
+         } else {
+            qMgr  = new MQQueueManager("", env);
+         }
+
+         /***********************************************************/
+         /* Open the queue, build the message, and put the message. */
+         /***********************************************************/
+         int openOptions = MQConstants.MQOO_OUTPUT;
+         MQQueue myQueue = qMgr.accessQueue(args[0], openOptions,
+                                            null, null, null);
+
+         MQMessage myMessage = new MQMessage();
+         myMessage.writeString("Environment set in hash table");
+         myMessage.format = MQConstants.MQFMT_STRING;
+
+         MQPutMessageOptions pmo = new MQPutMessageOptions();
+         myQueue.put(myMessage, pmo);
+
+         /**********************************************************/
+         /* Close the queue and disconnect from the queue manager. */
+         /**********************************************************/
+         myQueue.close();
+         qMgr.disconnect();
+      } catch (MQException ex) {
+          System.out.println("An MQ error occurred: " + ex.completionCode + " " +
+                                                        ex.reasonCode);
+      } catch (java.io.IOException ex) {
+                 System.out.println("Java exception: " + ex);
+      }
+   }
+}
+
+
+
+
+
+</PRE></BODY></HTML>

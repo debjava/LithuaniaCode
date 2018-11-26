@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0071)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/imsbridge.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2002  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Program name: IMSBridge                                                   */
+/*                                                                           */
+/* Description:  Sample java program to illustrate how to format a message   */
+/*               for the IMSBridge.                                          */
+/*                                                                           */
+/*                                                                           */
+/* Function:     This program connects to the requested queue manager and    */
+/*               queue specified as program arguments. It then creates and   */  
+/*               populates the MQMD and MQIIH headers. Finally, it sets the  */
+/*               LL and ZZ values along with the message text and puts the   */
+/*               message to the requested queue.                             */
+/*                                                                           */
+/* Prereqs:      MQSeries V5.2 with SupportPac MA88 or Websphere MQ 5.3      */
+/*                                                                           */
+/* Setup:        Create a local queue manager and queue with channels        */
+/*               communicating with MVS IMS system. Refer to SupportPac      */
+/*               MA1C readme file for detail on setup.                       */
+/*                                                                           */
+/* This program is run as follows:                                           */
+/*                                                                           */
+/*               java IMSBridge queue &lt;queuemanagername&gt;                     */
+/*                                                                           */
+/*                                                                           */
+/* Build:                                                                    */
+/*               Compile with javac IMSBridge.java                           */
+/*                                                                           */
+/*****************************************************************************/
+
+import java.io.*;
+import com.ibm.mq.*;
+
+
+public class IMSBridge
+{
+   //default constructor
+   public IMSBridge() 
+   {
+      super();
+   }
+
+   public static void main(String args[]) 
+   {
+
+      MQQueueManager     qMgr;
+      MQQueue            bridgeQueue;
+      MQMessage          msg;
+
+      try
+      {
+         if (args.length &lt; 1)
+         {
+            System.out.println("syntax: java IMSBridge queuename &lt;qmgrname&gt;");
+            System.exit(0);
+         }
+
+         /********************************************************/
+         /* Turn off reporting that is not controlled by this    */
+         /* application.                                         */
+         /********************************************************/
+         MQEnvironment.disableTracing ();
+         MQException.log = null;
+
+         /*********************************************************/
+         /* Connect to the queue manager                          */
+         /*********************************************************/
+         if (args.length &gt; 1)
+         {
+            qMgr = new MQQueueManager(args[1]);
+         }
+         else
+         {
+            qMgr = new MQQueueManager("");
+         }
+
+         /*********************************************************/
+         /* Open the target queue                                 */
+         /*********************************************************/
+         int openOptions = MQC.MQOO_OUTPUT;
+         bridgeQueue = qMgr.accessQueue(args[0],
+                                        openOptions,  null, null, null);
+
+         /*********************************************************/
+         /* Instantiate an MQMessage object and use its methods   */
+         /* to populate the MQMD fields.                          */
+         /*********************************************************/
+         msg = new MQMessage();
+
+         msg.messageType =         MQC.MQMT_REQUEST;
+         msg.replyToQueueName =    bridgeQueue.name;
+         msg.format =              MQC.MQFMT_IMS;       
+
+         /*********************************************************/
+         /* Use default put message options                       */
+         /*********************************************************/
+         MQPutMessageOptions pmo = new MQPutMessageOptions();
+         pmo.options = MQC.MQPMO_NONE;   
+
+         /*********************************************************/
+         /* Write the fields of the MQIIH header to the message   */
+         /* stream. The commented lines document the MQIIH        */
+         /* structure found in cmqc.h and cmqiihv.cpy             */
+         /*********************************************************/
+
+         //MQCHAR4   StrucId;         /* Structure identifier                     */
+         //MQLONG    Version;         /* Structure version number                 */
+         //MQLONG    StrucLength;     /* Length of MQIIH structure                */
+         //MQLONG    Encoding;        /* Reserved                                 */
+         //MQLONG    CodedCharSetId;  /* Reserved                                 */
+         //MQCHAR8   Format;          /* MQ format name of data that follows MQIIH*/
+         //MQLONG    Flags;           /* Flags                                    */
+         //MQCHAR8   LTermOverride;   /* Logical terminal override                */
+         //MQCHAR8   MFSMapName;      /* Message format services map name         */
+         //MQCHAR8   ReplyToFormat;   /* MQ format name of reply message          */
+         //MQCHAR8   Authenticator;   /* RACF password or passticket              */
+         //MQBYTE16  TranInstanceId;  /* Transaction instance identifier          */
+         //MQCHAR    TranState;       /* Transaction state                        */
+         //MQCHAR    CommitMode;      /* Commit mode                              */
+         //MQCHAR    SecurityScope;   /* Security scope                           */
+         //MQCHAR    Reserved;        /* Reserved                                 */
+
+
+         //MQIIH-STRUCID        PIC X(4) VALUE 'IIH '.      ** Structure version number
+         //MQIIH-VERSION        PIC S9(9) BINARY VALUE 1.   ** Length of MQIIH structure
+         //MQIIH-STRUCLENGTH    PIC S9(9) BINARY VALUE 84.  ** Structure length
+         //MQIIH-ENCODING       PIC S9(9) BINARY VALUE 0.   ** Reserved
+         //MQIIH-CODEDCHARSETID PIC S9(9) BINARY VALUE 0.   ** Reserved
+         //MQIIH-FORMAT         PIC X(8) VALUE SPACES.      ** MQ format name of data that follows MQIIH
+         //MQIIH-FLAGS          PIC S9(9) BINARY VALUE 0.   ** Flags 
+         //MQIIH-LTERMOVERRIDE  PIC X(8) VALUE SPACES.      ** Logical terminal override 
+         //MQIIH-MFSMAPNAME     PIC X(8) VALUE SPACES.      ** Message format services map name 
+         //MQIIH-REPLYTOFORMAT  PIC X(8) VALUE SPACES.      ** MQ format name of reply message 
+         //MQIIH-AUTHENTICATOR  PIC X(8) VALUE SPACES.      ** RACF password or passticket 
+         //MQIIH-TRANINSTANCEID PIC X(16) VALUE LOW-VALUES. ** Transaction instance identifier
+         //MQIIH-TRANSTATE      PIC X VALUE ' '.            ** Transaction state
+         //MQIIH-COMMITMODE     PIC X VALUE '0'.            ** Commit mode 
+         //MQIIH-SECURITYSCOPE  PIC X VALUE 'C'.            ** Security scope
+         //MQIIH-RESERVED       PIC X VALUE SPACES.         ** Reserved 
+
+         msg.writeString("IIH ");                         // MQIIH_STRUCT_ID
+         msg.writeInt(1);                                 // MQIIH_VERSION_1
+         msg.writeInt(84);                                // MQIIH_LENGTH_1
+         msg.writeInt(0);                                 // 4 byte reserved  
+         msg.writeInt(0);                                 // 4 byte reserved 
+         msg.writeString("MQIMSVS ");                     // MQFMT_IMS_VAR_STRING
+         msg.writeInt(0);                                 // MQIIH_NONE
+         msg.writeString("MASTER  ");                     // 8 byte ltermoverride
+         msg.writeString("MODU03  ");                     // 8 byte mfsmapname
+         msg.writeString("MQIMSVS ");                     // MQFMT_IMS_VAR_STRING
+         msg.writeString("        ");                     // 8 byte authenticator
+         msg.writeString("0000000000000000");             // 16 byte transid
+         msg.writeString(" ");                            // MQITS_NOT_IN_CONVERSATION
+         msg.writeString("0");                            // MQICM_COMMIT_THEN_SEND
+         msg.writeString("C");                            // MQIIS_CHECK
+         msg.writeString(" ");                            // 1 byte reserved
+
+
+         /*********************************************************/
+         /* Create the transaction message text                   */
+         /*********************************************************/
+         String data = new String("IAPMDI28 A Test Message for IMS");
+
+
+         /*********************************************************/
+         /* LL contains the length of the LL + ZZ + TRANS +       */
+         /* Record Text                                           */
+         /*********************************************************/
+         short LL = (short)(data.length() + 4);
+         short ZZ =0;
+
+         msg.writeShort(LL);
+         msg.writeShort(ZZ);
+         msg.writeString(data);
+
+
+         /*********************************************************/
+         /* Put the message to the target queue                   */
+         /*********************************************************/
+         bridgeQueue.put(msg, pmo);
+
+         System.out.println("Message successfully put to queue.");
+
+         /*********************************************************/
+         /* Cleanup the queue and queue manager resources         */
+         /*********************************************************/
+         bridgeQueue.close();
+         qMgr.disconnect();
+      }
+
+      catch (MQException mqex)
+      {
+         System.out.println("MQ exception occurred : Completeion code " +
+                            mqex.completionCode + " Reason code " +
+                            mqex.reasonCode);
+      }
+
+      catch (java.io.IOException ex)
+      {
+         System.out.println("An error occurred writing to message buffer: "+ex);
+      }
+
+   }
+}
+
+</PRE></BODY></HTML>

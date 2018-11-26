@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0069)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/MSender.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2004  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: MSender                                                   */
+/*                                                                         */
+/* Description: Sample java program that reads a line of input from the    */
+/*              keyboard and sends it to a queue.                          */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/* This program reads a line of input from the keyboard and sends it to a  */
+/* queue.  A blank line ends the program.                                  */
+/*                                                                         */
+/* This program has been tested with WebSphere MQ V5.3 CSD7 and JDK 1.4.2. */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/*  MSender has 2 parameters:                                              */
+/*    queue name (required)                                                */
+/*    queue manager name (optional)                                        */
+/*                                                                         */
+/***************************************************************************/
+
+import com.ibm.mq.*;
+import java.io.*;
+
+public class MSender {
+
+	private static MQQueueManager qMgr;
+
+	public MSender() {
+		super();
+	}
+
+	public static void main(String args[]) {
+		try {
+			if (args.length &lt; 1) {
+				System.out.println("Missing queue name: " 
+				        + "MSender &lt;queue name&gt; &lt;qmgr name (optional)&gt;");
+			} else {
+				System.out.println("MSender started...");
+
+				// create a new instance of the sample program
+				MSender mSender = new MSender();
+
+				if (args.length &gt; 1) {
+					qMgr = new MQQueueManager(args[1]);
+				} else {
+					qMgr = new MQQueueManager("");
+				}
+
+				int openOptions = MQC.MQOO_OUTPUT;
+				MQQueue q =
+					qMgr.accessQueue(args[0], openOptions, null, null, null);
+
+				// call method to send messages
+				mSender.mPut(qMgr, q);
+
+				// clean up connection
+				q.close();
+				qMgr.disconnect();
+				System.out.println("MSender ended...");
+			}
+
+		} catch (MQException ex) {
+			System.out.println(
+				"WMQ exception occurred : Completion code "
+					+ ex.completionCode
+					+ " Reason code "
+					+ ex.reasonCode);
+		}
+	}
+
+        /*************************************/
+        /* This method takes two parameters: */
+        /*  qMgr - a WMQ QueueManager object */
+        /*  q    - a WMQ Queue object        */
+        /*************************************/
+	public void mPut(MQQueueManager qMgr, MQQueue q) {
+		try {
+
+			// Define a MQ message buffer
+			MQMessage mBuf = new MQMessage();
+
+			// create message options
+			MQPutMessageOptions pmo = new MQPutMessageOptions();
+			// accept defaults
+			pmo.options = MQC.MQPMO_NONE; // use defaults
+
+			System.out.println("Enter text to send, blank line to exit");
+
+			InputStreamReader isr = new InputStreamReader(System.in);
+			BufferedReader br = new BufferedReader(isr);
+
+			String runShow;
+			do {
+				runShow = br.readLine();
+				if (runShow.length() &gt; 0) {
+					mBuf.clearMessage();                // reset the buffer
+					mBuf.correlationId = MQC.MQCI_NONE; // set correlationId
+					mBuf.messageId = MQC.MQMI_NONE;     // set messageId
+					mBuf.writeString(runShow);          // set actual message
+					System.out.println("--&gt; writing message to queue");
+					q.put(mBuf, pmo);      // put the message out on the queue
+				}
+			} while (runShow.length() &gt; 0);
+
+		} catch (MQException ex) {
+			System.out.println(
+				"MQ exception occurred : Completion code "
+					+ ex.completionCode
+					+ " Reason code "
+					+ ex.reasonCode);
+		} catch (java.io.IOException ex) {
+			System.out.println(
+				"An error occurred reading from message buffer: " + ex);
+		}
+	}
+}
+
+</PRE></BODY></HTML>

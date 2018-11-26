@@ -1,0 +1,354 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0069)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqreqro.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2005  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Program name: mqreqro                                                     */
+/*                                                                           */
+/* Description: Sample java program that shows how a requester program can   */
+/*              instruct a server program on how it would like the message   */
+/*              id and correlation id handled in the reply.                  */
+/*                                                                           */
+/*              This progam should be used in conjunction with the           */
+/*              mqsrvro.java sample program.                                 */
+/*                                                                           */
+/*              The best way to use the mqreqro.java and mqsrvro.java        */
+/*              samples is to start them in separate MS-DOS Prompt windows.  */
+/*              They need to be run against the same queue manager and queue.*/
+/*              mqreqro asks the user if they want a reply with the message  */
+/*              id copied to the correlation id.  if not, the same           */
+/*              correlation id is passed on the reply.  It also asks if the  */
+/*              user wants a new message id generated.  If not, the same     */
+/*              message id is passed back with the reply.                    */
+/*                                                                           */
+/*              When a blank line is entered in the mqreqro.java window, the */
+/*              program will send an application specific message to the     */
+/*              mqsrvro.cpp program to notify it to terminate.  mqreqro will */
+/*              then end.                                                    */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Function:                                                                 */
+/*                                                                           */
+/*  This program is a modified version of the mqreqro.cpp program that can   */
+/*  be found on the WebSphere MQ sample code section of the web at:          */
+/*                                                                           */
+/*    http://www.developer.ibm.com/tech/sampmq.html                          */
+/*                                                                           */
+/* This program has been tested with WebSphere MQ v5.3 FixPack 8 and         */
+/* JDK 1.4.2.                                                                */
+/*                                                                           */
+/* Execution:                                                                */
+/*                                                                           */
+/*  mqreqro queuename &lt;queuemgrname&gt;                                         */
+/*                                                                           */
+/*  where queuename is the required queue name                               */
+/*  and queuemgrname is an optional queue manager name                       */
+/*                                                                           */
+/*****************************************************************************/
+import com.ibm.mq.*; // Include the WMQ package
+import java.io.*;
+import java.lang.*;
+
+public class mqreqro {
+
+	private MQQueueManager qMgr;
+	private boolean bSyncPoint = false;
+	private String modelQueue  = "SYSTEM.MQSC.REPLY.QUEUE";
+	private String qTemplate   = "MQREQRO*";
+	private String sTerminate  = "TERMINATE";
+
+	public static void main(String args[]) throws IOException {
+		/****************************************************************/
+		/* Check to make sure that at least the queue name was entered. */
+		/****************************************************************/
+		if (args.length &lt; 1) {
+			System.out.println("Required parameter missing - queue name");
+			System.out.println("java mqreqro &lt;queue-name&gt; &lt;qmgr-name&gt;");
+		} else {
+			mqreqro mySample = new mqreqro();
+			mySample.init();
+			mySample.start(args);
+		}
+		System.exit(0);
+	}
+
+	/**********************************************************/
+	/* This program doesn't have any specific initialization. */
+	/* If it did, it could go here.                           */
+	/**********************************************************/
+	public void init() {
+	}
+
+	public void start(String args[]) {
+		try {
+			boolean newMsgID = true;
+			boolean passCorrelID = false;
+			int reportOpts = MQC.MQRO_EXCEPTION_WITH_DATA;
+
+			System.out.println("Program mqreqro started.");
+
+			/*****************************************/
+			/* Disable WMQ putting out the errors    */
+			/*****************************************/
+            MQException.log = null;
+
+			/******************************************************/
+			/* Create a queue manager object and access the queue */
+			/* that will be used for the putting of messages.     */
+			/******************************************************/
+			if (args.length &gt; 1) {
+				qMgr = new MQQueueManager(args[1]);
+			} else {
+				qMgr = new MQQueueManager("");
+			}
+			int openOptions =
+				MQC.MQOO_OUTPUT + MQC.MQOO_INQUIRE + MQC.MQOO_FAIL_IF_QUIESCING;
+
+			MQQueue qServer =
+				qMgr.accessQueue(args[0], openOptions, null, null, null);
+
+			openOptions =
+				MQC.MQOO_INPUT_EXCLUSIVE
+					+ MQC.MQOO_INQUIRE
+					+ MQC.MQOO_FAIL_IF_QUIESCING;
+			MQQueue qReply =
+				qMgr.accessQueue(
+					modelQueue,
+					openOptions,
+					null,
+					qTemplate,
+					null);
+
+			/*****************************************/
+			/* Set up a reader to get the user input */
+			/*****************************************/
+			InputStreamReader isr = new InputStreamReader(System.in);
+			BufferedReader br = new BufferedReader(isr);
+			String runShow;
+
+			/********************************************/
+			/* As long as the user keeps entering data, */
+			/* process it...                            */
+			/********************************************/
+			do {
+				reportOpts = MQC.MQRO_EXCEPTION_WITH_DATA;
+				passCorrelID = false;
+				newMsgID = true;
+
+				System.out.println(
+					"\n Would you like the message id copied to the correl id on the reply (y/n)?");
+				System.out.print(" Enter to exit ");
+				runShow = br.readLine();
+
+				/************************************/
+				/* See if the user entered anything */
+				/************************************/
+				if (runShow.length() &gt; 0) {
+					if ((runShow.indexOf("N") &gt;= 0)
+						|| (runShow.indexOf("n") &gt;= 0)) {
+						passCorrelID = true;
+						reportOpts |= MQC.MQRO_PASS_CORREL_ID;
+					} else {
+						reportOpts |= MQC.MQRO_COPY_MSG_ID_TO_CORREL_ID;
+					}
+
+					System.out.print(
+						"\n Would you like a new message id generated on the reply (y/n)?");
+					runShow = br.readLine();
+					if ((runShow.indexOf("N") &gt;= 0)
+						|| (runShow.indexOf("n") &gt;= 0)) {
+						newMsgID = false;
+						reportOpts |= MQC.MQRO_PASS_MSG_ID;
+					} else {
+						reportOpts |= MQC.MQRO_NEW_MSG_ID;
+					}
+
+					System.out.print("\n Sending message with request to ");
+					if (passCorrelID == true) {
+						System.out.print("reply with same correlation id and ");
+					} else {
+						System.out.print(
+							"reply with the message id copied to the correlation id and ");
+					}
+
+					if (newMsgID == true) {
+						System.out.println("a new message id.");
+					} else {
+						System.out.println("the same message id.");
+					}
+
+					/****************************************************/
+					/* Set up a new message with a format of string     */
+					/****************************************************/
+					MQMessage msg = new MQMessage();
+					msg.writeString("mqreqro.java test message");
+					msg.format = MQC.MQFMT_STRING;
+					msg.report = reportOpts;
+					msg.replyToQueueName = qReply.name;
+					msg.messageType = MQC.MQMT_REQUEST;
+
+					MQPutMessageOptions pmo = new MQPutMessageOptions();
+					pmo.options =
+						MQC.MQPMO_NEW_MSG_ID | MQC.MQPMO_NEW_CORREL_ID;
+
+					try {
+						qServer.put(msg, pmo);
+
+                        /***********************************************/
+                        /* Print out the message id and correlation id */
+                        /* that were sent to the server.               */
+                        /***********************************************/
+						System.out.print("\n  Message ID from put:     ");
+						dumpHexId(msg.messageId);
+						System.out.print("  Correlation ID from put: ");
+						dumpHexId(msg.correlationId);
+
+						MQGetMessageOptions gmo = new MQGetMessageOptions();
+						gmo.options =
+							MQC.MQGMO_WAIT | MQC.MQGMO_FAIL_IF_QUIESCING;
+						gmo.waitInterval = 15000;
+						MQMessage msgReply = new MQMessage();
+
+                        /****************************************************/
+                        /* If a new message id is requested, set the reply  */
+                        /* message to null to get next available message.   */
+                        /* If request was to pass the message id, we know   */
+                        /* what it is on the reply so only look for this    */
+                        /* specific message id on the queue                 */
+                        /****************************************************/
+						if (newMsgID) {
+							msgReply.messageId = MQC.MQMI_NONE;
+						} else {
+							msgReply.messageId = msg.messageId;
+						}
+
+                        /****************************************************/
+                        /* If pass correlid is requested, then look for the */
+                        /* same correlid in the reply otherwise, the server */
+                        /* will copy the messageid to the correlid field    */
+                        /* and we will look only for this specific correlid */
+                        /****************************************************/
+						if (passCorrelID) {
+							msgReply.correlationId = msg.correlationId;
+						} else {
+							msgReply.correlationId = msg.messageId;
+						}
+
+						try {
+							qReply.get(msgReply, gmo);
+
+
+                            /***********************************************/
+                            /* Print out the message id and correlation id */
+                            /* that were returned from the server.         */
+                            /***********************************************/
+							System.out.print("\n  Message ID from get:     ");
+							dumpHexId(msgReply.messageId);
+							System.out.print("  Correlation ID from get: ");
+							dumpHexId(msgReply.correlationId);
+						} catch (MQException ex) {
+							System.out.println(
+								"An MQ error occurred getting response message: "
+									+ ex.completionCode
+									+ " "
+									+ ex.reasonCode);
+						}
+					} catch (MQException ex) {
+						System.out.println("put failed");
+						System.out.println(
+							"An MQ error occurred putting server message: "
+								+ ex.completionCode
+								+ " "
+								+ ex.reasonCode);
+					}
+
+				} else {
+                    /*************************************************/
+                    /* User entered a blank line, send the terminate */
+                    /* message over to the server program.           */
+                    /*************************************************/
+					MQMessage msgTerminate = new MQMessage();
+					msgTerminate.replyToQueueName = qReply.name;
+					msgTerminate.writeString(sTerminate);
+					msgTerminate.format = MQC.MQFMT_STRING;
+					msgTerminate.report = reportOpts;
+					msgTerminate.messageType = MQC.MQMT_APPL_FIRST;
+					MQPutMessageOptions pmoTerminate =
+						new MQPutMessageOptions();
+					try {
+						qServer.put(msgTerminate, pmoTerminate);
+					} catch (MQException ex) {
+						System.out.println(
+							"An MQ error occurred sending terminate message: "
+								+ ex.completionCode
+								+ " "
+								+ ex.reasonCode);
+					}
+
+				}
+
+			} while (runShow.length() &gt; 0);
+
+			/**********************************************************/
+			/* Before the program ends, the open queue will be closed */
+			/* and the queue manager will be disconnected.            */
+			/**********************************************************/
+			qReply.close();
+			qServer.close();
+			qMgr.disconnect();
+		} catch (MQException ex) {
+			System.out.println(
+				"An MQ error occurred: "
+					+ ex.completionCode
+					+ " "
+					+ ex.reasonCode);
+		} catch (java.io.IOException ex) {
+			System.out.println("Java exception: " + ex);
+		}
+	}
+
+	/****************************************************/
+	/* Some of the MQ Ids are actually byte strings and */
+	/* need to be dumped in hex format.                 */
+	/****************************************************/
+	static void dumpHexId(byte[] myId) {
+		System.out.print("X'");
+		for (int i = 0; i &lt; myId.length; i++) {
+			char b = (char) (myId[i] &amp; 0xFF);
+			if (b &lt; 0x10) {
+				System.out.print("0");
+			}
+			System.out.print((String) (Integer.toHexString(b)).toUpperCase());
+		}
+		System.out.println("'");
+	}
+
+}
+Error 500: OutputStream already obtained
+</PRE></BODY></HTML>

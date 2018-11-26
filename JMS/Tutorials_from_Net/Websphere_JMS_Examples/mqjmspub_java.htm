@@ -1,0 +1,348 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqjmspub.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2004  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Program name: mqjmspub.java                                               */
+/*                                                                           */
+/* Description: Sample Java program that uses JMS to perform the role of the */
+/*              publisher in a publish/subscribe environment.                */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Function:                                                                 */
+/*                                                                           */
+/*   This program uses the JMS API to perform the role of a publisher in a   */
+/*   publish/subscribe environment.  It looks up the TopicConnectionFactory  */
+/*   using JNDI and accepts user input for the topic on which to publish.    */
+/*   This user input is of the form "sleep time;topic;text to publish".  The */
+/*   sleep time is in milliseconds.  If an invalid value is used, it is      */
+/*   ignored.                                                                */
+/*                                                                           */
+/* This program is run as follows:                                           */
+/*                                                                           */
+/*     java mqjmspub -icf ... -url ... -tcf ...                              */
+/*                                                                           */
+/* where                                                                     */
+/*     -icf is the classname of the initial context factory                  */
+/*     -url is the URL of the session's initial context                      */
+/*     -tcf is the topic connection factory                                  */
+/*                                                                           */
+/* An alternate method is to run the program with an mqjmspub.properties     */
+/* that contains the icf, url, and tcf definitions:                          */
+/*                                                                           */
+/*    icf=com.sun.jndi.fscontext.RefFSContextFactory                         */
+/*    url=file:c://support//jms//jmsadmin                                    */
+/*    tcf=\\pubsub\\ma0cTCF                                                  */
+/*                                                                           */
+/* Detailed information on the execution of this program can be found at:    */
+/*    http://www.developer.ibm.com/tech/faq/individual?oid=2:83352           */
+/*                                                                           */
+/* This program has been tested with WebSphere MQ 5.3 CSD5, SupportPac MA0C  */
+/* as a broker, and JDK 1.4.1.                                               */
+/*                                                                           */
+/* This program is a companion to the mqjmssub.java sample.                  */
+/*                                                                           */
+/* Information regarding a possible execution of JMSAdmin:                   */
+/*                                                                           */
+/*   JMSAdmin.cfg contents:                                                  */
+/*     INITIAL_CONTEXT_FACTORY=com.sun.jndi.fscontext.RefFSContextFactory    */
+/*     PROVIDER_URL=file:c://support//jms//jmsadmin                          */
+/*     SECURITY_AUTHENTICATION=none                                          */
+/*                                                                           */
+/*   JMSAdmin execution:                                                     */
+/*     JMSAdmin -cfg c:\support\jms\jmsadmin\jmsadmin.cfg                    */
+/*                                                                           */
+/*   JMSAdmin input:                                                         */
+/*     def ctx(pubsub)                                                       */
+/*     chg ctx(pubsub)                                                       */
+/*     def tcf(ma0cTCF) qmgr(pubsub.qmgr) clientid(SUB)                      */
+/*     def t(ma0cTopic) topic(SampleTopic)                                   */
+/*                                                                           */
+/*****************************************************************************/
+
+import java.io.*;
+import java.lang.*;
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Hashtable;
+import java.util.Properties;
+
+public class mqjmspub implements Runnable {
+
+    private static Context   ctx = null;
+    private static String    icf = null;
+    private static String    url = null;
+    private static String    lookupTCF = null;
+
+    public mqjmspub() { 
+       url = System.getProperty("url");
+       icf = System.getProperty("icf");
+       lookupTCF   = System.getProperty("tcf");
+       
+       /***********************************************/
+       /* Now go and get the mqjmspub.properties file */
+       /***********************************************/
+       try {
+          Properties props = new Properties(System.getProperties());
+          props.load(new BufferedInputStream(new FileInputStream("mqjmspub.properties")));
+          System.setProperties(props);
+       } catch (Exception e) {
+          System.out.println("Unable to read mqjmspub.properties:");
+          System.out.println(" " + e);
+       }
+
+       if (url == null) {url = System.getProperty("url");}
+       if (icf == null) {icf = System.getProperty("icf");}
+       if (lookupTCF   == null) {lookupTCF   = System.getProperty("tcf");}
+                
+    }
+
+    public mqjmspub(String[] args) {
+
+       this();
+
+       /**********************************/ 
+       /* Get the command-line arguments */ 
+       /**********************************/ 
+        for( int i=0; i&lt;args.length; i++ ) {
+            String arg = args[i].toLowerCase();
+
+            if( arg.equals("-url") ) {
+                if ( i+1&lt;args.length ) {
+                   url = args[++i];
+                } else {
+                   System.out.println("didn't specify url, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-icf") ) {
+                if ( i+1&lt;args.length ) {
+                   icf = args[++i];
+                } else {
+                   System.out.println("didn't specify icf, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-tcf") ) {
+                if ( i+1&lt;args.length ) {
+                   lookupTCF = args[++i];
+                } else {
+                   System.out.println("didn't specify tcf, exiting");
+                   return;
+                }
+
+            } else {
+              System.out.println( "Unknown argument: " + arg );
+            }
+        }
+
+   }
+
+   public void run() {
+
+      Topic             topic      = null;
+      TopicSession      session    = null;
+      TopicConnection   connection = null;
+      TopicConnectionFactory factory = null;
+
+      String parsedDelay = null;
+      String parsedTopic = null;
+      String parsedText  = null;
+
+      System.out.println("mqjmspub started....");
+
+      /**********************************/ 
+      /* Get the context factory.       */ 
+      /**********************************/ 
+      Hashtable environment = new Hashtable();
+      environment.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+      environment.put(Context.PROVIDER_URL, url);
+      environment.put(Context.REFERRAL, "throw");
+      try {
+         ctx = new InitialDirContext( environment );
+      } catch( Exception e ) {
+         System.err.println("Error during lookup of Context Factory " + e);
+         System.err.println(e);
+         return;
+      }
+
+      /****************************************/ 
+      /* Lookup the topic connection factory. */
+      /****************************************/ 
+      try {
+         factory = (TopicConnectionFactory)ctx.lookup(lookupTCF);
+      } catch( Exception e ) {
+         System.out.println("TCF Lookup error: " + e);
+         System.err.println(e);
+         return;
+      }
+
+      try {
+         /****************************************************/
+         /* Create a connection.  This will actually connect */
+         /* to WebSphere MQ.                                 */
+         /****************************************************/
+         connection = factory.createTopicConnection();
+         connection.start();
+
+         /******************************************************/
+         /* All work is done on a session.  Let's create one.  */
+         /* We won't be too particular about transactions.     */
+         /* If we were, we'd acknowledge everything ourselves. */
+         /******************************************************/
+         boolean transacted = false;
+         session = connection.createTopicSession(transacted,
+                                                 Session.AUTO_ACKNOWLEDGE);
+
+         /***********************************************************/
+         /* We'll accept user input on what to publish.  The format */
+         /* will be "delay;topic;message text", and we'll expect it */
+         /* to be in the right format (ie, minimal error checking). */
+         /***********************************************************/
+         TextMessage outMessage = session.createTextMessage();
+         InputStreamReader isr = new InputStreamReader(System.in);
+         BufferedReader    br  = new BufferedReader(isr);
+         String  userInput;
+
+         System.out.println("Enter message to publish &lt;delay;topic;text&gt;: ");
+         userInput = br.readLine();
+         do {
+            if (userInput.length() &gt; 0) {
+               /**************************************/
+               /* parse the delay;topic;message text */
+               /**************************************/
+               int parsedSemiColon  = userInput.indexOf(';');
+               int parsedSemiColon2 = userInput.indexOf(';', parsedSemiColon+1);
+
+               /*************************************************/
+               /* If we didn't find two ;'s, something is wrong */
+               /*************************************************/
+               if (    (parsedSemiColon == -1) 
+                    || (parsedSemiColon2 == -1) ) {
+                  System.out.println("Invalid input: &lt;delay;topic;text&gt;");
+               } else {
+                  parsedDelay = userInput.substring(0,userInput.indexOf(';'));
+                  parsedTopic = userInput.substring(parsedSemiColon + 1, parsedSemiColon2);
+                  parsedText  = userInput.substring(parsedSemiColon2 + 1, 
+                                                   userInput.length());
+                  try {
+                     Long longDelay  = new Long(parsedDelay);
+                     long longDelay2 = longDelay.longValue();
+                     System.out.println("Delay " + longDelay2 + " before publish");
+                     System.out.println("  Topic: " + parsedTopic);
+                     System.out.println("  Text : " + parsedText);
+                     Thread.sleep(longDelay2);
+                  } catch (java.lang.NumberFormatException e) {
+                     System.out.println(" -&gt; Ignoring invalid sleep interval.");
+                  }
+
+                  /****************************************************/
+                  /* We're now ready to publish.  We create a Topic   */
+                  /* based on the user input.  We then use this Topic */
+                  /* to create the publisher.  Because it can change  */
+                  /* with every input, we have to do this every time. */
+                  /* If we were only publishing on one topic, the     */
+                  /* creates could be done outside a loop and only    */
+                  /* the actual publish would be inside the loop.     */
+                  /****************************************************/
+                  topic = session.createTopic(parsedTopic);
+                  TopicPublisher tPub = session.createPublisher(topic);
+                  outMessage.setText(parsedText);
+                  tPub.publish(outMessage);
+                  tPub.close();
+               }
+ 
+               System.out.println("Enter message to publish: ");
+               userInput = br.readLine();
+               if (userInput == null) {
+                  userInput = "";
+               }
+
+            }
+         } while (userInput.length() &gt; 0);
+
+      } catch( JMSException je ) {
+         System.out.println("JMS Exception: " + je);
+         // check for a linked exception
+         Exception le = je.getLinkedException();
+         if (le != null) {
+            System.out.println("Linked exception: " + le);
+         }
+
+      } catch( Exception e ) {
+         System.out.println("Exception: " + e);
+      }
+
+      try {
+         if (session == null) {
+            session.close();
+            session = null;
+         }
+
+         if (connection == null) {
+            connection.close();
+            connection = null;
+         }
+      } catch( JMSException je ) {
+         System.out.println("JMS Exception: " + je);
+         // check for a linked exception
+         Exception le = je.getLinkedException();
+         if (le != null) {
+            System.out.println("Linked exception: " + le);
+         }
+      }
+
+      System.out.println("mqjmspub finished....");
+   }
+
+   public static void main( String[] args )     {
+      mqjmspub app = new mqjmspub(args);
+      if (   (icf==null) 
+          || (url==null) 
+          || (lookupTCF==null)  ) {
+         System.out.println("Usage:");
+         System.out.println("java mqjmspub -icf ... -url ... -tcf ...");
+         System.out.println("where -icf is the classname of the initial context factory");
+         System.out.println("      -url is the URL of the session's initial context");
+         System.out.println("      -tcf is the topic connection factory");
+      } else {
+         Thread t = new Thread(app);
+         t.start();
+      }
+   }
+
+}
+
+
+
+
+
+
+</PRE></BODY></HTML>

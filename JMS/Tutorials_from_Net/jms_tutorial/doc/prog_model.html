@@ -1,0 +1,860 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:11 2002">
+<title>The JMS API Programming Model</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="basics.html">Prev</a> |
+    <a href="client.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >3 &nbsp;&nbsp; The JMS API Programming Model</font>
+</h1>
+
+
+<p>
+  <a name="1023441"> </a>The basic building blocks of a JMS application consist of
+</p>
+
+<ul>
+  <li ><font ><a href="#1033480">Administered objects</a>: connection factories and destinations</font>
+    <a href="#1023395"><font >Connections</font> </a>
+    <li ><font ><a href="#1023396">Sessions</a></font> 
+    <li ><font ><a href="#1026466">Message producers</a></font>
+  <li ><font ><a href="#1026102">Message consumers</a></font>
+  <font ><li ><a href="#1023399">Messages</a></font>
+</ul>
+
+<p>
+  <a name="1024784"> </a><font ><a href="prog_model.html#1031718">Figure 3.1</a> shows how all these objects fit together in a JMS client application.</font>
+</p>
+
+
+<a name="1037353"> </a><img src="images/Fig3.1.gif" border="0" hspace="0" vspace="0">
+<br>
+
+<a name="1031718"> </a><i>Figure 3.1&nbsp;&nbsp; The JMS API Programming Model</i><br>
+
+
+<p>
+  <a name="1031725"> </a><font >This chapter describes all these objects briefly and provides sample commands and code snippets that show how to create and use the objects. The last section briefly describes JMS API exception handling. </font>
+</p>
+
+
+  <p> <a name="1033875"> </a><font >Examples that show how to combine all these 
+    objects in applications appear in later chapters. For more details, see the 
+    JMS API documentation, which you can download from the JMS Web site, <a href="http://java.sun.com/products/jms/"><code>http://java.sun.com/products/jms/</code></a>.</font> 
+  </p>
+
+<h3>
+  <a name="1033480"> </a><font color="#666699" >3.1&nbsp;&nbsp; Administered Objects</font>
+</h3>
+
+
+<p>
+  <a name="1023442"> </a><font >Two parts of a JMS application--destinations and connection factories--are best maintained administratively rather than programmatically. The technology underlying these objects is likely to be very different from one implementation of the JMS API to another. Therefore, the management of these objects belongs with other administrative tasks that vary from provider to provider.</font>
+</p>
+
+
+<p>
+  <a name="1024381"> </a><font >JMS clients access these objects through interfaces that are portable, so a client application can run with little or no change on more than one implementation of the JMS API. Ordinarily, an administrator configures administered objects in a 
+  Java<font size="-2"><sup>TM</sup></font> Naming and Directory 
+  Interface<font size="-2"><sup>TM</sup></font> (JNDI) API namespace, and JMS clients then look them up, using the JNDI API. 
+  J2EE<font size="-2"><sup>TM</sup></font> applications always use the JNDI API.</font>
+</p>
+
+
+  <p> <a name="1024318"> </a><font >With the J2EE Software Development Kit (SDK) 
+    version 1.3.1, you use a tool called <code>j2eeadmin</code> to perform administrative 
+    tasks. For help on the tool, type <code>j2eeadmin</code> with no arguments.</font> 
+  </p>
+
+<h4>
+  <a name="1023394"> </a><font color="#666699" >3.1.1&nbsp;&nbsp; Connection Factories</font>
+</h4>
+
+
+  <p> <a name="1024313"> </a><font >A <i>connection factory</i> is the object 
+    a client uses to create a connection with a provider. A connection factory 
+    encapsulates a set of connection configuration parameters that has been defined 
+    by an administrator. A pair of connection factories come preconfigured with 
+    the J2EE SDK and are accessible as soon as you start the service. Each connection 
+    factory is an instance of either the <code>QueueConnectionFactory</code> or 
+    the <code>TopicConnectionFactory</code> interface.</font> </p>
+
+
+  <p> <a name="1024394"> </a><font >With the J2EE SDK, for example, you can use 
+    the default connection factory objects, named <code>QueueConnectionFactory</code> 
+    and <code>TopicConnectionFactory</code>, to create connections. You can also 
+    create new connection factories by using the following commands:</font> </p>
+
+<pre>
+j2eeadmin -addJmsFactory <font ><i>jndi_name</i></font> queue
+
+j2eeadmin -addJmsFactory <font ><i>jndi_name</i></font> topic
+</pre>
+
+  <p> <a name="1024479"> </a><font >At the beginning of a JMS client program, 
+    you usually perform a JNDI API lookup of the connection factory. For example, 
+    the following code fragment obtains an <code>InitialContext</code> object 
+    and uses it to look up the <code>QueueConnectionFactory</code> and the <code>TopicConnectionFactory</code> 
+    by name:</font> </p>
+
+<pre>
+Context ctx = new InitialContext();
+
+QueueConnectionFactory queueConnectionFactory = 
+  (QueueConnectionFactory) ctx.lookup("QueueConnectionFactory");
+
+TopicConnectionFactory topicConnectionFactory = 
+  (TopicConnectionFactory) ctx.lookup("TopicConnectionFactory");
+</pre>
+
+  <p> <a name="1031187"> </a><font >Calling the <code>InitialContext</code> method 
+    with no parameters results in a search of the current classpath for a vendor-specific 
+    file named <code>jndi.properties</code>. This file indicates which JNDI API 
+    implementation to use and which namespace to use.</font> </p>
+
+<h4>
+  <a name="1024503"> </a><font color="#666699" >3.1.2&nbsp;&nbsp; Destinations</font>
+</h4>
+
+
+  <p> <a name="1024410"> </a><font >A <i>destination</i> is the object a client 
+    uses to specify the target of messages it produces and the source of messages 
+    it consumes. In the PTP messaging domain, destinations are called queues, 
+    and you use the following J2EE SDK command to create them:</font> </p>
+
+<pre>
+j2eeadmin -addJmsDestination <font ><i>queue_name</i></font> queue
+</pre>
+
+<p>
+  <a name="1024434"> </a><font >In the pub/sub messaging domain, destinations are called topics, and you use the following J2EE SDK command to create them:</font>
+</p>
+
+<pre>
+j2eeadmin -addJmsDestination <font ><i>topic_name</i></font> topic
+</pre>
+
+<p>
+  <a name="1026433"> </a><font >A JMS application may use multiple queues and/or topics.</font>
+</p>
+
+
+  <p> <a name="1024510"> </a><font >In addition to looking up a connection factory, 
+    you usually look up a destination. For example, the following line of code 
+    performs a JNDI API lookup of the previously created topic <code>MyTopic</code> 
+    and assigns it to a <code>Topic</code> object:</font> </p>
+
+<pre>
+Topic myTopic = (Topic) ctx.lookup("MyTopic");
+</pre>
+
+  <p> <a name="1031157"> </a><font >The following line of code looks up a queue 
+    named <code>MyQueue</code> and assigns it to a <code>Queue</code> object:</font> 
+  </p>
+
+<pre>
+Queue myQueue = (Queue) ctx.lookup("MyQueue");
+</pre>
+
+<h3>
+  <a name="1023395"> </a><font color="#666699" >3.2&nbsp;&nbsp; Connections</font>
+</h3>
+
+
+  <p> <a name="1024460"> </a><font >A <i>connection</i> encapsulates a virtual connection 
+    with a JMS provider. A connection could represent an open TCP/IP socket between 
+    a client and a provider service daemon. You use a connection to create one 
+    or more sessions.</font> </p>
+
+
+  <p> <a name="1024583"> </a><font >Like connection factories, connections come 
+    in two forms, implementing either the <code>QueueConnection</code> or the 
+    <code>TopicConnection</code> interface. For example, once you have a <code>QueueConnectionFactory</code> 
+    or a <code>TopicConnectionFactory</code> object, you can use it to create 
+    a connection:</font> </p>
+
+<pre>
+QueueConnection queueConnection =
+  queueConnectionFactory.createQueueConnection();
+
+TopicConnection topicConnection = 
+  topicConnectionFactory.createTopicConnection();
+</pre>
+
+<p>
+  <a name="1031616"> </a><font >When an application completes, you need to close any connections that you have created. Failure to close a connection can cause resources not to be released by the JMS provider. Closing a connection also closes its sessions and their message producers and message consumers.</font>
+</p>
+
+<pre>
+queueConnection.close();
+
+topicConnection.close();
+</pre>
+
+  <p> <a name="1031957"> </a><font >Before your application can consume messages, 
+    you must call the connection's <code>start</code> method; for details, see 
+    <a href="prog_model.html#1026102">Section 3.5, "Message Consumers."</a> If 
+    you want to stop message delivery temporarily without closing the connection, 
+    you call the <code>stop</code> method.</font> </p>
+
+<h3>
+  <a name="1023396"> </a><font color="#666699" >3.3&nbsp;&nbsp; Sessions</font>
+</h3>
+
+
+  <p> <a name="1023446"> </a><font >A <i>session</i> is a single-threaded context 
+    for producing and consuming messages. You use sessions to create message producers, 
+    message consumers, and messages. Sessions serialize the execution of message 
+    listeners; for details, see <a href="prog_model.html#1023398">Section 3.5.1, 
+    "Message Listeners."</a></font> </p>
+
+
+<p>
+  <a name="1031307"> </a><font >A session provides a transactional context with which to group a set of sends and receives into an atomic unit of work. For details, see <a href="advanced.html#1026538">Section 5.2.2, "Using JMS API Local Transactions."</a></font>
+</p>
+
+
+  <p> <a name="1024585"> </a><font >Sessions, like connections, come in two forms, 
+    implementing either the <code>QueueSession</code> or the <code>TopicSession</code> 
+    interface. For example, if you created a <code>TopicConnection</code> object, 
+    you use it to create a <code>TopicSession</code>:</font> </p>
+
+<pre>
+TopicSession topicSession = 
+  topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+</pre>
+
+<p>
+  <a name="1033961"> </a><font >The first argument means that the session is not transacted; the second means that the session automatically acknowledges messages when they have been received successfully. (For more information, see <a href="advanced.html#1025869">Section 5.1.1, "Controlling Message Acknowledgment."</a>)</font>
+</p>
+
+
+  <p> <a name="1033965"> </a><font >Similarly, you use a <code>QueueConnection</code> 
+    object to create a <code>QueueSession</code>:</font> </p>
+
+<pre>
+QueueSession queueSession = 
+  queueConnection.createQueueSession(true, 0);
+</pre>
+
+<p>
+  <a name="1031220"> </a><font >Here, the first argument means that the session is transacted; the second indicates that message acknowledgment is not specified for transacted sessions.</font>
+</p>
+
+<h3>
+  <a name="1026466"> </a><font color="#666699" >3.4&nbsp;&nbsp; Message Producers</font>
+</h3>
+
+
+  <p> <a name="1031326"> </a><font >A <i>message producer</i> is an object created 
+    by a session and is used for sending messages to a destination. The PTP form 
+    of a message producer implements the <code>QueueSender</code> interface. The 
+    pub/sub form implements the <code>TopicPublisher</code> interface.</font> 
+  </p>
+
+
+  <p> <a name="1026165"> </a><font >For example, you use a <code>QueueSession</code> 
+    to create a sender for the queue <code>myQueue</code>, and you use a <code>TopicSession</code> 
+    to create a publisher for the topic <code>myTopic</code>:</font> </p>
+
+<pre>
+QueueSender queueSender = queueSession.createSender(myQueue);
+
+TopicPublisher topicPublisher = topicSession.createPublisher(myTopic);
+</pre>
+
+  <p> <a name="1031321"> </a><font >You can create an unidentified producer by 
+    specifying <code>null</code> as the argument to <code>createSender</code> 
+    or <code>createPublisher</code>. With an unidentified producer, you can wait 
+    to specify which destination to send the message to until you send or publish 
+    a message.</font> </p>
+
+
+  <p> <a name="1031893"> </a><font >Once you have created a message producer, 
+    you can use it to send messages. (You have to create the messages first; see 
+    <a href="prog_model.html#1023399">Section 3.6, "Messages."</a>) With a <code>QueueSender</code>, 
+    you use the <code>send</code> method:</font> </p>
+
+<pre>
+queueSender.send(message);
+</pre>
+
+  <p> <a name="1031890"> </a><font >With a <code>TopicPublisher</code>, you use 
+    the <code>publish</code> method:</font> </p>
+
+<pre>
+topicPublisher.publish(message);
+</pre>
+
+  <p> <a name="1031693"> </a><font >If you created an unidentified producer, use 
+    the overloaded <code>send</code> or <code>publish</code> method that specifies 
+    the destination as the first parameter.</font> </p>
+
+<h3>
+  <a name="1026102"> </a><font color="#666699" >3.5&nbsp;&nbsp; Message Consumers</font>
+</h3>
+
+
+  <p> <a name="1024631"> </a><font >A <i>message consumer</i> is an object created 
+    by a session and is used for receiving messages sent to a destination. A message 
+    consumer allows a JMS client to register interest in a destination with a 
+    JMS provider. The JMS provider manages the delivery of messages from a destination 
+    to the registered consumers of the destination.</font> </p>
+
+
+  <p> <a name="1024648"> </a><font >The PTP form of message consumer implements 
+    the <code>QueueReceiver</code> interface. The pub/sub form implements the 
+    <code>TopicSubscriber</code> interface.</font> </p>
+
+
+  <p> <a name="1026184"> </a><font >For example, you use a <code>QueueSession</code> 
+    to create a receiver for the queue <code>myQueue</code>, and you use a <code>TopicSession</code> 
+    to create a subscriber for the topic <code>myTopic</code>:</font> </p>
+
+<pre>
+QueueReceiver queueReceiver = queueSession.createReceiver(myQueue);
+
+TopicSubscriber topicSubscriber = topicSession.createSubscriber(myTopic);
+</pre>
+
+  <p> <a name="1026070"> </a><font >You use the <code>TopicSession.createDurableSubscriber</code> 
+    method to create a durable topic subscriber. For details, see <a href="advanced.html#1024758">Section 
+    5.2.1, "Creating Durable Subscriptions."</a></font> </p>
+
+
+  <p> <a name="1026469"> </a><font >Once you have created a message consumer, 
+    it becomes active, and you can use it to receive messages. You can use the 
+    <code>close</code> method for a <code>QueueReceiver</code> or a <code>TopicSubscriber</code> 
+    to make the message consumer inactive. Message delivery does not begin until 
+    you start the connection you created by calling the <code>start</code> method 
+    (see <a href="prog_model.html#1023395">Section 3.2, "Connections"</a>). </font> 
+  </p>
+
+
+  <p> <a name="1031914"> </a><font >With either a <code>QueueReceiver</code> or 
+    a <code>TopicSubscriber</code>, you use the <code>receive</code> method to 
+    consume a message synchronously. You can use this method at any time after 
+    you call the <code>start</code> method:</font> </p>
+
+<pre>
+queueConnection.start();
+Message m = queueReceiver.receive();
+
+topicConnection.start();
+Message m = topicSubscriber.receive(1000); // time out after a second
+</pre>
+
+<p>
+  <a name="1024712"> </a><font >To consume a message asynchronously, you use a message listener, described in <a href="prog_model.html#1023398">Section 3.5.1, "Message Listeners."</a></font>
+</p>
+
+<h4>
+  <a name="1023398"> </a><font color="#666699" >3.5.1&nbsp;&nbsp; Message Listeners</font>
+</h4>
+
+
+  <p> <a name="1023448"> </a><font >A <i>message listener</i> is an object that 
+    acts as an asynchronous event handler for messages. This object implements 
+    the <code>MessageListener</code> interface, which contains one method, <code>onMessage</code>. 
+    In the <code>onMessage</code> method, you define the actions to be taken when 
+    a message arrives.</font> </p>
+
+
+  <p> <a name="1024764"> </a><font >You register the message listener with a specific 
+    <code>QueueReceiver</code> or <code>TopicSubscriber</code> by using the <code>setMessageListener</code> 
+    method. For example, if you define a class named <code>TopicListener</code> 
+    that implements the <code>MessageListener</code> interface, you can register 
+    the message listener as follows:</font> </p>
+
+<pre>
+TopicListener topicListener = new TopicListener();
+
+topicSubscriber.setMessageListener(topicListener);
+</pre>
+
+  <p> <a name="1024783"> </a><font >After you register the message listener, you 
+    call the <code>start</code> method on the <code>QueueConnection</code> or 
+    the <code>TopicConnection</code> to begin message delivery. (If you call <code>start</code> 
+    before you register the message listener, you are likely to miss messages.)</font> 
+  </p>
+
+
+  <p> <a name="1031954"> </a><font >Once message delivery begins, the message 
+    consumer automatically calls the message listener's <code>onMessage</code> 
+    method whenever a message is delivered. The <code>onMessage</code> method 
+    takes one argument of type <code>Message</code>, which the method can cast 
+    to any of the other message types (see <a href="prog_model.html#1023401">Section 
+    3.6.3, "Message Bodies"</a>).</font> </p>
+
+
+  <p> <a name="1033139"> </a><font >A message listener is not specific to a particular 
+    destination type. The same listener can obtain messages from either a queue 
+    or a topic, depending on whether the listener is set by a <code>QueueReceiver</code> 
+    or a <code>TopicSubscriber</code> object. A message listener does, however, 
+    usually expect a specific message type and format. Moreover, if it needs to 
+    reply to messages, a message listener must either assume a particular destination 
+    type or obtain the destination type of the message and create a producer for 
+    that destination type.</font> </p>
+
+
+  <p> <a name="1031335"> </a><font >Your <code>onMessage</code> method should 
+    handle all exceptions. It must not throw checked exceptions, and throwing 
+    a <code>RuntimeException</code>, though possible, is considered a programming 
+    error.</font> </p>
+
+
+<p>
+  <a name="1031340"> </a><font >The session used to create the message consumer serializes the execution of all message listeners registered with the session. At any time, only one of the session's message listeners is running. </font>
+</p>
+
+
+<p>
+  <a name="1031248"> </a><font >In the J2EE 1.3 platform, a message-driven bean is a special kind of message listener. For details, see <a href="jmsj2ee.html#1023782">Section 6.2, "Using Message-Driven Beans."</a></font>
+</p>
+
+<h4>
+  <a name="1026290"> </a><font color="#666699" >3.5.2&nbsp;&nbsp; Message Selectors</font>
+</h4>
+
+
+<p>
+  <a name="1031052"> </a><font >If your messaging application needs to filter the messages it receives, you can use a JMS API message selector, which allows a message consumer to specify the messages it is interested in. Message selectors assign the work of filtering messages to the JMS provider rather than to the application. For an example of the use of a message selector, see <a href="j2eeapp2.html">Chapter 8</a>.</font>
+</p>
+
+
+  <p> <a name="1031064"> </a><font >A message selector is a <code>String</code> 
+    that contains an expression. The syntax of the expression is based on a subset 
+    of the SQL92 conditional expression syntax. The <code>createReceiver</code>, 
+    <code>createSubscriber</code>, and <code>createDurableSubscriber</code> methods 
+    each have a form that allows you to specify a message selector as an argument 
+    when you create a message consumer.</font> </p>
+
+
+<p>
+  <a name="1026291"> </a><font >The message consumer then receives only messages whose headers and properties match the selector. (See <a href="prog_model.html#1023400">Section 3.6.1, "Message Headers,"</a> and <a href="prog_model.html#1031031">Section 3.6.2, "Message Properties."</a>) A message selector cannot select messages on the basis of the content of the message body.</font>
+</p>
+
+<h3>
+  <a name="1023399"> </a><font color="#666699" >3.6&nbsp;&nbsp; Messages</font>
+</h3>
+
+
+<p>
+  <a name="1024790"> </a><font >The ultimate purpose of a JMS application is to produce and to consume messages that can then be used by other software applications. JMS messages have a basic format that is simple but highly flexible, allowing you to create messages that match formats used by non-JMS applications on heterogeneous platforms.</font>
+</p>
+
+
+<p>
+  <a name="1024802"> </a><font >A JMS message has three parts:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1023400">A header</a></font>
+  <li ><font ><a href="#1031031">Properties</a> (optional)</font>
+  <font ><li ><a href="#1023401">A body</a> (optional)</font>
+</ul>
+
+  <p> <a name="1031019"> </a><font >For complete documentation of message headers, 
+    properties, and bodies, see the documentation of the <code>Message</code> 
+    interface in the API documentation.</font> </p>
+
+<h4>
+  <a name="1023400"> </a><font color="#666699" >3.6.1&nbsp;&nbsp; Message Headers</font>
+</h4>
+
+
+  <p> <a name="1035683"> </a><font >A JMS message header contains a number of 
+    predefined fields that contain values that both clients and providers use 
+    to identify and to route messages. (<a href="prog_model.html#1035765">Table 
+    3.1</a> lists the JMS message header fields and indicates how their values 
+    are set.) For example, every message has a unique identifier, represented 
+    in the header field <code>JMSMessageID</code>. The value of another header 
+    field, <code>JMSDestination</code>, represents the queue or the topic to which 
+    the message is sent. Other fields include a timestamp and a priority level. 
+    </font> </p>
+
+
+  <p> <a name="1035831"> </a><font >Each header field has associated setter and 
+    getter methods, which are documented in the description of the <code>Message</code> 
+    interface. Some header fields are intended to be set by a client, but many 
+    are set automatically by the <code>send</code> or the <code>publish</code> 
+    method, which overrides any client-set values. </font></p>
+  <font >
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1035765"> </a><font >Table 3.1: &nbsp;&nbsp; How JMS Message Header Field Values Are Set<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1035769"> </a><font >Header Field<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1035771"> </a><font >Set By<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035775"> </a><font ><code>JMSDestination</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1035777"> </a><font ><code>send</code> 
+          or <code>publish</code> method<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035781"> </a><font ><code>JMSDeliveryMode</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1035783"> </a><font ><code>send</code> 
+          or <code>publish</code> method<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035787"> </a><font ><code>JMSExpiration</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1035789"> </a><font ><code>send</code> 
+          or <code>publish</code> method<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035793"> </a><font ><code>JMSPriority</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1035795"> </a><font ><code>send</code> 
+          or <code>publish</code> method<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035799"> </a><font ><code>JMSMessageID</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1035801"> </a><font ><code>send</code> 
+          or <code>publish</code> method<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035805"> </a><font ><code>JMSTimestamp</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1035807"> </a><font ><code>send</code> 
+          or <code>publish</code> method<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035811"> </a><font ><code>JMSCorrelationID</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1035813"> </a><font >Client<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035817"> </a><font ><code>JMSReplyTo</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1035819"> </a><font >Client<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035822"> </a><font ><code>JMSType</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1035824"> </a><font >Client<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td>
+        <div align="left"><font face=""> <a name="1035828"> </a><font ><code>JMSRedelivered</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1035830"> </a><font >JMS provider<br></font>
+
+</font></div></td>
+  </tr>
+</table>
+
+</font>
+
+<h4>
+  <a name="1031031"> </a><font color="#666699" >3.6.2&nbsp;&nbsp; Message Properties</font>
+</h4>
+
+
+  <p> <a name="1023450"> </a><font >You can create and set properties for messages 
+    if you need values in addition to those provided by the header fields. You 
+    can use properties to provide compatibility with other messaging systems, 
+    or you can use them to create message selectors (see <a href="prog_model.html#1026290">Section 
+    3.5.2, "Message Selectors"</a>). For an example of setting a property to be 
+    used as a message selector, see <a href="j2eeapp2.html#1023875">Section 8.1.2.3, 
+    "The Bean Class: PublisherBean.java."</a></font> </p>
+
+
+<p>
+  <a name="1024867"> </a><font >The JMS API provides some predefined property names that a provider may support. The use of either predefined properties or user-defined properties is optional.</font>
+</p>
+
+<h4>
+  <a name="1023401"> </a><font color="#666699" >3.6.3&nbsp;&nbsp; Message Bodies</font>
+</h4>
+
+
+<p>
+  <a name="1024855"> </a><font >The JMS API defines five message body formats, also called message types, which allow you to send and to receive data in many different forms and provide compatibility with existing messaging formats. <a href="prog_model.html#1025836">Table 3.2</a> describes these message types.
+</font></p><font >
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1025836"> </a><font >Table 3.2: &nbsp;&nbsp; JMS Message Types<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1025840"> </a><font >Message Type<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1025842"> </a><font >Body Contains<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025844"> </a><font ><code>TextMessage</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1025846"> </a><font >A <code>java.lang.String</code> 
+          object (for example, the contents of an Extensible Markup Language file).<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025852"> </a><font ><code>MapMessage</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1025854"> </a><font >A set of 
+          name/value pairs, with names as <code>String</code> objects and values 
+          as primitive types in the Java programming language. The entries can 
+          be accessed sequentially by enumerator or randomly by name. The order 
+          of the entries is undefined.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025856"> </a><font ><code>BytesMessage</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1025858"> </a><font >A stream of uninterpreted bytes. This message type is for literally encoding a body to match an existing message format.<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025860"> </a><font ><code>StreamMessage</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1025862"> </a><font >A stream of primitive values in the Java programming language, filled and read sequentially.<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1026528"> </a><font ><code>ObjectMessage</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1026530"> </a><font >A <code>Serializable</code> 
+          object in the Java programming language.<br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1026474"> </a><font ><code>Message</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1026476"> </a><font >Nothing. Composed of header fields and properties only. This message type is useful when a message body is not required.<br></font>
+
+</font></div></td>
+  </tr>
+</table>
+
+</font>
+
+
+  <p> <a name="1024818"> </a><font >The JMS API provides methods for creating messages 
+    of each type and for filling in their contents. For example, to create and 
+    send a <code>TextMessage</code> to a queue, you might use the following statements:</font> 
+  </p>
+
+<pre>
+TextMessage message = queueSession.createTextMessage();
+message.setText(msg_text);     // msg_text is a String
+queueSender.send(message);
+</pre>
+
+  <p> <a name="1026355"> </a><font >At the consuming end, a message arrives as 
+    a generic <code>Message</code> object and must be cast to the appropriate 
+    message type. You can use one or more getter methods to extract the message 
+    contents. The following code fragment uses the <code>getText</code> method:</font> 
+  </p>
+
+<pre>
+Message m = queueReceiver.receive();
+if (m instanceof TextMessage) {
+    TextMessage message = (TextMessage) m;
+    System.out.println("Reading message: " + message.getText());
+} else {
+    // Handle error
+}
+</pre>
+
+<div align="left">
+<h3>
+  <a name="1033476"> </a><font color="#666699" >3.7&nbsp;&nbsp; Exception Handling</font>
+</h3>
+
+
+  <p> <a name="1033482"> </a><font >The root class for exceptions thrown by JMS 
+    API methods is <code>JMSException</code>. Catching <code>JMSException</code> 
+    provides a generic way of handling all exceptions related to the JMS API. 
+    The <code>JMSException</code> class includes the following subclasses, which 
+    are described in the API documentation:</font> </p>
+
+<ul>
+    <li ><font ><a name="1033492"> </a><code>IllegalStateException</code> </font> 
+    <li ><font ><a name="1033493"> </a><code>InvalidClientIDException</code> </font> 
+    <li ><font ><a name="1033494"> </a><code>InvalidDestinationException</code> 
+      </font> 
+    <li ><font ><a name="1033495"> </a><code>InvalidSelectorException</code> </font> 
+    <li ><font ><a name="1033497"> </a><code>JMSSecurityException</code> </font> 
+    <li ><font ><a name="1033498"> </a><code>MessageEOFException</code> </font> 
+    <li ><font ><a name="1033499"> </a><code>MessageFormatException</code> </font> 
+    <li ><font ><a name="1033500"> </a><code>MessageNotReadableException</code> 
+      </font> 
+    <li ><font ><a name="1033501"> </a><code>MessageNotWriteableException</code> 
+      </font> 
+    <li ><font ><a name="1033502"> </a><code>ResourceAllocationException</code> 
+      </font> 
+    <li ><font ><a name="1033503"> </a><code>TransactionInProgressException</code> 
+      </font> 
+    <font >
+    <li ><a name="1033477"> </a><code>TransactionRolledBackException</code>
+    </font>
+</ul>
+
+  <p> <a name="1033570"> </a><font >All the examples in the tutorial catch and handle 
+    <code>JMSException</code> when it is appropriate to do so.</font> </p>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="basics.html">Prev</a> |
+  <a href="client.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

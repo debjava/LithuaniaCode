@@ -1,0 +1,82 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;4.&nbsp;Download Software</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.65.1"><link rel="home" href="index.html" title="JBoss Messaging 1.2 User's Guide"><link rel="up" href="index.html" title="JBoss Messaging 1.2 User's Guide"><link rel="previous" href="c_overview.html" title="Chapter&nbsp;3.&nbsp;JBoss Messaging Clustering"><link rel="next" href="installation.html" title="Chapter&nbsp;5.&nbsp;JBoss Messaging Non-Clustered Installation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter&nbsp;4.&nbsp;Download Software</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="c_overview.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="installation.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="gettingstarted"></a>Chapter&nbsp;4.&nbsp;Download Software</h2></div></div><div></div></div><p>
+      The official releases of JBoss Messaging are available as a free download from
+      <a href="http://www.jboss.com/products/messaging" target="_top">the JBoss Messaging project landing page</a>.
+   </p><p>
+       The recommended download location is the JBoss Labs Messaging Project download zone:
+       <a href="http://labs.jboss.com/portal/jbossmessaging/downloads" target="_top">http://labs.jboss.com/portal/jbossmessaging/downloads</a>
+       We also maintain an alternate download location on sourceforge.net:
+       <a href="http://sourceforge.net/project/showfiles.php?group_id=22866&amp;package_id=157261" target="_top">http://sourceforge.net/project/showfiles.php?group_id=22866&amp;package_id=157261</a>
+   </p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="releasebundle"></a>4.1.&nbsp;The JBoss Messaging Release Bundle</h2></div></div><div></div></div><p>
+         The JBoss Messaging release bundle (<tt class="filename">jboss-messaging-1.2.x.zip</tt>)
+         will expand in a <tt class="filename">jboss-messaging-1.2.x</tt> directory that contains:
+      </p><div class="itemizedlist"><ul type="disc"><li><tt class="filename">jboss-messaging-scoped.sar</tt>
+            - the scoped JBoss service archive that contains JBoss Messaging and its
+            dependencies.
+            <div class="warning" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Warning</h3>
+               Do not simply attempt to copy the archive under a JBoss instance <tt class="filename">deploy</tt> directory,
+               since additional steps (such as un-installing JBossMQ and various other configurations
+               tasks) are required for a successful installation. See <a href="installation.html" title="Chapter&nbsp;5.&nbsp;JBoss Messaging Non-Clustered Installation">Chapter&nbsp;5, <i>JBoss Messaging Non-Clustered Installation</i></a> for
+               more details.
+            </div></li><li><tt class="filename">jboss-messaging-client.jar</tt>
+            - the client-side library that need to be in the classpath of the client that opens
+            a remote connection to the Messaging server.
+
+            <div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Note</h3><p>
+                This is an important note on the Messaging client jar. JBoss Messaging has an
+                extensive tree of dependencies and bundling all right dependencies in one easy
+                to use archive, so no wrong versions inadvertently get in the class path is, as
+                experience shows, extremely convenient. However, this could cause problems if a
+                different version of a dependency is required by the user's client code.
+                </p><p>
+                If, for example, the log4j.jar bundled with the release causes problems for being
+                too old, one could just simply build the client-side class path so a newer version
+                of log4j.jar precedes jboss-messaging-client.jar in that class path. This approach
+                may work, but is not guaranteed to work, because we did not run the full test suite
+                with any other log4j.jar version except the one we bundle with the release.
+
+                Soon we will providing an ant task that creates a slimmed down client jar without the extra
+                dependencies bundled.
+                </p><p>
+                 A list of required dependencies for a specific release can be found in the
+                 <tt class="filename">build-thirdpary.xml</tt> file that is part of the companion source
+                 bundle that ships with each release. It can also be looked up online in
+                  <a href="http://fisheye.jboss.org" target="_top">http://fisheye.jboss.org</a>.
+                </p></div></li><li><tt class="filename">util</tt>
+            - a collection of <tt class="literal">ant</tt> configuration files used to automate
+            installation and release
+            management procedures. See <a href="installation.html" title="Chapter&nbsp;5.&nbsp;JBoss Messaging Non-Clustered Installation">Chapter&nbsp;5, <i>JBoss Messaging Non-Clustered Installation</i></a> for
+             more details.
+         </li><li><tt class="filename">examples</tt>
+            - a collection of examples that should run out of the box and help you validate the
+            installation. Detailed instructions are provided with each example, which range from
+            very simple JMS queue and topic examples to relatively sophisticated use cases in which
+            EJBs and JCA JMS ConnectionFactories are involved, as well as clustering use cases.
+            The <tt class="filename">examples/config</tt> sub-directory contains various configuration
+            file examples.
+         </li><li><tt class="filename">docs</tt>
+            - this user's guide.
+         </li><li><tt class="filename">src/jboss-messaging-1.2.x-src.zip</tt>
+            - the zipped source directory. The file can be directly installed into and used
+            with a debugger.
+         </li><li><tt class="filename">test-results</tt>
+            - the output of the functional testsuite, stress and smoke test runs for this release.
+            All these files have been generated during the release procedure and are bundled here
+            for reference.
+         </li><li><tt class="filename">api</tt>
+            - the Messaging API javadoc.
+         </li><li><tt class="filename">README.html</tt>
+            - The release intro document that contains pointers to various other resources,
+            including this Guide.
+         </li></ul></div></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="SVN"></a>4.2.&nbsp;SVN Access</h2></div></div><div></div></div><p>
+         If you want to experiment with the latest developments you may checkout the latest code
+         from the Messaging SVN trunk. Be aware that the information provided in this manual might
+         then not be accurate.
+         For the latest instructions on how to check out and build source code, please go to
+         <a href="http://wiki.jboss.org/wiki/Wiki.jsp?page=JBossMessagingDevelopment" target="_top">
+            Messaging Development wiki page</a>, specifically
+
+         <a href="http://wiki.jboss.org/wiki/Wiki.jsp?page=JBossMessagingBuildInstructions" target="_top">
+          "Building and Running JBoss Messaging"</a> section.
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="c_overview.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="installation.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;3.&nbsp;JBoss Messaging Clustering&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;5.&nbsp;JBoss Messaging Non-Clustered Installation</td></tr></table></div></body></html>

@@ -1,0 +1,357 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqjmssel.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2003  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqjmssel                                                  */
+/*                                                                         */
+/* Description: Sample java program that uses a message selector to        */
+/*              retrieve a message.                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program prompts the user to enter a message selector that will    */
+/*  be used to selectively retrieve messages on a queue.                   */
+/*                                                                         */
+/*  This program is run as follows:                                        */
+/*                                                                         */
+/*     java mqjmssel -icf ..... -url ... -qcf .... -q ....                 */
+/*                                                                         */
+/*  where                                                                  */
+/*     -icf is the classname of the initial context factory.               */
+/*     -url is the JNDI location of the administered objects.              */
+/*     -qcf is the queue connection factory.                               */
+/*     -q   is the queue.                                                  */
+/*                                                                         */
+/* If this program is run with sample mqjmsusr, then sample selectors      */
+/* might be:                                                               */
+/*                                                                         */
+/*     StringTag1 = 'Tag1Value1'                                           */
+/*     IntTag2 = 2222                                                      */
+/*                                                                         */
+/* This program has been tested with both WebSphere MQ 5.3 and             */
+/* MQSeries V5.2 CSD 6 against JDK 1.3.0.                                  */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* The queue connection factory and queue parameters to this program need  */
+/* to be setup so that they can be found.  This is done via the JMS Admin- */
+/* istration tool that is described in the Using Java manual.  This        */
+/* program was tested using a file system context set up in a              */
+/* jmsadmin.config as folllows:                                            */
+/*                                                                         */
+/*    INITIAL_CONTEXT_FACTORY=com.sun.jndi.fscontext.RefFSContextFactory   */
+/*    PROVIDER_URL=file:c://support//jms//sample                           */
+/*    SECURITY_AUTHENTICATION=none                                         */
+/*                                                                         */
+/* The actual JMSAdmin utility was run with the following definitions:     */
+/*                                                                         */
+/*    def qcf(sampleQCF) qmanager(pubsub.qmgr)                             */
+/*    def q(sampleQ) qu(SYSTEM.DEFAULT.LOCAL.QUEUE)                        */
+/*                                                                         */
+/* The actual program execution would then be:                             */
+/*                                                                         */
+/*    java mqjmssel -icf com.sun.jndi.fscontext.RefFSContextFactory        */
+/*      -url file:c://support//jms//sample                                 */
+/*      -qcf sampleQCF                                                     */
+/*      -q   sampleQ                                                       */
+/*                                                                         */
+/* An alternate method of running this program is to create a file named   */
+/* mqjmssel.properties that contains the following:                        */
+/*                                                                         */
+/*   icf=com.sun.jndi.fscontext.RefFSContextFactory                        */
+/*   url=file:c://support//jms//sample                                     */
+/*   qcf=sampleQCF                                                         */
+/*   q=sampleQ                                                             */
+/*                                                                         */
+/***************************************************************************/
+import java.io.*;
+
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Hashtable;
+import java.util.Properties;
+
+public class mqjmssel implements MessageListener {
+
+    private static String      icf       = null;
+    private static String      url       = null;
+    private static String      qcfLookup = null;
+    private static String      qLookup   = null;
+
+   public mqjmssel() { 
+       url = System.getProperty("url");
+       icf = System.getProperty("icf");
+       qcfLookup   = System.getProperty("qcf");
+       qLookup     = System.getProperty("q");
+
+       try {
+          Properties props = new Properties(System.getProperties());
+          props.load(new BufferedInputStream(new FileInputStream("mqjmssel.properties")));
+          System.setProperties(props);
+       } catch (Exception e) {
+          System.out.println("Unable to read mqjmssel.properties: ");
+          System.out.println("  " + e);
+       }
+
+       if (url == null) {url = System.getProperty("url");}
+       if (icf == null) {icf = System.getProperty("icf");}
+       if (qcfLookup == null) {qcfLookup   = System.getProperty("qcf");}
+       if (qLookup  == null)  {qLookup = System.getProperty("q");}
+         
+    }
+
+    public mqjmssel(String[] args) {
+
+       this();
+
+       /**********************************/ 
+       /* Get the command-line arguments */ 
+       /**********************************/ 
+        for( int i=0; i&lt;args.length; i++ ) {
+            String arg = args[i].toLowerCase();
+
+            if( arg.equals("-url") ) {
+                if ( i+1&lt;args.length ) {
+                   url = args[++i];
+                } else {
+                   System.out.println("didn't specify url, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-icf") ) {
+                if ( i+1&lt;args.length ) {
+                   icf = args[++i];
+                } else {
+                   System.out.println("didn't specify icf, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-qcf") ) {
+                if ( i+1&lt;args.length ) {
+                   qcfLookup = args[++i];
+                } else {
+                   System.out.println("didn't specify qcf, exiting");
+                   return;
+                }
+
+            } else if( arg.equals("-q") ) {
+                if ( i+1&lt;args.length ) {
+                   qLookup = args[++i];
+                } else {
+                   System.out.println("didn't specify queue, exiting");
+                   return;
+                }
+
+            } else {
+              System.out.println( "Unknown argument: " + arg );
+            }
+        }
+
+   }
+
+  
+    /******************************************************/ 
+    /* Use onMessage to allow program to receive messages */
+    /* asynchronously.  Routine will print the text of a  */ 
+    /* TextMessage.  It will print type for other types   */ 
+    /* of messages.                                       */ 
+    /******************************************************/ 
+    public void onMessage(Message inMessage) {
+       try {
+          System.out.println("Inside onMessage");
+          if (inMessage instanceof TextMessage) {
+             System.out.println("Text message");
+             String myString= ((TextMessage)inMessage).getText();
+             System.out.println("Text = " + myString);
+
+          } else if (inMessage instanceof BytesMessage) {
+             System.out.println("BytesMessage:");
+             System.out.println((BytesMessage)inMessage);
+            
+          } else if (inMessage instanceof MapMessage) {
+             System.out.println("MapMessage:");
+             System.out.println((MapMessage)inMessage);
+
+          } else if (inMessage instanceof ObjectMessage) {
+             System.out.println("ObjectMessage:");
+             System.out.println((ObjectMessage)inMessage);
+
+          } else if (inMessage instanceof StreamMessage) {
+             System.out.println("StreamMessage:");
+             System.out.println((StreamMessage)inMessage);
+
+          } else {
+             System.out.println("undefined message type");
+          }
+       } catch (JMSException je) {
+          System.out.println("JMSException caught: " + je.getMessage());
+          Exception le = je.getLinkedException();
+          if (le != null) System.out.println("Linked exception: " + le);
+       }
+    }
+
+    public void myGet() {
+
+       QueueConnectionFactory factory = null;
+       QueueConnection        connection = null;
+       QueueSession           session = null;
+       Queue                  ioQueue = null;
+       QueueReceiver          qReceiver = null;
+   
+       Context     ctx       = null;
+
+       System.out.println("mqjmssel started.");
+
+        /**********************************/ 
+        /* Get the context factory.       */ 
+        /**********************************/ 
+        Hashtable environment = new Hashtable();
+        environment.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+        environment.put(Context.PROVIDER_URL, url);
+        environment.put(Context.REFERRAL, "throw");
+        try {
+            ctx = new InitialDirContext( environment );
+        } catch( Exception e ) {
+          System.err.println("Error during lookup of Context Factory " +
+                             e.getMessage());
+          System.err.println(e);
+           return;
+        }
+
+        /****************************************/ 
+        /* Lookup the queue connection factory. */
+        /****************************************/ 
+        try {
+           factory = (QueueConnectionFactory)ctx.lookup(qcfLookup );
+        } catch( Exception e ) {
+           System.out.println("Error during lookup of Queue Connection Factory " + e.getMessage());
+           System.err.println(e);
+           return;
+        }
+
+        /****************************************/ 
+        /* Lookup the queue.                    */
+        /****************************************/ 
+        try {
+          ioQueue = (Queue)ctx.lookup( qLookup );
+        } catch( Exception e ) {
+          System.out.println( "Error during lookup of Queue" + e.getMessage());
+          System.err.println(e);
+          return;
+        }
+
+        /***********************************************/ 
+        /* Create our objects, get selector from user. */
+        /***********************************************/ 
+        try {
+           System.out.println("  Create objects.");
+           System.out.println("");
+           connection = factory.createQueueConnection();
+           connection.start();
+
+           boolean transacted = false;
+           session = connection.createQueueSession( transacted,
+                           Session.AUTO_ACKNOWLEDGE);
+
+           InputStreamReader isr = new InputStreamReader(System.in);
+           BufferedReader    br  = new BufferedReader(isr);
+           String            userInput;
+ 
+           System.out.println("Enter selector: ");
+           userInput = br.readLine();
+           if (userInput.length() &gt; 0) {
+              qReceiver = session.createReceiver(ioQueue, userInput);
+              qReceiver.setMessageListener(this);
+           }
+
+           /***************************************************/
+           /* Program will need some time to get message.     */
+           /* User can wait here until a message is returned. */
+           /***************************************************/
+           System.out.println("");
+           System.out.println("Hit enter to end....");
+           userInput = br.readLine();
+
+           /*********************************************/
+           /* Make sure that all objects are closed and */
+           /* that the handles are set to null.         */
+           /*********************************************/
+           System.out.println("  Cleaning up");
+
+           qReceiver.close();
+
+           session.close();
+           session = null;
+
+           connection.close();
+           connection = null;
+
+        } catch( JMSException je ) {
+            /*******************************************/
+            /* Catch and display exception information */
+            /*******************************************/
+            System.out.println("JMSException: " + je);
+            Exception le = je.getLinkedException();
+            if (le != null) System.out.println("Linked exception: " + le);
+
+        } catch( Exception e ) {
+            /*******************************************/
+            /* Catch and display exception information */
+            /*******************************************/
+            System.out.println("Exception: " + e);
+        }
+
+        System.out.println("mqjmssel finished.");
+    }
+
+    public static void main (String args[]) {
+        mqjmssel app = new mqjmssel(args);
+        if ( (icf==null) 
+             || (url==null) 
+             || (qcfLookup==null) 
+             || (qLookup==null) ) {
+           System.out.println("Usage:");
+           System.out.println("java mqjmssel -icf ... -url ... -qcf ... -q ...");
+           System.out.println("where -icf is the classname of the initial context factory");
+           System.out.println("      -url is the JNDI location of the administered objects");
+           System.out.println("      -qcf is the queue connection factory");
+           System.out.println("      -q   is the queue");
+        } else {
+           app.myGet();
+        }
+    }
+
+}
+
+
+
+</PRE></BODY></HTML>

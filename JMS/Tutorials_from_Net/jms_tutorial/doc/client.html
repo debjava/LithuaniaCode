@@ -1,0 +1,920 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:14 2002">
+<title>Writing Simple JMS Client Applications</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="prog_model.html">Prev</a> |
+    <a href="advanced.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >4 &nbsp;&nbsp; Writing Simple JMS Client Applications</font>
+</h1>
+
+
+<p>
+  <a name="1019096"> </a>This chapter shows how to create and to run simple JMS client programs. A 
+  J2EE<font size="-2"><sup>TM</sup></font> application client commonly accesses J2EE components installed in a server based on J2EE technology ("J2EE server"). The clients in this chapter, however, are simple standalone programs that run outside the server as class files. The clients demonstrate the basic tasks that a JMS application must perform: 
+</p>
+
+<ul>
+  <li ><font ><a name="1028109"> </a>Creating a connection and a session</font>
+  <li ><font ><a name="1028110"> </a>Creating message producers and consumers</font>
+  <font ><li ><a name="1028111"> </a>Sending and receiving messages</font>
+</ul>
+
+<p>
+  <a name="1028112"> </a><font >In a J2EE application, some of these tasks are performed, in whole or in part, by the 
+  EJB<font size="-2"><sup>TM</sup></font> container. If you learn about these tasks, you will have a good basis for understanding how a JMS application works on the J2EE platform.</font>
+</p>
+
+
+<p>
+  <a name="1044122"> </a><font >The chapter covers the following topics:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1025249">Setting your environment to run J2EE clients and applications</a></font>
+  <li ><font ><a href="#1056518">A point-to-point example that uses synchronous receives</a></font>
+  <li ><font ><a href="#1025458">A publish/subscribe example that uses a message listener</a></font>
+  <font ><li ><a href="#1044118">Running JMS client programs on multiple systems</a></font>
+</ul>
+
+<p>
+  <a name="1023441"> </a><font >Each example consists of two programs: one that sends messages and one that receives them. You can run the programs in two terminal windows.</font>
+</p>
+
+
+<p>
+  <a name="1054917"> </a><font >When you write a JMS application to run in a J2EE component, you use many of the same methods in much the same sequence as you do for a JMS client program. However, there are some significant differences. <a href="jmsj2ee.html">Chapter 6</a> describes these differences, and the following chapters provide examples that illustrate them.</font>
+</p>
+
+
+<h3>
+  <a name="1025249"> </a><font color="#666699" >4.1&nbsp;&nbsp; Setting Your Environment for Running Applications</font>
+</h3>
+
+
+<p>
+  <a name="1044119"> </a><font >Before you can run the examples, you need to make sure that your environment is set appropriately. <a href="client.html#1025256">Table 4.1</a> shows how to set the environment variables needed to run J2EE applications on Microsoft Windows and 
+  UNIX&#174; platforms.
+</font></p><font >
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1025256"> </a><font >Table 4.1: &nbsp;&nbsp; Environment Settings for Compiling and Running <br>J2EE Applications<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1025262"> </a><font >Platform<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1025264"> </a><font >Variable Name<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1025266"> </a><font >Values<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td colspan="1" rowspan="4"><div align="left"><font face="">
+<a name="1025268"> </a><font >Microsoft Windows<br></font>
+
+</font></div></td>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025320"> </a><font ><code>%JAVA_HOME%</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1025322"> </a><font >Directory in which the 
+Java<font size="-2"><sup>TM</sup></font> 2 SDK, Standard Edition, version 1.3.1, is installed<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025270"> </a><font ><code>%J2EE_HOME%</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1025272"> </a><font >Directory 
+          in which the J2EE SDK 1.3.1 is installed, usually <code>C:\j2sdkee1.3.1</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025276"> </a><font ><code>%CLASSPATH%</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1025278"> </a><font >Include the following:<br></font>
+
+</font>
+          <div align="left"><font face=""> <a name="1025279"> </a><font ><code>.;%J2EE_HOME%\lib\j2ee.jar;</code><br>
+            </font>
+
+</font>
+            <div align="left"><font face=""> <a name="1027090"> </a><font ><code>%J2EE_HOME%\lib\locale</code><br>
+              </font>
+
+</font></div></div></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025441"> </a><font ><code>%PATH%</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1025443"> </a><font >Include 
+          <code>%J2EE_HOME%\bin</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td colspan="1" rowspan="4"><div align="left"><font face="">
+<a name="1025337"> </a><font >UNIX<br></font>
+
+</font></div></td>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025343"> </a><font ><code>$JAVA_HOME</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1025349"> </a><font >Directory in which the Java 2 SDK, Standard Edition, version 1.3.1, is installed<br></font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025283"> </a><font ><code>$J2EE_HOME</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1025285"> </a><font >Directory 
+          in which the J2EE SDK 1.3.1 is installed, usually <code>$HOME/j2sdkee1.3.1</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025289"> </a><font ><code>$CLASSPATH</code><br>
+          </font>
+
+</font></div></td>
+    <td><div align="left"><font face="">
+<a name="1026166"> </a><font >Include the following:<br></font>
+
+</font>
+          <div align="left"><font face=""> <a name="1025292"> </a><font ><code>.:$J2EE_HOME/lib/j2ee.jar:</code><br>
+            </font>
+
+</font>
+            <div align="left"><font face=""> <a name="1027099"> </a><font ><code>$J2EE_HOME/lib/locale</code><br>
+              </font>
+
+</font></div></div></div></td>
+  </tr>
+  <tr>
+    <td valign="top">
+        <div align="left"><font face=""> <a name="1025447"> </a><font ><code>$PATH</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1025449"> </a><font >Include 
+          <code>$J2EE_HOME/bin</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+</font>
+
+  <p> <a name="1026179"> </a><font >The appendix provides more examples of client 
+    programs that demonstrate additional features of the JMS API. You can download 
+    still more examples of JMS client programs from the JMS API Web site, <a href="http://java.sun.com/products/jms/"><code>http://java.sun.com/products/jms/</code></a>. 
+    If you downloaded the tutorial examples as described in the preface, you will 
+    find the examples for this chapter in the directory <code>jms_tutorial/examples/simple</code> 
+    (on UNIX systems) or <code>jms_tutorial\examples\simple</code> (on Microsoft 
+    Windows systems).</font> </p>
+
+<h3>
+  <a name="1056518"> </a><font color="#666699" >4.2&nbsp;&nbsp; A Simple Point-to-Point Example</font>
+</h3>
+
+
+  <p> <a name="1023430"> </a><font >This section describes the sending and receiving 
+    programs in a PTP example that uses the <code>receive</code> method to consume 
+    messages synchronously. This section then explains how to compile and run 
+    the programs, using the J2EE SDK 1.3.1.</font> </p>
+
+
+<p>
+  <a name="1072471"> </a><font >The following sections describe the steps in creating and running the example:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1027210">Writing the PTP client programs</a></font>
+  <li ><font ><a href="#1069477">Compiling the PTP clients</a></font>
+  <li ><font ><a href="#1024951">Starting the JMS provider</a></font>
+  <li ><font ><a href="#1027237">Creating the JMS administered objects</a></font>
+  <li ><font ><a href="#1025459">Running the PTP clients</a></font>
+  <font ><li ><a href="#1025489">Deleting the queue</a></font>
+</ul>
+
+<h4>
+  <a name="1027210"> </a><font color="#666699" >4.2.1&nbsp;&nbsp; Writing the PTP Client Programs</font>
+</h4>
+
+
+  <p> <a name="1025379"> </a><font >The sending program, <a href="../examples/simple/SimpleQueueSender.java"><code>SimpleQueueSender.java</code></a>, 
+    performs the following steps:</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025380"> </a>Performs a Java Naming and Directory 
+      Interface<font size="-2"><sup>TM</sup></font> (JNDI) API lookup of the <code>QueueConnectionFactory</code> 
+      and queue</font> 
+    <li  value="2"><font ><a name="1025381"> </a>Creates a connection and a session</font>
+    <li  value="3"><font ><a name="1025384"> </a>Creates a <code>QueueSender</code></font> 
+    <li  value="4"><font ><a name="1025385"> </a>Creates a <code>TextMessage</code></font> 
+    <li  value="5"><font ><a name="1025428"> </a>Sends one or more messages to the queue</font>
+  <li  value="6"><font ><a name="1025391"> </a>Sends a control message to indicate the end of the message stream</font>
+  <font >
+    <li  value="7"><a name="1026518"> </a>Closes the connection in a <code>finally</code> 
+      block, automatically closing the session and <code>QueueSender</code>
+    </font>
+</ol>
+
+  <p> <a name="1025422"> </a><font >The receiving program, <a href="../examples/simple/SimpleQueueReceiver.java"><code>SimpleQueueReceiver.java</code></a>, 
+    performs the following steps:</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025400"> </a>Performs a JNDI API lookup of the 
+      <code>QueueConnectionFactory</code> and queue</font> 
+    <li  value="2"><font ><a name="1025401"> </a>Creates a connection and a session</font>
+    <li  value="3"><font ><a name="1025402"> </a>Creates a <code>QueueReceiver</code></font> 
+    <li  value="4"><font ><a name="1027066"> </a>Starts the connection, causing message delivery to begin</font>
+  <li  value="5"><font ><a name="1025404"> </a>Receives the messages sent to the queue until the end-of-message-stream control message is received</font>
+  <font >
+    <li  value="6"><a name="1026521"> </a>Closes the connection in a <code>finally</code> 
+      block, automatically closing the session and <code>QueueReceiver</code>
+    </font>
+</ol>
+
+  <p> <a name="1044087"> </a><font >The <code>receive</code> method can be used 
+    in several ways to perform a synchronous receive. If you specify no arguments 
+    or an argument of <code>0,</code> the method blocks indefinitely until a message 
+    arrives:</font> </p>
+
+<pre>
+Message m = queueReceiver.receive();
+
+Message m = queueReceiver.receive(0);
+</pre>
+
+<p>
+  <a name="1025682"> </a><font >For a simple client program, this may not matter. But if you do not want your program to consume system resources unnecessarily, use a timed synchronous receive. Do one of the following:</font>
+</p>
+
+<ul>
+    <li ><font ><a name="1044086"> </a>Call the <code>receive</code> method with 
+      a timeout argument greater than <code>0</code>:</font> 
+      <pre>
+Message m = queueReceiver.receive(1); // 1 millisecond
+</pre>
+</li>
+    <li ><font ><a name="1027361"> </a>Call the <code>receiveNoWait</code> method, 
+      which receives a message only if one is available:</font> 
+      <pre>
+Message m = queueReceiver.receiveNoWait();
+</pre>
+</li>
+</ul>
+  <p> <a name="1069472"> </a><font >The <code>SimpleQueueReceiver</code> program 
+    uses an indefinite <code>while</code> loop to receive messages, calling <code>receive</code> 
+    with a timeout argument. Calling <code>receiveNoWait</code> would have the 
+    same effect. </font> </p>
+
+<h4>
+  <a name="1069477"> </a><font color="#666699" >4.2.2&nbsp;&nbsp; Compiling the PTP Clients</font>
+</h4>
+
+
+<p>
+  <a name="1024947"> </a><font >To compile the PTP example, do the following.</font>
+</p>
+
+<ol type="1">
+  <li><font ><a name="1026841"> </a>Make sure that you have set the environment variables shown in <a href="client.html#1025256">Table 4.1</a>.</font>
+  <li><font ><a name="1024948"> </a>At a command line prompt, compile the two source files: </font>
+<pre>
+javac SimpleQueueSender.java
+javac SimpleQueueReceiver.java
+</pre>
+</ol>
+
+<h4>
+  <a name="1024951"> </a><font color="#666699" >4.2.3&nbsp;&nbsp; Starting the JMS Provider</font>
+</h4>
+
+
+<p>
+  <a name="1027227"> </a><font >When you use the J2EE SDK 1.3.1, your JMS provider is the SDK. At another command line prompt, start the J2EE server as follows:</font>
+</p>
+
+<pre>
+j2ee -verbose
+</pre>
+
+<p>
+  <a name="1025460"> </a><font >Wait until the server displays the message "J2EE server startup complete."</font>
+</p>
+
+<h4>
+  <a name="1027237"> </a><font color="#666699" >4.2.4&nbsp;&nbsp; Creating the JMS Administered Objects</font>
+</h4>
+
+
+  <p> <a name="1027238"> </a><font >In the window in which you compiled the clients, 
+    use the <code>j2eeadmin</code> command to create a queue named <code>MyQueue</code>. 
+    The last argument tells the command what kind of destination to create.</font> 
+  </p>
+
+<pre>
+j2eeadmin -addJmsDestination MyQueue queue
+</pre>
+
+<p>
+  <a name="1026144"> </a><font >To make sure that the queue has been created, use the following command:</font>
+</p>
+
+<pre>
+j2eeadmin -listJmsDestination
+</pre>
+
+  <p> <a name="1026221"> </a><font >This example uses the default <code>QueueConnectionFactory</code> 
+    object supplied with the J2EE SDK 1.3.1. With a different J2EE product, you 
+    might need to create a connection factory yourself. </font> </p>
+
+<h4>
+  <a name="1025459"> </a><font color="#666699" >4.2.5&nbsp;&nbsp; Running the PTP Clients</font>
+</h4>
+
+
+<p>
+  <a name="1027249"> </a><font >Run the clients as follows.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font >
+      <p> <a name="1044101"> </a>Run the <code>SimpleQueueSender</code> program, 
+        sending three messages. You need to define a value for <code>jms.properties</code>. 
+      </p>
+      </font>
+  
+  <ul>
+    <li ><font ><a name="1047922"> </a>On a Microsoft Windows system, type the following command:</font>
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueSender MyQueue 3
+</pre>
+</li>
+  </ul>
+  <ul>
+    <li ><font ><a name="1025473"> </a>On a UNIX system, type the following command:</font>
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties SimpleQueueSender MyQueue 3
+</pre>
+</li>
+  </ul>
+
+<p>
+  <a name="1026158"> </a><font >The output of the program looks like this:</font>
+</p>
+
+<pre>
+Queue name is MyQueue
+Sending message: This is message 1
+Sending message: This is message 2
+Sending message: This is message 3
+</pre>
+</li>
+  <li  value="2"><font >
+      <p> <a name="1025480"> </a>In the same window, run the <code>SimpleQueueReceiver</code> 
+        program, specifying the queue name. The <code>java</code> commands look 
+        like this:</p>
+      </font>
+  
+  <ul>
+    <li ><font ><a name="1028099"> </a>Microsoft Windows systems:</font>
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueReceiver MyQueue
+</pre>
+    </li>
+    <li ><font ><a name="1028100"> </a>UNIX systems:</font>
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties SimpleQueueReceiver MyQueue
+</pre>
+    </li>
+  </ul>
+
+<p>
+  <a name="1025526"> </a><font >The output of the program looks like this:</font>
+</p>
+
+<pre>
+Queue name is MyQueue
+Reading message: This is message 1
+Reading message: This is message 2
+Reading message: This is message 3
+</pre>
+</li>
+  <li><font >
+      <p> <a name="1025727"> </a>Now try running the programs in the opposite 
+        order. Start the <code>SimpleQueueReceiver</code> program. It displays 
+        the queue name and then appears to hang, waiting for messages.</p>
+      </font>
+  
+  <font ><li>
+      <p> <a name="1025734"> </a>In a different terminal window, run the <code>SimpleQueueSender</code> 
+        program. When the messages have been sent, the <code>SimpleQueueReceiver</code> 
+        program receives them and exits.</p>
+    </font>
+  
+</ol>
+
+<h4>
+  <a name="1025489"> </a><font color="#666699" >4.2.6&nbsp;&nbsp; Deleting the Queue</font>
+</h4>
+
+
+<p>
+  <a name="1028122"> </a><font >You can delete the queue you created as follows:</font>
+</p>
+
+<pre>
+j2eeadmin -removeJmsDestination MyQueue
+</pre>
+
+<p>
+  <a name="1064369"> </a><font >You will use it again in <a href="client.html#1044334">Section 4.4.1, "Communicating Between Two J2EE Servers,"</a> however.</font>
+</p>
+
+
+<h3>
+  <a name="1025458"> </a><font color="#666699" >4.3&nbsp;&nbsp; A Simple Publish/Subscribe Example</font>
+</h3>
+
+
+<p>
+  <a name="1024260"> </a><font >This section describes the publishing and subscribing programs in a pub/sub example that uses a message listener to consume messages asynchronously. This section then explains how to compile and run the programs, using the J2EE SDK 1.3.1.</font>
+</p>
+
+
+<p>
+  <a name="1072827"> </a><font >The following sections describe the steps in creating and running the example:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1027256">Writing the pub/sub client programs</a></font>
+  <li ><font ><a href="#1024270">Compiling the pub/sub clients</a></font>
+  <li ><font ><a href="#1027303">Starting the JMS provider</a></font>
+  <li ><font ><a href="#1027311">Creating the JMS administered objects</a></font>
+  <li ><font ><a href="#1027318">Running the pub/sub clients</a></font>
+  <font ><li ><a href="#1025863">Deleting the topic and stopping the server</a></font>
+</ul>
+
+<h4>
+  <a name="1027256"> </a><font color="#666699" >4.3.1&nbsp;&nbsp; Writing the Pub/Sub Client Programs</font>
+</h4>
+
+
+  <p> <a name="1025754"> </a><font >The publishing program, <a href="../examples/simple/SimpleTopicPublisher.java"><code>SimpleTopicPublisher.java</code></a>, 
+    performs the following steps:</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025755"> </a>Performs a JNDI API lookup of the 
+      <code>TopicConnectionFactory</code> and topic</font> 
+    <li  value="2"><font ><a name="1025756"> </a>Creates a connection and a session</font>
+    <li  value="3"><font ><a name="1025757"> </a>Creates a <code>TopicPublisher</code></font> 
+    <li  value="4"><font ><a name="1025758"> </a>Creates a <code>TextMessage</code></font> 
+    <li  value="5"><font ><a name="1025759"> </a>Publishes one or more messages to the topic</font>
+  <font >
+    <li  value="6"><a name="1026534"> </a>Closes the connection, which automatically 
+      closes the session and <code>TopicPublisher</code>
+    </font>
+</ol>
+
+  <p> <a name="1025761"> </a><font >The receiving program, <a href="../examples/simple/SimpleTopicSubscriber.java"><code>SimpleTopicSubscriber.java</code></a>, 
+    performs the following steps:</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025762"> </a>Performs a JNDI API lookup of the 
+      <code>TopicConnectionFactory</code> and topic</font> 
+    <li  value="2"><font ><a name="1025763"> </a>Creates a connection and a session</font>
+    <li  value="3"><font ><a name="1025764"> </a>Creates a <code>TopicSubscriber</code></font> 
+    <li  value="4"><font ><a name="1025798"> </a>Creates an instance of the <code>TextListener</code> 
+      class and registers it as the message listener for the <code>TopicSubscriber</code></font> 
+    <li  value="5"><font ><a name="1027074"> </a>Starts the connection, causing message delivery to begin</font>
+    <li  value="6"><font ><a name="1025765"> </a>Listens for the messages published 
+      to the topic, stopping when the user enters the character <code>q</code> 
+      or <code>Q</code></font> 
+    <font >
+    <li  value="7"><a name="1026541"> </a>Closes the connection, which automatically 
+      closes the session and <code>TopicSubscriber</code>
+    </font>
+</ol>
+
+  <p> <a name="1025809"> </a><font >The message listener, <a href="../examples/simple/TextListener.java"><code>TextListener.java</code></a>, 
+    follows these steps: </font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025820"> </a>When a message arrives, the <code>onMessage</code> 
+      method is called automatically.</font> 
+    <font >
+    <li  value="2"><a name="1025821"> </a>The <code>onMessage</code> method converts 
+      the incoming message to a <code>TextMessage</code> and displays its content.
+    </font>
+</ol>
+
+<h4>
+  <a name="1024270"> </a><font color="#666699" >4.3.2&nbsp;&nbsp; Compiling the Pub/Sub Clients</font>
+</h4>
+
+
+<p>
+  <a name="1025828"> </a><font >To compile the pub/sub example, do the following.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026851"> </a>Make sure that you have set the environment variables shown in <a href="client.html#1025256">Table 4.1</a>.</font>
+  <li  value="2"><font ><a name="1025829"> </a>Compile the programs and the message listener class: </font>
+<pre>
+javac SimpleTopicPublisher.java
+javac SimpleTopicSubscriber.java
+javac TextListener.java
+</pre>
+</li>
+</ol>
+
+<h4>
+  <a name="1027303"> </a><font color="#666699" >4.3.3&nbsp;&nbsp; Starting the JMS Provider</font>
+</h4>
+
+
+<p>
+  <a name="1025832"> </a><font >If you did not do so before, start the J2EE server in another terminal window:</font>
+</p>
+
+<pre>
+j2ee -verbose
+</pre>
+
+<p>
+  <a name="1027310"> </a><font >Wait until the server displays the message "J2EE server startup complete."</font>
+</p>
+
+<h4>
+  <a name="1027311"> </a><font color="#666699" >4.3.4&nbsp;&nbsp; Creating the JMS Administered Objects</font>
+</h4>
+
+
+  <p> <a name="1025834"> </a><font >In the window in which you compiled the clients, 
+    use the <code>j2eeadmin</code> command to create a topic named <code>MyTopic</code>. 
+    The last argument tells the command what kind of destination to create.</font> 
+  </p>
+
+<pre>
+j2eeadmin -addJmsDestination MyTopic topic
+</pre>
+
+<p>
+  <a name="1026237"> </a><font >To verify that the queue has been created, use the following command:</font>
+</p>
+
+<pre>
+j2eeadmin -listJmsDestination
+</pre>
+
+  <p> <a name="1026244"> </a><font >This example uses the default <code>TopicConnectionFactory</code> 
+    object supplied with the J2EE SDK 1.3.1. With a different J2EE product, you 
+    might need to create a connection factory.</font> </p>
+
+<h4>
+  <a name="1027318"> </a><font color="#666699" >4.3.5&nbsp;&nbsp; Running the Pub/Sub Clients</font>
+</h4>
+
+
+<p>
+  <a name="1027319"> </a><font >Run the clients as follows.</font>
+</p>
+
+<ol type="1">
+  <li><font >
+      <p> <a name="1026239"> </a>Run the <code>SimpleTopicSubscriber</code> program, 
+        specifying the topic name. You need to define a value for <code>jms.properties</code>. 
+      </p>
+      </font>
+  
+  <ul>
+    <li ><font ><a name="1047921"> </a>On a Microsoft Windows system, type the following command:</font>
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleTopicSubscriber MyTopic
+</pre>
+</li>
+    <li ><font ><a name="1025959"> </a>On a UNIX system, type the following command:</font>
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties SimpleTopicSubscriber MyTopic
+</pre>
+</li>
+  </ul>
+
+<p>
+  <a name="1025928"> </a><font >The program displays the following lines and appears to hang:</font>
+</p>
+
+<pre>
+Topic name is MyTopic
+To end program, enter Q or q, then &lt;return&gt;
+</pre>
+</li>
+    <li  value="2"><font ><a name="1025836"> </a>In another terminal window, run 
+      the <code>SimpleTopicPublisher</code> program, publishing three messages. 
+      The <code>java</code> commands look like this:</font> 
+      <p></p>
+  <ul>
+    <li ><font ><a name="1028104"> </a>Microsoft Windows systems:</font>
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleTopicPublisher MyTopic 3
+</pre>
+</li>
+    <li ><font ><a name="1028105"> </a>UNIX systems:</font>
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties SimpleTopicPublisher MyTopic 3
+</pre>
+</li>
+</ul>
+
+<p>
+  <a name="1025844"> </a><font >The output of the program looks like this:</font>
+</p>
+
+<pre>
+Topic name is MyTopic
+Publishing message: This is message 1
+Publishing message: This is message 2
+Publishing message: This is message 3
+</pre>
+<p>
+  <a name="1026004"> </a><font >In the other window, the program displays the following:</font>
+</p>
+
+<pre>
+Reading message: This is message 1
+Reading message: This is message 2
+Reading message: This is message 3
+</pre>
+
+      <p> <a name="1026016"> </a><font >Enter <code>Q</code> or <code>q</code> 
+        to stop the program.</font> </p>
+</li>
+</ol>
+
+<h4>
+  <a name="1025863"> </a><font color="#666699" >4.3.6&nbsp;&nbsp; Deleting the Topic and Stopping the Server</font>
+</h4>
+
+<ol type="1">
+  <li><font ><a name="1027322"> </a>You can delete the topic you created as follows:</font>
+<pre>
+j2eeadmin -removeJmsDestination MyTopic
+</pre>
+
+<p>
+  <a name="1064381"> </a><font >You will use it again in <a href="client.html#1056129">Section 4.4.2, "Communicating Between a J2EE Server and a System Not Running a J2EE Server,"</a> however.</font>
+</p>
+</li>
+  <li><font ><a name="1026024"> </a>If you wish, you can stop the J2EE server as well:</font>
+<pre>
+j2ee -stop
+</pre>
+</li>
+</ol>
+
+<h3>
+  <a name="1044118"> </a><font color="#666699" >4.4&nbsp;&nbsp; Running JMS Client Programs on Multiple Systems</font>
+</h3>
+
+
+<p>
+  <a name="1044347"> </a><font >JMS client programs can communicate with each other when they are running on different systems in a network. The systems must be visible to each other by name--the UNIX host name or the Microsoft Windows computer name--and must both be running the J2EE server. </font>
+</p>
+
+
+<p>
+  <a name="1056113"> </a><font >This section explains how to produce and to consume messages in two different situations:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1044334">When a J2EE server is running on both systems</a></font>
+  <font ><li ><a href="#1056129">When a J2EE server is running on only one system</a></font>
+</ul>
+
+<h4>
+  <a name="1044334"> </a><font color="#666699" >4.4.1&nbsp;&nbsp; Communicating Between Two J2EE Servers</font>
+</h4>
+
+
+  <p> <a name="1056116"> </a><font >Suppose that you want to run the <code>SimpleQueueSender</code> 
+    program on one system, <code>mars</code>, and the <code>SimpleQueueReceiver</code> 
+    program on another system, <code>earth</code>. To do so, follow these steps.</font> 
+  </p>
+
+<ol type="1">
+  <li><font ><a name="1044180"> </a>Start the J2EE server on both systems. Enter the following command in a terminal window on each system:</font>
+<pre>
+j2ee -verbose
+</pre>
+</li>
+    <li><font ><a name="1044166"> </a>On <code>earth</code>, create a <code>QueueConnectionFactory</code> 
+      object, using a command like the following:</font> 
+      <pre>
+j2eeadmin -addJmsFactory jms/EarthQCF queue
+</pre>
+</li>
+    <li><font ><a name="1044205"> </a>On <code>mars</code>, create a connection 
+      factory with the same name that points to the server on <code>earth</code>. 
+      Enter, on one line, a command like the following:</font> 
+      <pre>
+j2eeadmin -addJmsFactory jms/EarthQCF queue -props url=corbaname:iiop:earth:1050#earth
+</pre>
+      <p> <a name="1073246"> </a><font >You can modify the script <code>setup.bat</code> 
+        or <code>setup.sh</code>, which you will use in <a href="j2eeapp4.html">Chapter 
+        10</a>, to automate this command.</font> </p>
+</li>
+  <li><font ><a name="1044218"> </a>In each source program, change the line that looks up the connection factory so that it refers to the new connection factory:</font>
+<pre>
+queueConnectionFactory = 
+    (QueueConnectionFactory) jndiContext.lookup("jms/EarthQCF");
+</pre>
+  <font ><li><a name="1044271"> </a>Recompile the programs; then run them by using the instructions in <a href="client.html#1025459">Section 4.2.5, "Running the PTP Clients."</a> Because both connection factories have the same name, you can run either the sender or the receiver on either system. (Note: A bug in the JMS provider in the J2EE SDK may cause a runtime failure to create a connection to systems that use the Dynamic Host Configuration Protocol [DHCP] to obtain an IP address.)</li></font>
+
+</ol>
+
+  <p> <a name="1044376"> </a><font >You can run the pub/sub example in the same 
+    way by creating a <code>TopicConnectionFactory</code> object on both systems. 
+    For an example showing how to deploy J2EE applications on two different systems, 
+    see <a href="j2eeapp4.html">Chapter 10</a>.</font> </p>
+
+<h4>
+  <a name="1056129"> </a><font color="#666699" >4.4.2&nbsp;&nbsp; Communicating Between a J2EE Server and a System Not Running a J2EE Server</font>
+</h4>
+
+
+  <p> <a name="1056135"> </a><font >In order for two standalone client programs 
+    to communicate, both must have the J2EE SDK installed locally. However, the 
+    J2EE server does not have to be running on both systems. Suppose that you 
+    want to run the <code>SimpleTopicPublisher</code> and the <code>SimpleTopicSubscriber</code> 
+    programs on two systems called <code>earth</code> and <code>mars</code>, as 
+    in <a href="client.html#1044334">Section 4.4.1</a>, but that the J2EE server 
+    will be running only on <code>earth</code>. To specify the system running 
+    the server, you can either</font> </p>
+
+<ul>
+  <li ><font ><a name="1056375"> </a>Use the command line, which allows you to access different applications on different servers for maximum flexibility</font>
+  <font ><li ><a name="1056376"> </a>Set a configurable property, which allows applications to run only on the system specified in the property</font>
+</ul>
+
+  <p> <a name="1056308"> </a><font >When the server is running only on the remote 
+    system, you do <i>not</i> have to create a connection factory on the local 
+    system that refers to the remote system.</font> </p>
+
+
+<p>
+  <a name="1056668"> </a><font >The procedure for using the command line is as follows:</font>
+</p>
+
+<ol type="1">
+    <li><font ><a name="1056147"> </a>Start the J2EE server on <code>earth</code>:</font> 
+      <pre>
+j2ee -verbose
+</pre>
+</li>
+  <font >
+    <li><a name="1056149"> </a>Set the <code>J2EE_HOME</code> environment variable 
+      and the classpath on <code>mars</code> so that they point to the J2EE SDK 
+      1.3.1 installation on <code>mars</code> (see <a href="client.html#1025256">Table 
+      4.1</a>). </li>
+    </font>
+
+    <li><font ><a name="1056533"> </a>To access a client program on a system running 
+      the server from a client program on a system not running the server, use 
+      the following option, where <i>hostname</i> is the name of the system running 
+      the J2EE server:</font> 
+      <pre>
+-Dorg.omg.CORBA.ORBInitialHost=<font ><i>hostname</i></font>
+</pre>
+</li>
+    <p> <a name="1056157"> </a><font >This option allows you to access the naming 
+      service on the remote system. For example, if the server is running on <code>earth</code>, 
+      use a command like the following to run the <code>SimpleTopicSubscriber</code> 
+      program on <code>mars</code>. Make sure that the destination you specify 
+      exists on the server running on <code>earth</code>.</font> </p>
+
+<ul>
+    <li ><font ><a name="1056350"> </a>On a Microsoft Windows system, type the following command:</font>
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties -Dorg.omg.CORBA.ORBInitialHost=earth SimpleTopicSubscriber MyTopic
+</pre>
+</li>
+    <li ><font ><a name="1056362"> </a>On a UNIX system, type the following command:</font>
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties -Dorg.omg.CORBA.ORBInitialHost=earth SimpleTopicSubscriber MyTopic
+</pre>
+</li>
+  </ul>
+
+</ol>
+
+  <p> <a name="1056383"> </a><font >If all the remote programs you need to access 
+    are on the same system, you can edit the file <code>%J2EE_HOME%\config\orb.properties</code> 
+    (on Microsoft Windows systems) or <code>$J2EE_HOME/config/orb.properties</code> 
+    (on UNIX systems) on the local system. The second line of this file looks 
+    like this:</font> </p>
+
+<pre>
+host=localhost
+</pre>
+
+  <p> <a name="1063631"> </a><font >Change <code>localhost</code> to the name 
+    of the system on which the J2EE server is running--for example, <code>earth</code>:</font> 
+  </p>
+
+<pre>
+host=earth
+</pre>
+
+  <p> <a name="1056411"> </a><font >You can now run the client program as before, 
+    but you do not need to specify the option <code>-Dorg.omg.CORBA.ORBInitialHost</code>. 
+    </font> </p>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="prog_model.html">Prev</a> |
+  <a href="advanced.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

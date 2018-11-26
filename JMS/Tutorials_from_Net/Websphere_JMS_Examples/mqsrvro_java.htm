@@ -1,0 +1,415 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0069)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqsrvro.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2005  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Program name: mqsrvro.java                                                */
+/*                                                                           */
+/* Description: Sample Java program that demonstrates how to set the message */
+/*              id and correlation id when the requester has set instructions*/
+/*              in the message header report field.  mqsrvro terminates when */
+/*              it receives an application defined termination or there are  */
+/*              no messages received for 5 minutes.                          */
+/*                                                                           */
+/*****************************************************************************/
+/*                                                                           */
+/* Function:                                                                 */
+/*                                                                           */
+/*   This program is similar to the mqsrvro.cpp program found at:            */
+/*                                                                           */
+/*       http://www.developer.ibm.com/tech/sampmq.html                       */
+/*                                                                           */
+/* This program is run as follows:                                           */
+/*                                                                           */
+/*     java mqsrvro -q ... -qm ...                                           */
+/*                                                                           */
+/* where                                                                     */
+/*     -q   is the queue name                                                */
+/*     -qm  is the queue manager name                                        */
+/*                                                                           */
+/* An alternate method is to run the program with an mqsrvro.properties      */
+/* that contains the q, qm:                                                  */
+/*                                                                           */
+/*    q=SYSTEM.DEFAULT.LOCAL.QUEUE                                           */
+/*    qm=pubsub.qmgr                                                         */
+/*                                                                           */
+/* This program has been tested with WebSphere MQ 5.3 FixPack 8 and          */
+/* JDK 1.4.2.                                                                */
+/*                                                                           */
+/* This program can be run with the mqreqro sample.                          */
+/*                                                                           */
+/*****************************************************************************/
+
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import com.ibm.mq.MQC;
+import com.ibm.mq.MQException;
+import com.ibm.mq.MQGetMessageOptions;
+import com.ibm.mq.MQMessage;
+import com.ibm.mq.MQPutMessageOptions;
+import com.ibm.mq.MQQueue;
+import com.ibm.mq.MQQueueManager;
+
+public class mqsrvro implements Runnable {
+
+	private static String iQueue = null;
+	private static String iQmgr = null;
+	private static String sTerminate = "TERMINATE";
+
+	public mqsrvro() {
+		iQueue = System.getProperty("q");
+		iQmgr = System.getProperty("qm");
+
+		/***********************************************/
+		/* Now go and get the mqsrvro.properties file  */
+		/***********************************************/
+		try {
+			Properties props = new Properties(System.getProperties());
+			props.load(
+				new BufferedInputStream(
+					new FileInputStream("mqsrvro.properties")));
+			System.setProperties(props);
+		} catch (Exception e) {
+			System.out.print("Unable to read mqsrvro.properties: ");
+			System.out.println(" " + e);
+		}
+
+		if (iQueue == null) {
+			iQueue = System.getProperty("q");
+		}
+		if (iQmgr == null) {
+			iQmgr = System.getProperty("qm");
+		}
+
+	}
+
+	public mqsrvro(String[] args) {
+
+		this();
+
+		/**********************************/
+		/* Get the command-line arguments */
+		/**********************************/
+		for (int i = 0; i &lt; args.length; i++) {
+			String arg = args[i].toLowerCase();
+
+			if (arg.equals("-q")) {
+				if (i + 1 &lt; args.length) {
+					iQueue = args[++i];
+				} else {
+					System.out.println("didn't specify queue, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-qm")) {
+				if (i + 1 &lt; args.length) {
+					iQmgr = args[++i];
+				} else {
+					System.out.println("didn't specify queue manager, exiting");
+					return;
+				}
+
+			} else {
+				System.out.println("Unknown argument: " + arg);
+			}
+		}
+
+	}
+
+	public void run() {
+
+		MQQueueManager qMgr;
+		boolean doneWithGet = false;
+
+		System.out.println("mqsrvro started....");
+		MQException.log = null;
+
+		try {
+			if (iQmgr != null) {
+				qMgr = new MQQueueManager(iQmgr);
+			} else {
+				qMgr = new MQQueueManager("");
+			}
+			try {
+				int openOptions =
+					MQC.MQOO_INPUT_AS_Q_DEF + MQC.MQOO_FAIL_IF_QUIESCING;
+				MQQueue myQueue =
+					qMgr.accessQueue(iQueue, openOptions, null, null, null);
+				//    try {
+				do {
+					MQGetMessageOptions gmo = new MQGetMessageOptions();
+					gmo.options =
+						gmo.options + MQC.MQGMO_WAIT + MQC.MQGMO_CONVERT;
+					gmo.matchOptions = MQC.MQMO_NONE;
+					gmo.waitInterval = 300000; /* we'll wait 5 minutes */
+
+					MQMessage myMessage = new MQMessage();
+
+					// myMessage.clearMessage();
+					myMessage.correlationId = MQC.MQCI_NONE;
+					myMessage.messageId = MQC.MQMI_NONE;
+					myMessage.groupId = MQC.MQGI_NONE;
+
+					try {
+						myQueue.get(myMessage, gmo);
+						String msgText =
+							myMessage.readString(myMessage.getMessageLength());
+						switch (myMessage.messageType) {
+							case MQC.MQMT_APPL_FIRST :
+								if (msgText.indexOf(sTerminate) &gt;= 0) {
+									doneWithGet = true;
+								} else {
+									sendExceptionReply(myMessage, qMgr);
+								}
+
+								break;
+							case MQC.MQMT_REQUEST :
+								System.out.println("mqmt request");
+								replyToRequest(myMessage, qMgr);
+								break;
+							default :
+								System.out.println("in default");
+								sendExceptionReply(myMessage, qMgr);
+
+						}
+
+					} catch (MQException ex) {
+						doneWithGet = true;
+						if (ex.reasonCode
+							== MQException.MQRC_NO_MSG_AVAILABLE) {
+							System.out.println("No more messages");
+						} else {
+							System.err.println(
+								"Error getting message "
+									+ ex.completionCode
+									+ " "
+									+ ex.reasonCode);
+						}
+					} catch (IOException ex) {
+						System.out.println("IOException reading message");
+					}
+
+				} while (!doneWithGet);
+
+				myQueue.close();
+			} catch (MQException ex) {
+				System.err.println(
+					"Error opening queue "
+						+ ex.completionCode
+						+ " "
+						+ ex.reasonCode);
+			}
+			qMgr.disconnect();
+		} catch (MQException ex) {
+			System.err.println(
+				"Error opening queue manager "
+					+ ex.completionCode
+					+ " "
+					+ ex.reasonCode);
+		}
+
+		System.out.println("mqsrvro finished....");
+	}
+
+	static void replyToRequest(MQMessage myMessage, MQQueueManager myQmgr) {
+		System.out.println("Inside replyToRequest");
+		System.out.println(" Request received");
+		System.out.print(" Message ID from get:     ");
+		dumpHexId(myMessage.messageId);
+		System.out.print(" Correlation ID from get: ");
+		dumpHexId(myMessage.correlationId);
+
+		try {
+
+			int openOptions = MQC.MQOO_OUTPUT + MQC.MQOO_FAIL_IF_QUIESCING;
+			MQQueue qReply =
+				myQmgr.accessQueue(
+					myMessage.replyToQueueName,
+					openOptions,
+					null,
+					null,
+					null);
+			MQMessage msgReply = new MQMessage();
+			MQPutMessageOptions pmo = new MQPutMessageOptions();
+			msgReply.messageType = MQC.MQMT_REPLY;
+			int reportOpts = myMessage.report;
+
+			if ((reportOpts &amp; MQC.MQRO_PASS_MSG_ID) == MQC.MQRO_PASS_MSG_ID) {
+				System.out.println(
+					" Requester asked for the existing message id to be passed back");
+				msgReply.messageId = myMessage.messageId;
+			} else {
+				System.out.println(
+					" Requester asked for a new message id to be generated");
+				msgReply.messageId = MQC.MQMI_NONE;
+				pmo.options |= MQC.MQPMO_NEW_MSG_ID;
+			}
+
+			if ((reportOpts &amp; MQC.MQRO_PASS_CORREL_ID)
+				== MQC.MQRO_PASS_CORREL_ID) {
+				System.out.println(
+					" Requester asked for the existing correlation id to be passed back as correlation id");
+				msgReply.correlationId = myMessage.correlationId;
+			} else {
+				System.out.println(
+					" Requester asked for the existing message id to be passed back as correlation id");
+				msgReply.correlationId = myMessage.messageId;
+			}
+			msgReply.writeString("mqsrvro reply message");
+			qReply.put(msgReply, pmo);
+
+			System.out.print(" Message ID from put:     ");
+			dumpHexId(msgReply.messageId);
+			System.out.print(" Correlation ID from put: ");
+			dumpHexId(msgReply.correlationId);
+			qReply.close();
+		} catch (MQException ex) {
+			System.err.println(
+				"Error opening queue manager "
+					+ ex.completionCode
+					+ " "
+					+ ex.reasonCode);
+		} catch (IOException ex) {
+			System.out.println("caught io exception");
+		}
+
+	}
+
+	static void sendExceptionReply(
+		MQMessage myMessage,
+		MQQueueManager myQmgr) {
+		System.out.println(" Unexpected message type received!");
+
+		int reportOpts = myMessage.report;
+		if ((reportOpts &amp; MQC.MQRO_EXCEPTION_WITH_FULL_DATA)
+			!= MQC.MQRO_EXCEPTION_WITH_FULL_DATA) {
+			System.out.println(
+				" Requester did not ask for exception processing; nothing to do");
+		} else {
+			try {
+
+				int openOptions = MQC.MQOO_OUTPUT + MQC.MQOO_FAIL_IF_QUIESCING;
+				MQQueue qReply =
+					myQmgr.accessQueue(
+						myMessage.replyToQueueName,
+						openOptions,
+						null,
+						null,
+						null);
+				MQMessage msgReply = new MQMessage();
+				MQPutMessageOptions pmo = new MQPutMessageOptions();
+				msgReply.messageType = MQC.MQMT_REPORT;
+				msgReply.report = MQC.MQRO_NONE;
+				msgReply.feedback = MQC.MQFB_APPL_FIRST;
+				msgReply.encoding = myMessage.encoding;
+				msgReply.characterSet = myMessage.characterSet;
+				msgReply.format = myMessage.format;
+				msgReply.priority = myMessage.priority;
+				msgReply.persistence = myMessage.persistence;
+
+				if ((reportOpts &amp; MQC.MQRO_PASS_MSG_ID)
+					== MQC.MQRO_PASS_MSG_ID) {
+					msgReply.messageId = myMessage.messageId;
+				} else {
+					msgReply.messageId = MQC.MQMI_NONE;
+					pmo.options |= MQC.MQPMO_NEW_MSG_ID;
+				}
+
+				if ((reportOpts &amp; MQC.MQRO_PASS_CORREL_ID)
+					== MQC.MQRO_PASS_CORREL_ID) {
+					msgReply.correlationId = myMessage.correlationId;
+				} else {
+					msgReply.correlationId = myMessage.messageId;
+				}
+
+				if ((reportOpts &amp; MQC.MQRO_EXCEPTION_WITH_FULL_DATA)
+					== MQC.MQRO_EXCEPTION_WITH_FULL_DATA) {
+					msgReply.writeString(
+						myMessage.readString(myMessage.getMessageLength()));
+
+				} else if (
+					(reportOpts &amp; MQC.MQRO_EXCEPTION_WITH_DATA)
+						== MQC.MQRO_EXCEPTION_WITH_DATA) {
+					int msgLength = myMessage.getMessageLength();
+					if (msgLength &gt; 100) {
+						msgReply.writeString(myMessage.readString(100));
+					} else {
+						msgReply.writeString(myMessage.readString(msgLength));
+					}
+				}
+				qReply.put(msgReply, pmo);
+
+				qReply.close();
+			} catch (MQException ex) {
+				System.err.println(
+					"Error opening queue manager "
+						+ ex.completionCode
+						+ " "
+						+ ex.reasonCode);
+			} catch (IOException ex) {
+				System.out.println("caught io exception");
+			}
+		}
+	}
+
+	/****************************************************/
+	/* Some of the MQ Ids are actually byte strings and */
+	/* need to be dumped in hex format.                 */
+	/****************************************************/
+	static void dumpHexId(byte[] myId) {
+		System.out.print("X'");
+		for (int i = 0; i &lt; myId.length; i++) {
+			char b = (char) (myId[i] &amp; 0xFF);
+			if (b &lt; 0x10) {
+				System.out.print("0");
+			}
+			System.out.print((String) (Integer.toHexString(b)).toUpperCase());
+		}
+		System.out.println("'");
+	}
+
+	public static void main(String[] args) {
+		mqsrvro app = new mqsrvro(args);
+		if (iQueue == null) {
+			System.out.println("Usage:");
+			System.out.println("java mqsrvro -q ... -qm ...");
+			System.out.println("where -q is the name of the queue");
+			System.out.println(
+				"      -qm is the name of the queue manager (optional)");
+		} else {
+			Thread t = new Thread(app);
+			t.start();
+		}
+	}
+
+}
+Error 500: OutputStream already obtained
+</PRE></BODY></HTML>

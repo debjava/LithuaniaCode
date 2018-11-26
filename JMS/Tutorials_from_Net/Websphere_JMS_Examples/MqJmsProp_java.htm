@@ -1,0 +1,298 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0071)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/MqJmsProp.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2002  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: MqJmsProp                                                 */
+/*                                                                         */
+/* Description: java program displays the properties of the JMS provider   */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program dumps the ConnectionMetaData for the JMS provider.        */
+/*                                                                         */
+/*  This program is run as follows:                                        */
+/*                                                                         */
+/*     java MqJmsProp    -icf ... -url ... -qcf ... -tcf ...               */
+/*                                                                         */
+/*  where                                                                  */
+/*     -icf is the classname of the initial context factory.               */
+/*     -url is the JNDI location of the administered objects.              */
+/*     -qcf is the queue connection factory.                               */
+/*     -tcf is the topic connection factory.                               */
+/*                                                                         */
+/* If both a qcf and a tcf are supplied, only the qcf will be used.        */
+/*                                                                         */
+/* This program has been tested with MQSeries V5.2 and JDK 1.3.0.          */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* The queue connection factory for the testing of this program was setup  */
+/* using the JMS administration tool that is supplied with MQSeries Java   */
+/* (SupportPac MA88).  This tool is described in the Using Java manual.    */
+/* This program was tested using a file system context set up in a         */
+/* jmsadmin.config as follows:                                             */
+/*                                                                         */
+/*    INITIAL_CONTEXT_FACTORY=com.sun.jndi.fscontext.RefFSContextFactory   */
+/*    PROVIDER_URL=file:e://support//jms//sample                           */
+/*    SECURITY_AUTHENTICATION=none                                         */
+/*                                                                         */
+/* The actual JMSAdmin utility was run with the following definitions:     */
+/*                                                                         */
+/*    def qcf(sampleQCF) qmanager(bower1.qmgr)                             */
+/*                                                                         */
+/* The program could then be executed with:                                */
+/*                                                                         */
+/*    java MqJmsProp    -icf com.sun.jndi.fscontext.RefFSContextFactory    */
+/*      -url file:e://support//jms//sample                                 */
+/*      -qcf sampleQCF                                                     */
+/* or                                                                      */
+/*    java -Dicf=com.sun.jndi.fscontext.RefFSContextFactory                */
+/*      -Durl=file:e://support//jms//sample -Dqcf=sampleQCF MqJmsProp      */
+/* or                                                                      */
+/*    java MqJmsProp                                                       */
+/*    with a MqJmsProp.properties file that contained                      */
+/*      icf=com.sun.jndi.fscontext.RefFSContextFactory                     */
+/*      url=file:c://support//jms//sample                                  */
+/*      qcf=sampleQCF                                                      */
+/*                                                                         */ 
+/***************************************************************************/
+import java.io.*;
+
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Hashtable;
+import java.util.Enumeration;
+import java.util.Properties;
+
+public class MqJmsProp    {
+
+   private static String icf       = null;
+   private static String url       = null;
+   private static String tcfLookup = null;
+   private static String qcfLookup = null;
+
+   public MqJmsProp() {
+
+      /***********************************************/
+      /* We'll get anything with the -D syntax first */
+      /***********************************************/
+      url = System.getProperty("url");
+      icf = System.getProperty("icf");
+      qcfLookup = System.getProperty("qcf");
+      tcfLookup = System.getProperty("tcf");
+
+      /*************************************************/
+      /* Now go and get the MqJmsProp.properties file. */
+      /*************************************************/
+      try {
+         Properties props = new Properties(System.getProperties());
+         props.load(new BufferedInputStream(new FileInputStream("MqJmsProp.properties")));
+         System.setProperties(props);
+      } catch (Exception e) {
+         System.out.println("Error getting MqJmsProp.properties" + e.getMessage());
+         System.err.println(e);
+      }
+ 
+      /******************************************************/
+      /* If any of the necessary properties are null, we'll */
+      /* take the value from the file since they weren't    */
+      /* specified with -D.                                 */
+      /******************************************************/
+      if (url == null)       {url = System.getProperty("url");}
+      if (icf == null)       {icf = System.getProperty("icf");}
+      if (qcfLookup == null) {qcfLookup = System.getProperty("qcf");}
+      if (tcfLookup == null) {tcfLookup = System.getProperty("tcf");}
+
+   }
+
+   public MqJmsProp(String[] args) {
+
+      this(); /* Get any properties that were specified */
+
+      /**********************************/ 
+      /* Get the command-line arguments */ 
+      /**********************************/ 
+      for (int i=0; i&lt;args.length; i++) {
+         String arg = args[i].toLowerCase();
+
+         if ( arg.equals("-url") ) {
+            if ( i+1&lt;args.length ) {
+               url = args[++i];
+            } else {
+               System.out.println("didn't specify url");
+            }
+
+         } else if( arg.equals("-icf") ) {
+            if ( i+1&lt;args.length ) {
+               icf = args[++i];
+            } else {
+               System.out.println("didn't specify icf");
+            }
+
+         } else if( arg.equals("-qcf") ) {
+            if ( i+1&lt;args.length ) {
+               qcfLookup = args[++i];
+            } else {
+               System.out.println("didn't specify qcf");
+            }
+
+         } else if( arg.equals("-tcf") ) {
+            if ( i+1&lt;args.length ) {
+               tcfLookup = args[++i];
+            } else {
+               System.out.println("didn't specify tcf");
+            }
+
+         } else {
+            System.out.println( "Unknown argument: " + arg );
+         }
+      }
+
+   }
+
+   public void getJmsProperties() {
+
+      ConnectionFactory factory        = null;
+      Connection        connection     = null;
+      Context           ctx            = null;
+      String            myPropertyName = null;
+
+      System.out.println("MqJmsProp started with:");
+      System.out.println("  url = " + url);
+      System.out.println("  icf = " + icf);
+      System.out.println("  qcfLookup = " + qcfLookup);
+      System.out.println("  tcfLookup = " + tcfLookup + "\n");
+
+      /**********************************/ 
+      /* Get the context factory.       */ 
+      /**********************************/ 
+      Hashtable environment = new Hashtable();
+      environment.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+      environment.put(Context.PROVIDER_URL, url);
+      environment.put(Context.REFERRAL, "throw");
+      try {
+          ctx = new InitialDirContext( environment );
+      } catch( Exception e ) {
+        System.err.println("Error during lookup of Context Factory " +
+                           e.getMessage());
+        System.err.println(e);
+        System.exit( -1 );
+      }
+
+      /********************************************/ 
+      /* Lookup the connection factory.  If both  */
+      /* qcf and tcf supplied, we'll use the qcf. */
+      /********************************************/ 
+      try {
+         if (qcfLookup != null) {
+            factory = (ConnectionFactory)ctx.lookup(qcfLookup);
+         } else {
+            factory = (ConnectionFactory)ctx.lookup(tcfLookup);
+         }
+      } catch( Exception e ) {
+         System.out.println("Error during lookup of Connection Factory " + e.getMessage());
+         System.err.println(e);
+         System.exit(-1);
+      }
+
+      /*******************************************************/ 
+      /* Get the connection and find out the JMSX properties */
+      /* that are supported.                                 */
+      /*******************************************************/ 
+      try {
+         if (qcfLookup != null) {
+            connection = ((QueueConnectionFactory)factory).createQueueConnection();
+         } else {
+            connection = ((TopicConnectionFactory)factory).createTopicConnection();
+         }
+
+         ConnectionMetaData cMetaData = connection.getMetaData();
+         System.out.println("  Provider name: " + cMetaData.getJMSProviderName());
+         System.out.println("    Provider Version: " + cMetaData.getProviderVersion());
+         System.out.println("    Provider Major Version: " + cMetaData.getProviderMajorVersion());
+         System.out.println("    Provider Minor Version: " + cMetaData.getProviderMinorVersion());
+         System.out.println("  JMS Version: " + cMetaData.getJMSVersion());
+         System.out.println("    JMS Major Version: " + cMetaData.getJMSMajorVersion());
+         System.out.println("    JMS Minor Version: " + cMetaData.getJMSMinorVersion());
+
+         /************************************************************/
+         /* Enumerate the list of JMSX properties that are supported */
+         /************************************************************/
+         Enumeration myJMSProperties = cMetaData.getJMSXPropertyNames();
+         while (myJMSProperties.hasMoreElements()) {
+            myPropertyName = (String)myJMSProperties.nextElement();
+            System.out.println("  Property: " + myPropertyName);
+         }
+
+         connection.close();
+         connection = null;
+
+      } catch( JMSException je ) {
+          /*******************************************/
+          /* Catch and display exception information */
+          /*******************************************/
+          System.out.println("JMSException: " + je);
+          Exception le = je.getLinkedException();
+          if (le != null) System.out.println("Linked exception: " + le);
+
+      } catch( Exception e ) {
+          /*******************************************/
+          /* Catch and display exception information */
+          /*******************************************/
+          System.out.println("Exception: " + e);
+      }
+
+      System.out.println("MqJmsProp finished....");
+   }
+
+   public static void main (String args[]) {
+      MqJmsProp app = new MqJmsProp(args);
+
+      /******************************************/ 
+      /* Check that all arguments were entered. */ 
+      /******************************************/ 
+      if (     (icf==null)  
+            || (url==null) 
+            || ( (qcfLookup==null) &amp;&amp; tcfLookup==null) ) {
+         System.out.println("Usage:");
+         System.out.println("java MqJmsProp -icf ... -url ... -qcf ... -tcf ...");
+         System.out.println("where -icf is the classname of the initial context factory");
+         System.out.println("      -url is the JNDI location of the administered objects");
+         System.out.println("      -qcf is the queue connection factory");
+         System.out.println("      -tcf is the topic connection factory");
+      } else {
+         app.getJmsProperties();
+      }
+   }
+
+}
+</PRE></BODY></HTML>

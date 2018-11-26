@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:02 2002">
+<title>JMS Tutorial: Contents</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+<table width="550">
+  <tr>
+  <TD align="left" valign="center">
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  <td align="right" valign="center">
+  <I><FONT SIZE="-1">By Kim Haase</FONT></I>
+  </td>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    TOC |
+    <a href="copyright.html">Prev</a> |
+    <a href="overview.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+
+    <td align="right" valign="center">
+    <font size="-1">
+    Revised: March 20, 2002
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+<font color="#666699">Contents</font>
+</h1>
+<h2>
+  <a name="795062"> </a><font ><a href="overview.html"> 1&nbsp;&nbsp;Overview</a></font>
+</h2>
+<dl>
+  <dd> <a name="795064"> </a><font ><a href="overview.html#1027335">1.1&nbsp;&nbsp;What Is Messaging? </a></font>
+  <dd> <a name="795066"> </a><font ><a href="overview.html#1100542">1.2&nbsp;&nbsp;What Is the JMS API?</a></font>
+  <dd> <a name="795068"> </a><font ><a href="overview.html#1023396">1.3&nbsp;&nbsp;When Can You Use the JMS API?</a></font>
+  <dd> <a name="795070"> </a><font ><a href="overview.html#1023407">1.4&nbsp;&nbsp;How Does the JMS API Work with the J2EE<font size="-2"><sup>TM</sup></font> Platform?</a></font>
+</dl>
+<h2>
+  <a name="795072"> </a><font ><a href="basics.html"> 2&nbsp;&nbsp;Basic JMS API Concepts</a></font>
+</h2>
+<dl>
+  <dd> <a name="795074"> </a><font ><a href="basics.html#1023437">2.1&nbsp;&nbsp;JMS API Architecture</a></font>
+  <dd> <a name="795076"> </a><font ><a href="basics.html#1033949">2.2&nbsp;&nbsp;Messaging Domains</a></font>
+  <dl>
+    <dd> <a name="795078"> </a><font ><a href="basics.html#1023671"> 2.2.1&nbsp;&nbsp;Point-to-Point Messaging Domain</a></font>
+    <dd> <a name="795080"> </a><font ><a href="basics.html#1023551"> 2.2.2&nbsp;&nbsp;Publish/Subscribe Messaging Domain</a></font>
+  </dl>
+  <dd> <a name="795082"> </a><font ><a href="basics.html#1023390">2.3&nbsp;&nbsp;Message Consumption</a></font>
+</dl>
+<h2>
+  <a name="795084"> </a><font ><a href="prog_model.html"> 3&nbsp;&nbsp;The JMS API Programming Model</a></font>
+</h2>
+<dl>
+  <dd> <a name="795086"> </a><font ><a href="prog_model.html#1033480">3.1&nbsp;&nbsp;Administered Objects</a></font>
+  <dl>
+    <dd> <a name="795088"> </a><font ><a href="prog_model.html#1023394">3.1.1&nbsp;&nbsp;Connection Factories</a></font>
+    <dd> <a name="795090"> </a><font ><a href="prog_model.html#1024503">3.1.2&nbsp;&nbsp;Destinations</a></font>
+  </dl>
+  <dd> <a name="795092"> </a><font ><a href="prog_model.html#1023395">3.2&nbsp;&nbsp;Connections</a></font>
+  <dd> <a name="795094"> </a><font ><a href="prog_model.html#1023396">3.3&nbsp;&nbsp;Sessions</a></font>
+  <dd> <a name="795096"> </a><font ><a href="prog_model.html#1026466">3.4&nbsp;&nbsp;Message Producers</a></font>
+  <dd> <a name="795098"> </a><font ><a href="prog_model.html#1026102">3.5&nbsp;&nbsp;Message Consumers</a></font>
+  <dl>
+    <dd> <a name="795100"> </a><font ><a href="prog_model.html#1023398"> 3.5.1&nbsp;&nbsp;Message Listeners</a></font>
+    <dd> <a name="795102"> </a><font ><a href="prog_model.html#1026290"> 3.5.2&nbsp;&nbsp;Message Selectors</a></font>
+  </dl>
+  <dd> <a name="795104"> </a><font ><a href="prog_model.html#1023399">3.6&nbsp;&nbsp;Messages</a></font>
+  <dl>
+    <dd> <a name="795106"> </a><font ><a href="prog_model.html#1023400"> 3.6.1&nbsp;&nbsp;Message Headers</a></font>
+    <dd> <a name="795108"> </a><font ><a href="prog_model.html#1031031"> 3.6.2&nbsp;&nbsp;Message Properties</a></font>
+    <dd> <a name="795110"> </a><font ><a href="prog_model.html#1023401"> 3.6.3&nbsp;&nbsp;Message Bodies</a></font>
+  </dl>
+  <dd> <a name="795112"> </a><font ><a href="prog_model.html#1033476">3.7&nbsp;&nbsp;Exception Handling</a></font>
+</dl>
+<h2>
+  <a name="795114"> </a><font ><a href="client.html"> 4&nbsp;&nbsp;Writing Simple JMS Client Applications</a></font>
+</h2>
+<dl>
+  <dd> <a name="795116"> </a><font ><a href="client.html#1025249">4.1&nbsp;&nbsp;Setting Your Environment for Running Applications</a></font>
+  <dd> <a name="795118"> </a><font ><a href="client.html#1056518">4.2&nbsp;&nbsp;A Simple Point-to-Point Example</a></font>
+  <dl>
+    <dd> <a name="795120"> </a><font ><a href="client.html#1027210"> 4.2.1&nbsp;&nbsp;Writing the PTP Client Programs</a></font>
+    <dd> <a name="795122"> </a><font ><a href="client.html#1069477"> 4.2.2&nbsp;&nbsp;Compiling the PTP Clients</a></font>
+    <dd> <a name="795124"> </a><font ><a href="client.html#1024951"> 4.2.3&nbsp;&nbsp;Starting the JMS Provider</a></font>
+    <dd> <a name="795126"> </a><font ><a href="client.html#1027237"> 4.2.4&nbsp;&nbsp;Creating the JMS Administered Objects</a></font>
+    <dd> <a name="795128"> </a><font ><a href="client.html#1025459"> 4.2.5&nbsp;&nbsp;Running the PTP Clients</a></font>
+    <dd> <a name="795130"> </a><font ><a href="client.html#1025489"> 4.2.6&nbsp;&nbsp;Deleting the Queue</a></font>
+  </dl>
+  <dd> <a name="795132"> </a><font ><a href="client.html#1025458">4.3&nbsp;&nbsp;A Simple Publish/Subscribe Example</a></font>
+  <dl>
+    <dd> <a name="795134"> </a><font ><a href="client.html#1027256"> 4.3.1&nbsp;&nbsp;Writing the Pub/Sub Client Programs</a></font>
+    <dd> <a name="795136"> </a><font ><a href="client.html#1024270"> 4.3.2&nbsp;&nbsp;Compiling the Pub/Sub Clients</a></font>
+    <dd> <a name="795138"> </a><font ><a href="client.html#1027303"> 4.3.3&nbsp;&nbsp;Starting the JMS Provider</a></font>
+    <dd> <a name="795140"> </a><font ><a href="client.html#1027311"> 4.3.4&nbsp;&nbsp;Creating the JMS Administered Objects</a></font>
+    <dd> <a name="795142"> </a><font ><a href="client.html#1027318"> 4.3.5&nbsp;&nbsp;Running the Pub/Sub Clients</a></font>
+    <dd> <a name="795144"> </a><font ><a href="client.html#1025863"> 4.3.6&nbsp;&nbsp;Deleting the Topic and Stopping the Server</a></font>
+  </dl>
+  <dd> <a name="795146"> </a><font ><a href="client.html#1044118">4.4&nbsp;&nbsp;Running JMS Client Programs on Multiple Systems</a></font>
+  <dl>
+    <dd> <a name="795148"> </a><font ><a href="client.html#1044334"> 4.4.1&nbsp;&nbsp;Communicating Between Two J2EE Servers</a></font>
+    <dd> <a name="795150"> </a><font ><a href="client.html#1056129"> 4.4.2&nbsp;&nbsp;Communicating Between a J2EE Server and a System Not Running a J2EE Server</a></font>
+  </dl>
+</dl>
+<h2>
+  <a name="795152"> </a><font ><a href="advanced.html"> 5&nbsp;&nbsp;Creating Robust JMS Applications</a></font>
+</h2>
+<dl>
+  <dd> <a name="795154"> </a><font ><a href="advanced.html#1024664">5.1&nbsp;&nbsp;Using Basic Reliability Mechanisms</a></font>
+  <dl>
+    <dd> <a name="795156"> </a><font ><a href="advanced.html#1025869"> 5.1.1&nbsp;&nbsp;Controlling Message Acknowledgment</a></font>
+    <dd> <a name="795158"> </a><font ><a href="advanced.html#1023387"> 5.1.2&nbsp;&nbsp;Specifying Message Persistence</a></font>
+    <dd> <a name="795160"> </a><font ><a href="advanced.html#1024730"> 5.1.3&nbsp;&nbsp;Setting Message Priority Levels</a></font>
+    <dd> <a name="795162"> </a><font ><a href="advanced.html#1024689"> 5.1.4&nbsp;&nbsp;Allowing Messages to Expire</a></font>
+    <dd> <a name="795164"> </a><font ><a href="advanced.html#1024752"> 5.1.5&nbsp;&nbsp;Creating Temporary Destinations</a></font>
+  </dl>
+  <dd> <a name="795166"> </a><font ><a href="advanced.html#1024717">5.2&nbsp;&nbsp;Using Advanced Reliability Mechanisms</a></font>
+  <dl>
+    <dd> <a name="795168"> </a><font ><a href="advanced.html#1024758"> 5.2.1&nbsp;&nbsp;Creating Durable Subscriptions</a></font>
+    <dd> <a name="795170"> </a><font ><a href="advanced.html#1026538"> 5.2.2&nbsp;&nbsp;Using JMS API Local Transactions</a></font>
+  </dl>
+</dl>
+<h2>
+  <a name="795172"> </a><font ><a href="jmsj2ee.html"> 6&nbsp;&nbsp;Using the JMS API in a J2EE Application</a></font>
+</h2>
+<dl>
+  <dd> <a name="795174"> </a><font ><a href="jmsj2ee.html#1029384">6.1&nbsp;&nbsp;Using Enterprise Beans to Produce and to Synchronously Receive Messages</a></font>
+  <dl>
+    <dd> <a name="795176"> </a><font ><a href="jmsj2ee.html#1029706"> 6.1.1&nbsp;&nbsp;Administered Objects</a></font>
+    <dd> <a name="795178"> </a><font ><a href="jmsj2ee.html#1029412"> 6.1.2&nbsp;&nbsp;Resource Management</a></font>
+    <dd> <a name="795180"> </a><font ><a href="jmsj2ee.html#1029701"> 6.1.3&nbsp;&nbsp;Transactions</a></font>
+  </dl>
+  <dd> <a name="795182"> </a><font ><a href="jmsj2ee.html#1023782">6.2&nbsp;&nbsp;Using Message-Driven Beans</a></font>
+  <dd> <a name="795184"> </a><font ><a href="jmsj2ee.html#1029338">6.3&nbsp;&nbsp;Managing Distributed Transactions</a></font>
+  <dd> <a name="795186"> </a><font ><a href="jmsj2ee.html#1030529">6.4&nbsp;&nbsp;Using the JMS API with Application Clients and Web Components</a></font>
+</dl>
+<h2>
+  <a name="795188"> </a><font ><a href="j2eeapp1.html"> 7&nbsp;&nbsp;A Simple J2EE Application that Uses the JMS API</a></font>
+</h2>
+<dl>
+  <dd> <a name="795190"> </a><font ><a href="j2eeapp1.html#1023816">7.1&nbsp;&nbsp;Writing and Compiling the Application Components</a></font>
+  <dl>
+    <dd> <a name="795192"> </a><font ><a href="j2eeapp1.html#1055859"> 7.1.1&nbsp;&nbsp;Coding the Application Client: <code>SimpleClient.java</code></a></font>
+    <dd> <a name="795194"> </a><font ><a href="j2eeapp1.html#1024033"> 7.1.2&nbsp;&nbsp;Coding the Message-Driven Bean: <code>MessageBean.java</code></a></font>
+    <dd> <a name="795196"> </a><font ><a href="j2eeapp1.html#1024278"> 7.1.3&nbsp;&nbsp;Compiling the Source Files</a></font>
+  </dl>
+  <dd> <a name="795198"> </a><font ><a href="j2eeapp1.html#1023764">7.2&nbsp;&nbsp;Creating and Packaging the Application</a></font>
+  <dl>
+    <dd> <a name="795200"> </a><font ><a href="j2eeapp1.html#1036305"> 7.2.1&nbsp;&nbsp;Starting the J2EE Server and the Deploytool</a></font>
+    <dd> <a name="795202"> </a><font ><a href="j2eeapp1.html#1036351"> 7.2.2&nbsp;&nbsp;Creating a Queue</a></font>
+    <dd> <a name="795204"> </a><font ><a href="j2eeapp1.html#1036357"> 7.2.3&nbsp;&nbsp;Creating the J2EE Application</a></font>
+    <dd> <a name="795206"> </a><font ><a href="j2eeapp1.html#1055988"> 7.2.4&nbsp;&nbsp;Packaging the Application Client</a></font>
+    <dd> <a name="795208"> </a><font ><a href="j2eeapp1.html#1025061"> 7.2.5&nbsp;&nbsp;Packaging the Message-Driven Bean</a></font>
+    <dd> <a name="795210"> </a><font ><a href="j2eeapp1.html#1025781"> 7.2.6&nbsp;&nbsp;Checking the JNDI Names</a></font>
+  </dl>
+  <dd> <a name="795212"> </a><font ><a href="j2eeapp1.html#1028835">7.3&nbsp;&nbsp;Deploying and Running the Application</a></font>
+  <dl>
+    <dd> <a name="795214"> </a><font ><a href="j2eeapp1.html#1028929"> 7.3.1&nbsp;&nbsp;Looking at the Deployment Descriptor</a></font>
+    <dd> <a name="795216"> </a><font ><a href="j2eeapp1.html#1063372"> 7.3.2&nbsp;&nbsp;Adding the Server</a></font>
+    <dd> <a name="795218"> </a><font ><a href="j2eeapp1.html#1036262"> 7.3.3&nbsp;&nbsp;Deploying the Application</a></font>
+    <dd> <a name="795220"> </a><font ><a href="j2eeapp1.html#1024369"> 7.3.4&nbsp;&nbsp;Running the Client</a></font>
+    <dd> <a name="795222"> </a><font ><a href="j2eeapp1.html#1026015"> 7.3.5&nbsp;&nbsp;Undeploying the Application</a></font>
+    <dd> <a name="795224"> </a><font ><a href="j2eeapp1.html#1026043"> 7.3.6&nbsp;&nbsp;Removing the Application and Stopping the Server</a></font>
+  </dl>
+</dl>
+<h2>
+  <a name="795226"> </a><font ><a href="j2eeapp2.html"> 8&nbsp;&nbsp;A J2EE Application that Uses the JMS API with a Session Bean</a></font>
+</h2>
+<dl>
+  <dd> <a name="795228"> </a><font ><a href="j2eeapp2.html#1038294">8.1&nbsp;&nbsp;Writing and Compiling the Application Components</a></font>
+  <dl>
+    <dd> <a name="795230"> </a><font ><a href="j2eeapp2.html#1038078"> 8.1.1&nbsp;&nbsp;Coding the Application Client: <code>MyAppClient.java</code></a></font>
+    <dd> <a name="795232"> </a><font ><a href="j2eeapp2.html#1028798"> 8.1.2&nbsp;&nbsp;Coding the Publisher Session Bean</a></font>
+    <dd> <a name="795234"> </a><font ><a href="j2eeapp2.html#1024033"> 8.1.3&nbsp;&nbsp;Coding the Message-Driven Bean: <code>MessageBean.java</code></a></font>
+    <dd> <a name="795236"> </a><font ><a href="j2eeapp2.html#1024278"> 8.1.4&nbsp;&nbsp;Compiling the Source Files</a></font>
+  </dl>
+  <dd> <a name="795238"> </a><font ><a href="j2eeapp2.html#1023764">8.2&nbsp;&nbsp;Creating and Packaging the Application</a></font>
+  <dl>
+    <dd> <a name="795240"> </a><font ><a href="j2eeapp2.html#1040196"> 8.2.1&nbsp;&nbsp;Starting the J2EE Server and the Deploytool</a></font>
+    <dd> <a name="795242"> </a><font ><a href="j2eeapp2.html#1036351"> 8.2.2&nbsp;&nbsp;Creating a Topic</a></font>
+    <dd> <a name="795244"> </a><font ><a href="j2eeapp2.html#1040648"> 8.2.3&nbsp;&nbsp;Creating a Connection Factory</a></font>
+    <dd> <a name="795246"> </a><font ><a href="j2eeapp2.html#1036357"> 8.2.4&nbsp;&nbsp;Creating the J2EE Application</a></font>
+    <dd> <a name="795248"> </a><font ><a href="j2eeapp2.html#1042047"> 8.2.5&nbsp;&nbsp;Packaging the Application Client</a></font>
+    <dd> <a name="795250"> </a><font ><a href="j2eeapp2.html#1024382"> 8.2.6&nbsp;&nbsp;Packaging the Session Bean</a></font>
+    <dd> <a name="795252"> </a><font ><a href="j2eeapp2.html#1025061"> 8.2.7&nbsp;&nbsp;Packaging the Message-Driven Bean</a></font>
+    <dd> <a name="795254"> </a><font ><a href="j2eeapp2.html#1025781"> 8.2.8&nbsp;&nbsp;Specifying the JNDI Names</a></font>
+  </dl>
+  <dd> <a name="795256"> </a><font ><a href="j2eeapp2.html#1046339">8.3&nbsp;&nbsp;Deploying and Running the Application</a></font>
+  <dl>
+    <dd> <a name="795258"> </a><font ><a href="j2eeapp2.html#1041076"> 8.3.1&nbsp;&nbsp;Adding the Server</a></font>
+    <dd> <a name="795260"> </a><font ><a href="j2eeapp2.html#1041090"> 8.3.2&nbsp;&nbsp;Deploying the Application</a></font>
+    <dd> <a name="795262"> </a><font ><a href="j2eeapp2.html#1041117"> 8.3.3&nbsp;&nbsp;Running the Client</a></font>
+    <dd> <a name="795264"> </a><font ><a href="j2eeapp2.html#1041134"> 8.3.4&nbsp;&nbsp;Undeploying the Application</a></font>
+    <dd> <a name="795266"> </a><font ><a href="j2eeapp2.html#1041160"> 8.3.5&nbsp;&nbsp;Removing the Application and Stopping the Server</a></font>
+  </dl>
+</dl>
+<h2>
+  <a name="795268"> </a><font ><a href="j2eeapp3.html"> 9&nbsp;&nbsp;A J2EE Application that Uses the JMS API with an Entity Bean</a></font>
+</h2>
+<dl>
+  <dd> <a name="795270"> </a><font ><a href="j2eeapp3.html#1038294">9.1&nbsp;&nbsp;Overview of the Human Resources Application</a></font>
+  <dd> <a name="795272"> </a><font ><a href="j2eeapp3.html#1042481">9.2&nbsp;&nbsp;Writing and Compiling the Application Components</a></font>
+  <dl>
+    <dd> <a name="795274"> </a><font ><a href="j2eeapp3.html#1038078"> 9.2.1&nbsp;&nbsp;Coding the Application Client: <code>HumanResourceClient.java</code></a></font>
+    <dd> <a name="795276"> </a><font ><a href="j2eeapp3.html#1040891"> 9.2.2&nbsp;&nbsp;Coding the Message-Driven Beans</a></font>
+    <dd> <a name="795278"> </a><font ><a href="j2eeapp3.html#1054442"> 9.2.3&nbsp;&nbsp;Coding the Entity Bean</a></font>
+    <dd> <a name="795280"> </a><font ><a href="j2eeapp3.html#1024278"> 9.2.4&nbsp;&nbsp;Compiling the Source Files</a></font>
+  </dl>
+  <dd> <a name="795282"> </a><font ><a href="j2eeapp3.html#1023764">9.3&nbsp;&nbsp;Creating and Packaging the Application</a></font>
+  <dl>
+    <dd> <a name="795284"> </a><font ><a href="j2eeapp3.html#1043077"> 9.3.1&nbsp;&nbsp;Starting the J2EE Server and the Deploytool</a></font>
+    <dd> <a name="795286"> </a><font ><a href="j2eeapp3.html#1036351"> 9.3.2&nbsp;&nbsp;Creating a Queue</a></font>
+    <dd> <a name="795288"> </a><font ><a href="j2eeapp3.html#1043131"> 9.3.3&nbsp;&nbsp;Starting the Cloudscape Database Server</a></font>
+    <dd> <a name="795290"> </a><font ><a href="j2eeapp3.html#1036357"> 9.3.4&nbsp;&nbsp;Creating the J2EE Application</a></font>
+    <dd> <a name="795292"> </a><font ><a href="j2eeapp3.html#1043178"> 9.3.5&nbsp;&nbsp;Packaging the Application Client</a></font>
+    <dd> <a name="795294"> </a><font ><a href="j2eeapp3.html#1043368"> 9.3.6&nbsp;&nbsp;Packaging the Equipment Message-Driven Bean</a></font>
+    <dd> <a name="795296"> </a><font ><a href="j2eeapp3.html#1043559"> 9.3.7&nbsp;&nbsp;Packaging the Office Message-Driven Bean</a></font>
+    <dd> <a name="795298"> </a><font ><a href="j2eeapp3.html#1059313"> 9.3.8&nbsp;&nbsp;Packaging the Schedule Message-Driven Bean</a></font>
+    <dd> <a name="795300"> </a><font ><a href="j2eeapp3.html#1024382"> 9.3.9&nbsp;&nbsp;Packaging the Entity Bean</a></font>
+    <dd> <a name="795302"> </a><font ><a href="j2eeapp3.html#1025781"> 9.3.10&nbsp;&nbsp;Specifying the Entity Bean Deployment Settings</a></font>
+    <dd> <a name="795304"> </a><font ><a href="j2eeapp3.html#1052176"> 9.3.11&nbsp;&nbsp;Specifying the JNDI Names</a></font>
+  </dl>
+  <dd> <a name="795306"> </a><font ><a href="j2eeapp3.html#1028835">9.4&nbsp;&nbsp;Deploying and Running the Application</a></font>
+  <dl>
+    <dd> <a name="795308"> </a><font ><a href="j2eeapp3.html#1043906"> 9.4.1&nbsp;&nbsp;Adding the Server</a></font>
+    <dd> <a name="795310"> </a><font ><a href="j2eeapp3.html#1043921"> 9.4.2&nbsp;&nbsp;Deploying the Application</a></font>
+    <dd> <a name="795312"> </a><font ><a href="j2eeapp3.html#1043948"> 9.4.3&nbsp;&nbsp;Running the Client</a></font>
+    <dd> <a name="795314"> </a><font ><a href="j2eeapp3.html#1043982"> 9.4.4&nbsp;&nbsp;Undeploying the Application</a></font>
+    <dd> <a name="795316"> </a><font ><a href="j2eeapp3.html#1043994"> 9.4.5&nbsp;&nbsp;Removing the Application and Stopping the Server</a></font>
+  </dl>
+</dl>
+<h2>
+  <a name="795318"> </a><font ><a href="j2eeapp4.html"> 10&nbsp;&nbsp;An Application Example that Uses Two J2EE Servers</a></font>
+</h2>
+<dl>
+  <dd> <a name="795320"> </a><font ><a href="j2eeapp4.html#1023427">10.1&nbsp;&nbsp;Overview of the Applications</a></font>
+  <dd> <a name="795322"> </a><font ><a href="j2eeapp4.html#1023514">10.2&nbsp;&nbsp;Writing and Compiling the Application Components</a></font>
+  <dl>
+    <dd> <a name="795324"> </a><font ><a href="j2eeapp4.html#1023543"> 10.2.1&nbsp;&nbsp;Coding the Application Client: <code>MultiAppServerRequester.java</code></a></font>
+    <dd> <a name="795326"> </a><font ><a href="j2eeapp4.html#1023574"> 10.2.2&nbsp;&nbsp;Coding the Message-Driven Bean: <code>ReplyMsgBean.java</code></a></font>
+    <dd> <a name="795328"> </a><font ><a href="j2eeapp4.html#1024416"> 10.2.3&nbsp;&nbsp;Compiling the Source Files</a></font>
+  </dl>
+  <dd> <a name="795330"> </a><font ><a href="j2eeapp4.html#1024433">10.3&nbsp;&nbsp;Creating and Packaging the Application</a></font>
+  <dl>
+    <dd> <a name="795332"> </a><font ><a href="j2eeapp4.html#1024474"> 10.3.1&nbsp;&nbsp;Starting the J2EE Servers and the Deploytool</a></font>
+    <dd> <a name="795334"> </a><font ><a href="j2eeapp4.html#1024488"> 10.3.2&nbsp;&nbsp;Creating a Connection Factory</a></font>
+    <dd> <a name="795336"> </a><font ><a href="j2eeapp4.html#1024508"> 10.3.3&nbsp;&nbsp;Creating the First J2EE Application</a></font>
+    <dd> <a name="795338"> </a><font ><a href="j2eeapp4.html#1026480"> 10.3.4&nbsp;&nbsp;Packaging the Application Client</a></font>
+    <dd> <a name="795340"> </a><font ><a href="j2eeapp4.html#1027241"> 10.3.5&nbsp;&nbsp;Creating the Second J2EE Application</a></font>
+    <dd> <a name="795342"> </a><font ><a href="j2eeapp4.html#1026743"> 10.3.6&nbsp;&nbsp;Packaging the Message-Driven Bean</a></font>
+    <dd> <a name="795344"> </a><font ><a href="j2eeapp4.html#1026999"> 10.3.7&nbsp;&nbsp;Checking the JNDI Names</a></font>
+  </dl>
+  <dd> <a name="795346"> </a><font ><a href="j2eeapp4.html#1025213">10.4&nbsp;&nbsp;Deploying and Running the Applications</a></font>
+  <dl>
+    <dd> <a name="795348"> </a><font ><a href="j2eeapp4.html#1025227"> 10.4.1&nbsp;&nbsp;Adding the Server</a></font>
+    <dd> <a name="795350"> </a><font ><a href="j2eeapp4.html#1025245"> 10.4.2&nbsp;&nbsp;Deploying the Applications</a></font>
+    <dd> <a name="795352"> </a><font ><a href="j2eeapp4.html#1025304"> 10.4.3&nbsp;&nbsp;Running the Client</a></font>
+    <dd> <a name="795354"> </a><font ><a href="j2eeapp4.html#1026930"> 10.4.4&nbsp;&nbsp;Undeploying the Applications</a></font>
+    <dd> <a name="795356"> </a><font ><a href="j2eeapp4.html#1025387"> 10.4.5&nbsp;&nbsp;Removing the Applications and Stopping the Servers</a></font>
+  </dl>
+  <dd> <a name="795358"> </a><font ><a href="j2eeapp4.html#1034912">10.5&nbsp;&nbsp;Accessing a J2EE Application from a Remote System that Is Not Running a J2EE Server</a></font>
+  <dl>
+    <dd> <a name="795360"> </a><font ><a href="j2eeapp4.html#1034946"> 10.5.1&nbsp;&nbsp;Accessing a J2EE Application from a Standalone Client</a></font>
+    <dd> <a name="795362"> </a><font ><a href="j2eeapp4.html#1035056"> 10.5.2&nbsp;&nbsp;Using runclient to Access a Remote Application Client</a></font>
+  </dl>
+</dl>
+<h2>
+  <a name="795364"> </a><font ><a href="client_samples.html">Appendix A&nbsp;&nbsp; JMS Client Examples</a></font>
+</h2>
+<dl>
+  <dd> <a name="795366"> </a><font ><a href="client_samples.html#1002876">A.1&nbsp;&nbsp;Durable Subscriptions</a></font>
+  <dd> <a name="795368"> </a><font ><a href="client_samples.html#1022517">A.2&nbsp;&nbsp;Transactions</a></font>
+  <dd> <a name="795370"> </a><font ><a href="client_samples.html#1019555">A.3&nbsp;&nbsp;Acknowledgment Modes</a></font>
+  <dd> <a name="795372"> </a><font ><a href="client_samples.html#1006838">A.4&nbsp;&nbsp;Utility Class</a></font>
+</dl>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+TOC | <a href="copyright.html">Prev</a> | 
+<a href="overview.html">Next</a> | 
+<a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

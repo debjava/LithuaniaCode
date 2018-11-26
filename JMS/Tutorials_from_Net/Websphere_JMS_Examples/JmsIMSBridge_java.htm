@@ -1,0 +1,394 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0074)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/JmsIMSBridge.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2002  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: JmsIMSBridge                                              */
+/*                                                                         */
+/* Description:  Sample jms program to illustrate how to format a message  */
+/*               for the IMS Bridge.                                       */
+/*                                                                         */
+/* Function:     This program uses JMS APIs to create and format a message */
+/*               that can be sent to the IMS Bridge.                       */
+/*                                                                         */
+/* Prereqs:      MQSeries V5.2 with SupportPac MA88 or WebSphere MQ V5.3   */
+/*                                                                         */
+/* Setup:        Create a local queue manager and queue with channels      */
+/*               communicating with MVS IMS system. Refer to SupportPac    */
+/*               MA1C readme file for detail on setup.                     */
+/*                                                                         */
+/* This program is run as follows:                                         */
+/*                                                                         */
+/*    java JmsIMSBridge -icf com.sun.jndi.fscontext.RefFSContextFactory    */
+/*      -url file:e://support//jms//sample                                 */
+/*      -qcf qcfIMS                                                        */
+/*      -q   qIMS                                                          */
+/*                                                                         */
+/*    where icf is the JNDI service provider                               */
+/*          url is the URL of the session's initial context                */
+/*          qcf is the queue connection factory                            */
+/*          q   is the queue to put the output message on                  */
+/*                                                                         */
+/* The queue connection factory and queue parameters to this program need  */
+/* to be setup so that they can be found.  This is done via the JMS Admin- */
+/* istration tool that is supplied with MQSeries Java (SupportPac MA88)    */
+/* and is described in the Using Java manual.  This program was tested     */
+/* using a file system context set up in a jmsadmin.config as follows:     */
+/*                                                                         */
+/*    INITIAL_CONTEXT_FACTORY=com.sun.jndi.fscontext.RefFSContextFactory   */
+/*    PROVIDER_URL=file:e://support//jms//sample                           */
+/*    SECURITY_AUTHENTICATION=none                                         */
+/*                                                                         */
+/* The actual JMSAdmin utility was run with the following definitions:     */
+/*                                                                         */
+/*    def qcf(qcfIMS) qmanager(ims.qmgr)                                   */
+/*    def q(qIMS)     queue(SYSTEM.DEFAULT.LOCAL.QUEUE) targclient(MQ)     */
+/*                                                                         */
+/* Build:        Compile with javac JmsIMSBridge.java                      */
+/*                                                                         */
+/***************************************************************************/
+
+import java.io.*;
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Hashtable;
+import java.util.Properties;
+
+public class JmsIMSBridge {
+
+    private static String icf         = null;
+    private static String url         = null;
+    private static String lookupQCF   = null;
+    private static String lookupQueue = null;
+
+    public JmsIMSBridge() {
+      /***********************************************/
+      /* We'll get anything with the -D syntax first */
+      /***********************************************/
+      url = System.getProperty("url");
+      icf = System.getProperty("icf");
+      lookupQueue = System.getProperty("q");
+      lookupQCF   = System.getProperty("qcf");
+
+      /****************************************************/
+      /* Now go and get the JmsIMSBridge.properties file. */
+      /****************************************************/
+      try { 
+         Properties props = new Properties(System.getProperties());
+         props.load(new BufferedInputStream(new FileInputStream("JmsIMSBridge.properties")));
+         System.setProperties(props);
+      } catch (IOException e) {
+         /*******************************************************************/
+         /* We'll ignore this exception and attempt to get the program      */
+         /* inputs from the command line.                                   */
+         /* System.out.println("JmsIMSBridge.properties" + e.getMessage()); */
+         /*******************************************************************/
+      } 
+ 
+      /******************************************************/
+      /* If any of the necessary properties are null, we'll */
+      /* take the value from the file since they weren't    */
+      /* specified with -D.                                 */
+      /******************************************************/
+      if (url == null)       {url = System.getProperty("url");}
+      if (icf == null)       {icf = System.getProperty("icf");}
+      if (lookupQueue == null) {lookupQueue = System.getProperty("q");}
+      if (lookupQCF == null) {lookupQCF = System.getProperty("qcf");}
+    }
+
+   public JmsIMSBridge(String[] args) {
+
+      this();
+
+      /**********************************/ 
+      /* Get the command-line arguments */ 
+      /**********************************/ 
+      for( int i=0; i&lt;args.length; i++ ) {
+         String arg = args[i].toLowerCase();
+
+         if( arg.equals("-url") ) {
+             if ( i+1&lt;args.length ) {
+                url = args[++i];
+             } else {
+                System.out.println("didn't specify url, exiting");
+             }
+
+         } else if( arg.equals("-icf") ) {
+             if ( i+1&lt;args.length ) {
+                icf = args[++i];
+             } else {
+                System.out.println("didn't specify icf, exiting");
+             }
+
+         } else if( arg.equals("-qcf") ) {
+             if ( i+1&lt;args.length ) {
+                lookupQCF = args[++i];
+             } else {
+                System.out.println("didn't specify qcf, exiting");
+             }
+
+         } else if( arg.equals("-q") ) {
+             if ( i+1&lt;args.length ) {
+                lookupQueue = args[++i];
+             } else {
+                System.out.println("didn't specify q, exiting");
+             }
+
+         } else {
+           System.out.println( "Unknown argument: " + arg );
+         }
+      }
+   }
+
+   public void myIMSMessage() {
+
+      Context                ctx     = null;
+      QueueConnectionFactory factory = null;
+      QueueConnection        connection;
+      QueueSession           session;
+      Queue                  ioQueue;     
+      Destination            dest;
+      
+      System.out.println("JmsIMSBridge started.");
+
+      /**********************************/ 
+      /* Get the context factory.       */ 
+      /**********************************/ 
+      Hashtable environment = new Hashtable();
+      environment.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+      environment.put(Context.PROVIDER_URL, url);
+      environment.put(Context.REFERRAL, "throw");
+      try {
+          ctx = new InitialDirContext( environment );
+      } catch( Exception e ) {
+        System.err.println("Error during lookup of Context Factory " +
+                           e.getMessage());
+        System.err.println(e);
+        return;
+      }
+
+      /****************************************/ 
+      /* Lookup the queue connection factory. */
+      /****************************************/ 
+      try {
+         factory = (QueueConnectionFactory)ctx.lookup(lookupQCF);
+      } catch( Exception e ) {
+         System.out.println("Error during lookup of Queue Connection Factory " + e.getMessage());
+         System.err.println(e);
+         return;
+      }
+
+      /****************************************/ 
+      /* Lookup the queue.                    */
+      /****************************************/ 
+      try {
+        ioQueue = (Queue)ctx.lookup(lookupQueue);
+      } catch( Exception e ) {
+        System.out.println( "Error during lookup of Queue" + e.getMessage());
+        System.err.println(e);
+        return;
+      }
+
+      /****************************************/ 
+      /* Create objects, put message.         */
+      /****************************************/ 
+      try {
+         System.out.println("  Create objects.");
+         connection = factory.createQueueConnection();
+         connection.start();
+
+         boolean transacted = false;
+         session = connection.createQueueSession( transacted,
+                         Session.AUTO_ACKNOWLEDGE);
+
+         QueueSender queueSender = session.createSender(ioQueue);
+         dest = (Destination)(queueSender.getQueue());
+
+         /************************************************************/
+         /* The message will actually be built as a string of bytes. */
+         /************************************************************/
+         BytesMessage outMessage = session.createBytesMessage();
+         outMessage.setJMSReplyTo(dest);
+
+         /*******************************************************/
+         /* Set up some constants that are used for the various */
+         /* fields in the MQIIH part of the message.            */
+         /*******************************************************/
+         String myStrucId = new String("IIH ");
+         String myFormat = new String("MQIMSVS ");
+         String myLTermOverride = new String("MASTER  ");
+         String myMFSMapName    = new String("MODU03  ");
+         String myReplyToFormat = new String("MQIMSVS ");
+         String myAuthenticator = new String("        ");
+         String myTranInstanceID = new String("0000000000000000");
+         String myTranState      = new String(" ");
+         String myCommitMode     = new String("0");
+         String mySecurityScope  = new String("C");
+         String myReserved       = new String(" ");
+   
+         /*********************************************************/
+         /* Write the fields of the MQIIH header to the message   */
+         /* stream. The commented lines document the MQIIH        */
+         /* structure found in cmqc.h and cmqiihv.cpy             */
+         /*********************************************************/
+
+         //MQCHAR4   StrucId;         /* Structure identifier                     */
+         //MQLONG    Version;         /* Structure version number                 */
+         //MQLONG    StrucLength;     /* Length of MQIIH structure                */
+         //MQLONG    Encoding;        /* Reserved                                 */
+         //MQLONG    CodedCharSetId;  /* Reserved                                 */
+         //MQCHAR8   Format;          /* MQ format name of data that follows MQIIH*/
+         //MQLONG    Flags;           /* Flags                                    */
+         //MQCHAR8   LTermOverride;   /* Logical terminal override                */
+         //MQCHAR8   MFSMapName;      /* Message format services map name         */
+         //MQCHAR8   ReplyToFormat;   /* MQ format name of reply message          */
+         //MQCHAR8   Authenticator;   /* RACF password or passticket              */
+         //MQBYTE16  TranInstanceId;  /* Transaction instance identifier          */
+         //MQCHAR    TranState;       /* Transaction state                        */
+         //MQCHAR    CommitMode;      /* Commit mode                              */
+         //MQCHAR    SecurityScope;   /* Security scope                           */
+         //MQCHAR    Reserved;        /* Reserved                                 */
+
+
+         //MQIIH-STRUCID        PIC X(4) VALUE 'IIH '.      ** Structure version number
+         //MQIIH-VERSION        PIC S9(9) BINARY VALUE 1.   ** Length of MQIIH structure
+         //MQIIH-STRUCLENGTH    PIC S9(9) BINARY VALUE 84.  ** Structure length
+         //MQIIH-ENCODING       PIC S9(9) BINARY VALUE 0.   ** Reserved
+         //MQIIH-CODEDCHARSETID PIC S9(9) BINARY VALUE 0.   ** Reserved
+         //MQIIH-FORMAT         PIC X(8) VALUE SPACES.      ** MQ format name of data that follows MQIIH
+         //MQIIH-FLAGS          PIC S9(9) BINARY VALUE 0.   ** Flags 
+         //MQIIH-LTERMOVERRIDE  PIC X(8) VALUE SPACES.      ** Logical terminal override 
+         //MQIIH-MFSMAPNAME     PIC X(8) VALUE SPACES.      ** Message format services map name 
+         //MQIIH-REPLYTOFORMAT  PIC X(8) VALUE SPACES.      ** MQ format name of reply message 
+         //MQIIH-AUTHENTICATOR  PIC X(8) VALUE SPACES.      ** RACF password or passticket 
+         //MQIIH-TRANINSTANCEID PIC X(16) VALUE LOW-VALUES. ** Transaction instance identifier
+         //MQIIH-TRANSTATE      PIC X VALUE ' '.            ** Transaction state
+         //MQIIH-COMMITMODE     PIC X VALUE '0'.            ** Commit mode 
+         //MQIIH-SECURITYSCOPE  PIC X VALUE 'C'.            ** Security scope
+         //MQIIH-RESERVED       PIC X VALUE SPACES.         ** Reserved 
+
+         outMessage.writeBytes(myStrucId.getBytes());
+         outMessage.writeInt(1);            /* Version */
+         outMessage.writeInt(84);           /* StrucLength */
+         outMessage.writeInt(0);            /* Encoding */
+         outMessage.writeInt(0);            /* CodedCharSetId */
+         outMessage.writeBytes(myFormat.getBytes());
+         outMessage.writeInt(0);            /* Flags */
+         outMessage.writeBytes(myLTermOverride.getBytes());
+         outMessage.writeBytes(myMFSMapName.getBytes());
+         outMessage.writeBytes(myReplyToFormat.getBytes());
+         outMessage.writeBytes(myAuthenticator.getBytes());
+         outMessage.writeBytes(myTranInstanceID.getBytes());
+         outMessage.writeBytes(myTranState.getBytes());
+         outMessage.writeBytes(myCommitMode.getBytes());
+         outMessage.writeBytes(mySecurityScope.getBytes());
+         outMessage.writeBytes(myReserved.getBytes());
+
+         /*********************************************/
+         /* Change the format in the MQMD to be MQIMS */
+         /*********************************************/
+         ((Message)outMessage).setStringProperty("JMS_IBM_Format", "MQIMS");
+
+         /******************************************/
+         /* The actual text of the message....     */
+         /******************************************/
+         String myMessageBody = new String("IAPMDI28 A Test message for IMS");
+
+         /**********************************************/
+         /* Build the LL (length) and ZZ (zeroes) part */
+         /* of the message.                            */
+         /**********************************************/
+         short LL = (short)(myMessageBody.length() + 4);
+         short ZZ = 0;
+         outMessage.writeShort(LL);
+         outMessage.writeShort(ZZ);
+         outMessage.writeBytes(myMessageBody.getBytes());
+
+         /**************************/
+         /* Write out the message. */
+         /**************************/
+         System.out.println("  Putting message.");                
+         queueSender.send(outMessage);
+
+         /*********************************************/
+         /* Make sure that all objects are closed and */
+         /* that the handles are set to null.         */
+         /*********************************************/
+         System.out.println("  Cleaning up.");
+         queueSender.close();
+         queueSender = null; 
+
+         session.close();
+         session = null;
+
+         connection.close();
+         connection = null;
+
+      } catch( JMSException je ) {
+          /*******************************************/
+          /* Catch and display exception information */
+          /*******************************************/
+          System.out.println("JMSException: " + je);
+          Exception le = je.getLinkedException();
+          if (le != null) System.out.println("Linked exception: " + le);
+
+      } catch( Exception e ) {
+          /*******************************************/
+          /* Catch and display exception information */
+          /*******************************************/
+          System.out.println("Exception: " + e);
+      }
+
+      System.out.println("JmsIMSBridge finished.");
+  }
+        
+
+   public static void main (String args[]) {
+      JmsIMSBridge app = new JmsIMSBridge(args);
+      /******************************************/ 
+      /* Check that all arguments were entered. */ 
+      /******************************************/ 
+      if (   (icf==null) 
+          || (url==null) 
+          || (lookupQCF==null) 
+          || (lookupQueue==null) ) {
+         System.out.println("Usage:");
+         System.out.println("java JmsIMSBridge -icf ... -url ... -qcf ... -q ...");
+         System.out.println("where -icf is the classname of the initial context factory");
+         System.out.println("      -url is the JNDI location of the administered objects");
+         System.out.println("      -qcf is the queue connection factory");
+         System.out.println("      -q   is the queue");
+         System.exit(-1);
+      } else {
+         app.myIMSMessage();
+      }
+   }
+
+}
+</PRE></BODY></HTML>

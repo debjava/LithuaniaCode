@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0073)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/ResetQStats.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/*****************************************************************************/
+/*                                                                           */
+/* (c) Copyright IBM Corp. 2005  All rights reserved.                        */
+/*                                                                           */
+/* This sample program is owned by International Business Machines           */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted         */
+/* and licensed, not sold.                                                   */
+/*                                                                           */
+/* You may copy, modify, and distribute this sample program in any           */
+/* form without payment to IBM,  for any purpose including developing,       */
+/* using, marketing or distributing programs that include or are             */
+/* derivative works of the sample program.                                   */
+/*                                                                           */
+/* The sample program is provided to you on an "AS IS" basis, without        */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,    */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED     */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.       */
+/* Some jurisdictions do not allow for the exclusion or limitation of        */
+/* implied warranties, so the above limitations or exclusions may not        */
+/* apply to you.  IBM shall not be liable for any damages you suffer as      */
+/* a result of using, modifying or distributing the sample program or        */
+/* its derivatives.                                                          */
+/*                                                                           */
+/********************************************************************************************/
+/*                                                                        		    */
+/* Program name: ResetQStats                                              		    */
+/*                                                                       		    */
+/* Description:  Sample Java that demonstrates using the 		  		    */
+/* 		 MQCMD_RESET_Q_STATS command to display:				    */
+/*										 	    */		  	   
+/*		 Queue Statistics:					    	            */
+/*		    QName 	   = &lt;Queue name&gt;                               	    */
+/*		    MsgEnqCount    = &lt;Number of messages enqueued&gt;                 	    */
+/*	            MsgDeqCount    = &lt;Number of messages dequeued&gt;                          */
+/*		    HighQDepth     = &lt;Max number of messages on the queue since last reset&gt; */
+/* 		    TimeSinceReset = &lt;Seconds since last reset&gt;	                 	    */
+/*                                                                                	    */
+/* This program is run as follows:                                              	    */
+/*               If you are connecting to a local queue manager:	        	    */
+/*		     java ResetQStats queue-manager           	         		    */
+/*		 If you are connecting to a remote queue manager:	     	            */
+/*		     java ResetQStats host port svrconn-channel         		    */
+/*                                                                           		    */
+/* Required:	 - Download and install the  MS0B SupportPac                           	    */
+/*		 - Ensure the command server is started                   		    */
+/*											    */			 
+/* Note:	 The queue name has been hard coded as SYSTEM.DEFAULT.LOCAL.QUEUE	    */
+/*										  	    */
+/* Build:                                                                   	 	    */
+/*               This program has been tested with  Java 1.4.2		    	  	    */
+/*               and WebSphere MQ V5.3 FixPack 8 on WindowsXP.                        	    */
+/*                                                                           	  	    */
+/********************************************************************************************/
+
+import java.io.*;
+import com.ibm.mq.*;
+import com.ibm.mq.pcf.*;
+
+public class ResetQStats
+{
+	final public static String copyright = "Copyright (c) IBM Corp. 2005 All rights reserved.";
+
+	public static void main (String [] args)
+	{
+                PCFAgent 		agent;
+		PCFParameter [] parameters = { new MQCFST (CMQC.MQCA_Q_NAME, "SYSTEM.DEFAULT.LOCAL.QUEUE") };
+		MQMessage [] 		responses;
+		MQCFH 			cfh;
+		PCFParameter 		p;
+
+		try
+		{
+		   	// Connect a PCFAgent to the specified queue manager
+			if (args.length == 1)
+			{
+				System.out.print ("Connecting to local queue manager " + 
+					args [0] + "... ");
+				agent = new PCFAgent (args [0]);
+			}
+			else
+			{
+				System.out.print ("Connecting to queue manager at " + 
+					args [0] + ":" + args [1] + " over channel " + args [2] + "... ");
+				agent = new PCFAgent (args [0], Integer.parseInt (args [1]), args [2]);
+			}
+
+			System.out.println ("Connected.");
+
+			// Use the agent to send the request
+
+			System.out.print ("Sending PCF request... ");
+			responses = agent.send (CMQCFC.MQCMD_RESET_Q_STATS, parameters);
+			System.out.println ("Received reply.");
+			cfh = new MQCFH (responses [0]);
+
+			// Check the PCF header (MQCFH) in the first response message
+
+			if (cfh.reason == 0)
+			{
+				System.out.println ("Queue Statistics:");
+				for (int i = 0; i &lt; cfh.parameterCount; i++)
+				{
+					// Walk through the returned attributes
+
+					p = PCFParameter.nextParameter (responses [0]);
+					int parm = p.getParameter();
+					switch (parm)
+					{
+						case CMQC.MQCA_Q_NAME:            System.out.print("\t QName         "); 
+									          break;
+						case CMQC.MQIA_TIME_SINCE_RESET:  System.out.print("\t TimeSinceReset"); 	
+									          break;            
+						case CMQC.MQIA_MSG_ENQ_COUNT:     System.out.print("\t MsgEnqCount   "); 
+										  break;
+						case CMQC.MQIA_MSG_DEQ_COUNT:     System.out.print("\t MsgDeqCount   "); 
+										  break;
+						case CMQC.MQIA_HIGH_Q_DEPTH:      System.out.print("\t HighQDepth    "); 
+										  break;
+					}
+					System.out.println (" = " + p.getValue ());
+				}
+			}
+			else
+			{
+				System.out.println ("PCF error:\n" + cfh);
+
+				// Walk through the returned parameters describing the error
+
+				for (int i = 0; i &lt; cfh.parameterCount; i++)
+				{
+					System.out.println (PCFParameter.nextParameter (responses [0]));
+				}
+			}
+
+			// Disconnect
+
+			System.out.print ("Disconnecting... ");
+			agent.disconnect ();
+			System.out.println ("Done.");
+		}
+
+		catch (ArrayIndexOutOfBoundsException abe)
+		{
+			System.out.println ("Usage: \n" + 
+				"\tjava ResetQStats queue-manager\n" + 
+				"\tjava ResetQStats host port svrconn-channel");
+		}
+
+		catch (NumberFormatException nfe)
+		{
+			System.out.println ("Invalid port: " + args [1]);
+			System.out.println ("Usage: \n" + 
+				"\tjava ResetQStats queue-manager\n" + 
+				"\tjava ResetQStats host port svrconn-channel");
+		}
+
+		catch (MQException mqe)
+		{
+			System.err.println (mqe);
+		}
+
+		catch (IOException ioe)
+		{
+			System.err.println (ioe);
+		}
+	}
+}Error 500: OutputStream already obtained
+</PRE></BODY></HTML>

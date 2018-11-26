@@ -1,0 +1,102 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter&nbsp;3.&nbsp;JBoss Messaging Clustering</title><link rel="stylesheet" href="css/html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.65.1"><link rel="home" href="index.html" title="JBoss Messaging 1.2 User's Guide"><link rel="up" href="index.html" title="JBoss Messaging 1.2 User's Guide"><link rel="previous" href="introduction.html" title="Chapter&nbsp;2.&nbsp;Introduction"><link rel="next" href="gettingstarted.html" title="Chapter&nbsp;4.&nbsp;Download Software"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter&nbsp;3.&nbsp;JBoss Messaging Clustering</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="introduction.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="gettingstarted.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="c_overview"></a>Chapter&nbsp;3.&nbsp;JBoss Messaging Clustering</h2></div></div><div></div></div><p>
+      This section of the userguide gives a brief overview of the features available in
+        JBoss Messaging Clustering 1.2.0.GA. It gives a high level explanation of how
+        clustering works.
+     </p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="clustering_overview"></a>3.1.&nbsp;JBoss Messaging Clustering Overview</h2></div></div><div></div></div><p>
+      Here's a brief overview of how clustering works in JBoss Messaging 1.2.
+      </p><p>
+      Clustered destinations (queues and topics) can be deployed at all or none of the nodes of
+      the cluster.
+      A JMS client uses HA JNDI to lookup the connection factory. A client side load balancing
+      policy will automatically chose a node to connect to (This is similar to
+      how EJB clustering chooses a node).
+      </p><p>
+      The JMS client has now made a connection to a node where it can create sessions, message
+      producers and message consumers and browsers and send or consume messages,
+      using the standard JMS api.
+      When a distributed queue is deployed across the cluster, individual partial queues are
+      deployed on each node.
+      </p><p>
+      When a message is sent from a message producer attached to a particular node to a
+      distributed queue, a routing policy determines which partial queue will receive
+      the message.
+      By default the router will always pass the message to a local queue, if there is one,
+      this is so we avoid unnecessary network traffic.
+      If there is no local queue then a partial queue on a different node will be chosen by the
+      router, by default this will be round robin between remote partial queues.
+      </p><p>
+      When a message is sent to a distributed topic while attached to a node, there may be
+      multiple subscriptions on different nodes that need to receive the
+      message. Depending on the number and location of subscriptions, the message may be multicast
+      or unicast across the cluster so the other nodes can pick it up.
+      (All group communication, unicast, multicast and group management is handled by JGroups.)
+      </p><p>
+      In the case of shared durable subscriptions, if a durable subscription with the same name
+      exists on more than node, then only one of the instances needs to receive the message.
+      Which one is determined by the same routing policy used to route messages to partial queues.
+      All of this is accomplished without losing the reliability guarantees required by JMS.
+      </p><p>
+      Subscriptions (both durable and non durable) can be created on all nodes and will receive messages sent via any node.
+      What happens if the consumers on one queue/subscription are faster/slower than consumers on another?
+      Normally this would result in messages building up on that queue and fast consumers being starved of work on another, thus wasting CPU cycles on the node that
+      could be put to good use.
+      The most degenerate example is of a queue containing many messages then the consumers being closed on that queue.
+      The messages might potentially remain stranded on the queue until another consumer attaches.
+      A routing policy is no use here, since the messages have already been routed to the queuee and the consumers closed / slowed down
+      after they were routed there.
+      JBoss Messaging can deal with this problem by intelligently pulling messages from other less
+      busy nodes, if it detects idle consumers on the fast node and slow consumers
+      on another node.
+      </p><p>
+      Normally, persistent messages are persisted in a shared database which is shared by all nodes
+      in the cluster.
+
+      JBoss Messaging 1.2.1 will contain
+      an option where you can choose to not persist persistent messages in a database, but instead to replicate them between nodes of the cluster.
+
+      The idea here is the network IO on a fast network should be much faster than persisting to disk.
+      This solution should also be more scalable since different nodes replicate their messages onto
+      different other nodes - there is no "master node".
+
+      If the messages are replicated onto sufficient nodes and the hardware is set-up with UPS, then we believe a comparable reliability guarantee to persisting messages to disk
+      can be achieved. Of course, this won't be suitable for all situations, but you use the best tool for the job.
+      </p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="clustering_architectural_overview"></a>3.2.&nbsp;Clustering Architectural Overview</h2></div></div><div></div></div><p>
+           One of the fundamental Messaging Core building blocks is the "Post Office". A JBoss Messaging
+           Post Office is message routing component, which accepts messages for delivery and synchronously
+           forwards them to their destination queues or topic subscriptions.
+        </p><p>
+           There is a single Post Office instance per JBoss Messaging server (cluster node). Both queues
+           and topics deployed on a JBoss Messaging node are "plugged" into that Post Office instance.
+           Internally JBoss Messaging only deals  with the concepts of queues, and considers a topic to
+           just be a set of queues (one for each subscription). Depending on the type of subscription -
+           durable or non-durable - the corresponding queue saves messages to persistent storage or
+           it just holds messages in memory and discards them when the non-durable subscription is closed.
+        </p><p>
+           Therefore, for a JMS queue, the Post Office routes messages to one and only one core queue,
+           depending on the queue name, whereas for a JMS topic, the Post Office routes a message
+           to a set of core queues, one for each topic subscription, depending on the topic name.
+        </p><p>
+           Clustering across multiple address spaces is achieved by clustering Post Office instances. Each
+           JBoss Messaging cluster node runs a Clustered Post Office instance, which is aware of the presence
+           of all other clustered Post Offices in the cluster. There is an one-to-one relationship between cluster
+           nodes and clustered Post Office instances. So, naturally, the most important piece of clustering
+           configuration is the <span class="emphasis"><em>clustered Post Office service configuration</em></span>,
+           covered in detail below.
+        </p><p>
+           Clustered Post Office instances connect to each other via JGroups and they heavily rely on JGroups
+           group management and notification mechanisms. <span class="emphasis"><em>JGroups stack configuration</em></span>
+           is an essential part of JBoss Messaging clustering configuration. JGroups configuration is only
+           briefly addressed in this guide. Detailed information on JGroups can be found in JGroups
+           release documentation or on-line at <a href="http://www.jgroups.org" target="_top">http://www.jgroups.org</a>
+           or <a href="http://wiki.jboss.org/wiki/Wiki.jsp?page=JGroups" target="_top">http://wiki.jboss.org/wiki/Wiki.jsp?page=JGroups</a>
+        </p><p>
+           When routing messages, a clustered Post Office  has a choice of forwarding the message to local
+           queues or remote queues, plugged into remote Post Office instances that are part of the same
+           cluster. Local queues are usually preferred, but if a local queue is part of a distributed queue, has
+           no consumers, and other local queues part of the same distributed queue have consumers, messages
+           can be automatically redistributed, subject of the message redistribution policy in effect. This allows
+           us to create distributed queues and distributed topics.  <span class="emphasis"><em>Message redistribution
+           configuration</em></span> is another subject that we will insist on.
+        </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="introduction.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="gettingstarted.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter&nbsp;2.&nbsp;Introduction&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Chapter&nbsp;4.&nbsp;Download Software</td></tr></table></div></body></html>

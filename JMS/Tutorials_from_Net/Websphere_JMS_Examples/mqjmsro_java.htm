@@ -1,0 +1,218 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0069)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqjmsro.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2000  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqjmsro                                                   */
+/*                                                                         */
+/* Description: Sample java program that uses the jms interface to set the */
+/*              reporting options on the MQSeries MQMD.                    */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program is a java program that shows the setting of MQMD report   */
+/*  options via jms.  Even though it uses the jms interface, this code is  */
+/*  written based on MQSeries (ie, it does not use a JNDI naming service). */
+/*                                                                         */
+/*  The program can be run as follows                                      */
+/*                                                                         */
+/*     java mqjmsro -m &lt;qmgr name&gt;                                         */
+/*                                                                         */
+/*  The program will write a message to SYSTEM.DEFAULT.LOCAL.QUEUE.        */
+/*                                                                         */
+/* This program has been tested with MQSeries V5.1 CSD5 and JDK 1.1.7.     */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/*  mqjmsro has 1 parameter:                                               */
+/*    queue manager name (optional)                                        */
+/*                                                                         */
+/***************************************************************************/
+
+import javax.jms.*;      /* import of Sun's JMS interface */
+
+
+/* Imports for MQSeries specific objects */
+import com.ibm.mq.MQC;
+import com.ibm.mq.jms.MQQueue;
+
+import com.ibm.mq.jms.MQQueueConnectionFactory; /* import to allow program */
+                                                /* to bypass JNDI lookup   */
+
+public class mqjmsro {
+
+  public static String        QMGR         = "";
+  public static final String  QUEUE        = "SYSTEM.DEFAULT.LOCAL.QUEUE" ;
+
+  public static void main( String[] args )
+  {
+    String                  outString    = "Test message from mqjmsro";
+    Queue                   ioQueue      = null;
+    QueueSession            session      = null;
+    QueueConnection         connection   = null;
+    QueueConnectionFactory  factory      = null;
+
+    System.out.println("mqjmsro sample program");
+
+    /********************************************************/
+    /* Process command-line arguments looking for qmgr name */
+    /********************************************************/
+    for ( int i=0; i&lt;args.length; i++ ) {
+      String arg = args[i].toLowerCase();
+
+      if( arg.equals("-m") ) {
+         if (i+1&lt; args.length) {
+            QMGR = args[++i];
+         } else {
+            System.out.println("Ignoring -m flag; no value supplied");
+         }
+      } else
+         // Report and discard any unknown command-line options
+         System.out.println("Ignoring unknown flag: " + arg );
+    }
+
+    try {
+
+       /****************************************************/
+       /* Create the connection factory directly from qmgr */
+       /****************************************************/
+       System.out.println(" creating QueueConnectionFactory");
+       factory = new MQQueueConnectionFactory();
+       ((MQQueueConnectionFactory)factory).setQueueManager(QMGR);
+
+       /****************************************************/
+       /* Create the connection.  Note: Receive calls will */
+       /* be blocked if the connection is not explicityly  */
+       /* started.                                         */
+       /****************************************************/
+       System.out.println(" creating connection");
+       connection = factory.createQueueConnection();
+       System.out.println(" starting connection");
+       connection.start();
+
+       /**************************************************/
+       /* Create a session that won't be transacted and  */
+       /* that should automatically acknowledge received */
+       /* messages.                                      */
+       /**************************************************/
+       System.out.println(" creating session");
+       boolean transacted = false;
+       session = connection.createQueueSession( transacted,
+                                                Session.AUTO_ACKNOWLEDGE);
+
+       /**********************************************/
+       /* Create a queue using the MQSeries specific */
+       /* queue name.                                */
+       /**********************************************/
+       ioQueue = session.createQueue( QUEUE );
+ 
+       /**********************************************/
+       /* Use the session to create a QueueSender by */
+       /* passing in the destination parameter.      */
+       /**********************************************/
+       System.out.println(" creating a QueueSender");
+       QueueSender queueSender = session.createSender(ioQueue);
+
+       /***************************************************/
+       /* Create an empty message and put our text in it. */
+       /***************************************************/
+       System.out.println( " creating the message" );
+       TextMessage outMessage = session.createTextMessage();
+       outMessage.setText(outString);
+
+       /******************************************************/
+       /* In order to get a report exception, MQSeries must  */
+       /* be given a destination for it.  The following code */
+       /* will set the destination to be the queue manager   */
+       /* and queue where the message is being sent.  This   */
+       /* would normally not be done but is being done here  */
+       /* for convenience.                                   */
+       /******************************************************/
+       MQQueue replyToQ = new MQQueue(QMGR,QUEUE);
+       Destination replyTo = (Destination) replyToQ;
+       outMessage.setJMSReplyTo(replyTo);
+
+       System.out.println(" setting Report property");
+       outMessage.setIntProperty("JMS_IBM_Report_Exception", 
+                                 MQC.MQRO_EXCEPTION_WITH_DATA); 
+
+       /*********************************/
+       /* Send the message to the queue */
+       /*********************************/
+       System.out.println( " sending message to " + ioQueue.getQueueName() );
+       queueSender.send(outMessage);
+
+       /***********************************/
+       /* Program is done, close objects. */
+       /***********************************/
+       System.out.println(" closing queue");
+       queueSender.close();
+
+       System.out.println(" closing session");
+       session.close();
+       session = null;
+
+       System.out.println(" closing connection");
+       connection.close();
+       connection = null;
+
+    } catch( JMSException je ) {
+      System.out.println("Caught JMSException: " + je);
+      Exception le = je.getLinkedException();
+      if (le != null) System.out.println("linked exception: " + le);
+
+    } catch( Exception e ) {
+      System.out.println("Caught exception: " + e );
+
+    } finally {
+      /*****************************************************/
+      /* We'll use a finally block to ensure that the most */
+      /* important JMS objects were closed.                */
+      /*****************************************************/
+      try {
+        if (session != null) {
+          System.out.println(" closing session");
+          session.close();
+        }
+        if (connection != null) {
+          System.out.println(" closing connection");
+          connection.close();
+        }
+      } catch (JMSException je) {
+        System.out.println("Caught exception: "+je);
+      }
+    }
+
+    System.out.println("mqjmsro ending...");
+  }
+
+
+}
+</PRE></BODY></HTML>

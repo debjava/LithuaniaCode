@@ -1,0 +1,1176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:35 2002">
+<title>An Application Example that Uses Two J2EE(TM) Servers</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="j2eeapp3.html">Prev</a> |
+    <a href="client_samples.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1027887"> </a><font color="#666699" >10 &nbsp;&nbsp; An Application Example that Uses Two J2EE<sup><font size="-2">TM</font></sup> Servers</font>
+</h1>
+
+
+<p>
+  <a name="1027891"> </a>This chapter explains how to write, compile, package, deploy, and run a pair of 
+  J2EE<font size="-2"><sup>TM</sup></font> applications that use the JMS API and run on two J2EE servers. A common practice is to deploy different components of an enterprise application on different systems within a company, and this example illustrates on a small scale how to do this for an application that uses the JMS API.
+</p>
+
+
+<p>
+  <a name="1032371"> </a><font >The applications use the following components:</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1025489"> </a>An application client that uses two connection factories--one ordinary one and one that is configured to communicate with the remote server--to create two publishers and two subscribers and to publish and to consume messages</font>
+  <font ><li ><a name="1025495"> </a>A message-driven bean that is deployed twice--once on the local server and once on the remote one--to process the messages and to send replies</font>
+</ul>
+
+  <p> <a name="1033841"> </a><font >In this chapter, the term <i>local server</i> 
+    means the server on which the application client is deployed. The term <i>remote 
+    server</i> means the server on which only the message-driven bean is deployed.</font> 
+  </p>
+
+
+<p>
+  <a name="1034898"> </a><font >Another possible situation is that an application deployed on a J2EE server must be accessed from another system on which no J2EE server is running. The last section of this chapter discusses how to handle this situation.</font>
+</p>
+
+
+<p>
+  <a name="1025464"> </a><font >The chapter covers the following topics:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1023427">An overview of the applications</a></font>
+  <li ><font ><a href="#1023514">Writing and compiling the application components</a></font>
+  <li ><font ><a href="#1024433">Creating and packaging the applications</a></font>
+  <li ><font ><a href="#1025213">Deploying and running the applications</a></font>
+  <font ><li ><a href="#1034912">Accessing a J2EE application from a remote system that is not running a J2EE server</a></font>
+</ul>
+
+  <p> <a name="1034963"> </a><font >If you downloaded the tutorial examples as 
+    described in the preface, you will find the source code files for this chapter 
+    in <code>jms_tutorial/examples/multi_server</code> (on UNIX&#174; systems) 
+    or <code>jms_tutorial\examples\multi_server</code> (on Microsoft Windows systems). 
+    The directory <code>ear_files</code> in the <code>examples</code> directory 
+    contains two built applications, called <code>SampleMultiApp.ear</code> and 
+    <code>SampleReplyBeanApp.ear</code>. If you run into difficulty at any time, 
+    you can open one of these files in the deploytool and compare that file to 
+    your own version. </font> </p>
+
+<h3>
+  <a name="1023427"> </a><font color="#666699" >10.1&nbsp;&nbsp; Overview of the Applications</font>
+</h3>
+
+
+<p>
+  <a name="1023425"> </a><font >This pair of applications is somewhat similar to the application in <a href="j2eeapp1.html">Chapter 7</a> in that the only components are a client and a message-driven bean. However, the applications here use these components in more complex ways. One application consists of the application client. The other application contains only the message-driven bean and is deployed twice, once on each server.</font>
+</p>
+
+
+<p>
+  <a name="1025469"> </a><font >The basic steps of the applications are as follows.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025496"> </a>The administrator starts two J2EE servers.</font>
+  <li  value="2"><font ><a name="1027157"> </a>On the local server, the administrator creates a connection factory to communicate with the remote server.</font>
+  <li  value="3"><font ><a name="1025506"> </a>The application client uses two connection factories--a preconfigured one and the one just created--to create two connections, sessions, publishers, and subscribers. Each publisher publishes five messages.</font>
+  <li  value="4"><font ><a name="1027198"> </a>The local and the remote message-driven beans each receive five messages and send replies.</font>
+  <font ><li  value="5"><a name="1026372"> </a>The client's message listener consumes the replies.</font>
+</ol>
+
+<p>
+  <a name="1023448"> </a><font ><a href="j2eeapp4.html#1023450">Figure 10.1</a> illustrates the structure of this application.</font>
+</p>
+
+<p>
+<a name="1043012"> </a><img src="images/Fig10.1.gif" border="0" hspace="0" vspace="0">
+</p>
+
+<a name="1023450"> </a><i>Figure 10.1&nbsp;&nbsp; A J2EE Two-Server Application</i><br>
+
+<h3>
+  <a name="1023514"> </a><font color="#666699" >10.2&nbsp;&nbsp; Writing and Compiling the Application Components</font>
+</h3>
+
+
+<p>
+  <a name="1023525"> </a><font >Writing and compiling the components of the applications involve</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1023543">Coding the application client</a></font>
+  <li ><font ><a href="#1023574">Coding the message-driven bean</a></font>
+  <font ><li ><a href="#1024416">Compiling the source files</a></font>
+</ul>
+
+<h4>
+  <a name="1023543"> </a><font color="#666699" >10.2.1&nbsp;&nbsp; Coding the Application Client: <code>MultiAppServerRequester.java</code></font>
+</h4>
+
+
+  <p> <a name="1023523"> </a><font >The application client class, <a href="../examples/multi_server/MultiAppServerRequester.java"><code>MultiAppServerRequester.java</code></a>, 
+    does the following.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1028336"> </a>It uses the Java<font size="-2"><sup>TM</sup></font> 
+      Naming and Directory Interface<font size="-2"><sup>TM</sup></font> (JNDI) 
+      API naming context <code>java:comp/env</code> to look up two connection 
+      factories and a topic.</font> 
+    <li  value="2"><font ><a name="1027201"> </a>For each connection factory, it creates a connection, a publisher session, a publisher, a subscriber session, a subscriber, and a temporary topic for replies.</font>
+    <li  value="3"><font ><a name="1030175"> </a>Each subscriber sets its message 
+      listener, <code>ReplyListener</code>, and starts the connection.</font> 
+    <li  value="4"><font ><a name="1027218"> </a>Each publisher publishes five messages and creates a list of the messages the listener should expect.</font>
+  <li  value="5"><font ><a name="1027203"> </a>When each reply arrives, the message listener displays its contents and removes it from the list of expected messages.</font>
+  <font ><li  value="6"><a name="1027210"> </a>When all the messages have arrived, the client exits.</font>
+</ol>
+
+<h4>
+  <a name="1023574"> </a><font color="#666699" >10.2.2&nbsp;&nbsp; Coding the Message-Driven Bean: <code>ReplyMsgBean.java</code></font>
+</h4>
+
+
+  <p> <a name="1026265"> </a><font >The <code>onMessage</code> method of the message-driven 
+    bean class, <a href="../examples/multi_server/ReplyMsgBean.java"><code>ReplyMsgBean.java</code></a>, 
+    does the following:</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1027211"> </a>Casts the incoming message to a 
+      <code>TextMessage</code> and displays the text</font> 
+    <li  value="2"><font ><a name="1027212"> </a>Creates a connection, session, and publisher for the reply message</font>
+  <li  value="3"><font ><a name="1027219"> </a>Publishes the message to the reply topic</font>
+  <font ><li  value="4"><a name="1027224"> </a>Closes the connection</font>
+</ol>
+
+<h4>
+  <a name="1024416"> </a><font color="#666699" >10.2.3&nbsp;&nbsp; Compiling the Source Files</font>
+</h4>
+
+
+  <p> <a name="1024417"> </a><font >To compile the files in the application, go 
+    to the directory <code>multi_server</code> and do the following.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1024420"> </a>Make sure that you have set the 
+      environment variables shown in <a href="client.html#1025256">Table 4.1</a>: 
+      <code>JAVA_HOME</code>, <code>J2EE_HOME</code>, <code>CLASSPATH</code>, 
+      and <code>PATH</code>.</font> 
+    <li  value="2"><font ><a name="1024422"> </a>At a command line prompt, compile the source files:</font>
+<pre>
+javac MultiAppServerRequester.java
+javac ReplyMsgBean.java
+</pre>
+</ol>
+
+<h3>
+  <a name="1024433"> </a><font color="#666699" >10.3&nbsp;&nbsp; Creating and Packaging the Application</font>
+</h3>
+
+
+<p>
+  <a name="1024437"> </a><font >Creating and packaging this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1024474">Starting the J2EE servers and the deploytool</a></font>
+  <li><font ><a href="#1024488">Creating a connection factory</a></font>
+  <li><font ><a href="#1024508">Creating the first J2EE application</a></font>
+  <li><font ><a href="#1026480">Packaging the application client</a></font>
+  <li><font ><a href="#1027241">Creating the second J2EE application</a></font>
+  <li><font ><a href="#1026743">Packaging the message-driven bean</a></font>
+  <font ><li><a href="#1026999">Checking the JNDI API names ("JNDI names")</a></font>
+</ol>
+
+<h4>
+  <a name="1024474"> </a><font color="#666699" >10.3.1&nbsp;&nbsp; Starting the J2EE Servers and the Deploytool</font>
+</h4>
+
+
+<p>
+  <a name="1024475"> </a><font >Before you can create and package the application, you must start the local and remote J2EE servers and the deploytool. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1024479"> </a>At a command line prompt on the local system, start the J2EE server: </font>
+<pre>
+j2ee -verbose
+</pre>
+
+<p>
+  <a name="1024481"> </a><font >Wait until the server displays the message "J2EE server startup complete."</font>
+</p>
+
+      <p> <a name="1024482"> </a><font >(To stop the server, type <code>j2ee -stop</code>.)</font> 
+      </p>
+</li>
+  <li  value="2"><font ><a name="1027318"> </a>At another command line prompt on the local system, start the deploytool: </font>
+<pre>
+deploytool
+</pre>
+<p>
+  <a name="1024487"> </a><font >(To access the tool's context-sensitive help, press F1.)</font>
+</p>
+</li>
+  <li  value="3"><font ><a name="1027333"> </a>At a command line prompt on the remote system, start the J2EE server: </font>
+<pre>
+j2ee -verbose
+</pre>
+</ol>
+
+<h4>
+  <a name="1024488"> </a><font color="#666699" >10.3.2&nbsp;&nbsp; Creating a Connection Factory</font>
+</h4>
+
+
+  <p> <a name="1042296"> </a><font >For this example, you create on the local 
+    system a connection factory that allows the client to communicate with the 
+    remote server. If you downloaded the tutorial examples as described in the 
+    preface, you will find in the <code>multi_server</code> directory in the <code>multi_server</code> 
+    directory a Microsoft Windows script called <code>setup.bat</code> and a UNIX 
+    script called <code>setup.sh</code>. You can use one of these scripts to create 
+    the connection factory on the local system. The command in <code>setup.bat</code> 
+    looks like this:</font> </p>
+
+<pre>
+call j2eeadmin -addJmsFactory jms/RemoteTCF topic -props url=corbaname:iiop:%1:1050#%1
+</pre>
+
+  <p> <a name="1042301"> </a><font >The UNIX command in <code>setup.sh</code> looks 
+    like this:</font> </p>
+
+<pre>
+#!/bin/sh -x
+j2eeadmin -addJmsFactory jms/RemoteTCF topic -props url=corbaname:iiop:$1:1050#$1
+</pre>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1027368"> </a>To run the script, specify the 
+      name of the remote server as an argument. Use the host name that is visible 
+      to you on your network; do not use an IP address. For example, if the remote 
+      system is named <code>mars</code>, enter the following:</font> 
+      <pre>
+setup.bat mars
+</pre>
+
+<p>
+  <a name="1026380"> </a><font >or</font>
+</p>
+
+<pre>
+setup.sh mars
+</pre>
+  <li  value="2"><font ><a name="1024495"> </a>Verify that the connection factory was created:</font>
+<pre>
+j2eeadmin -listJmsFactory
+</pre>
+
+<p>
+  <a name="1032878"> </a><font >One line of the output looks like this:</font>
+</p>
+
+<pre>
+&lt; JMS Cnx Factory : jms/RemoteTCF , Topic , [ url=corbaname:iiop:mars:1050#mars ] &gt;
+</pre>
+</ol>
+
+<h4>
+  <a name="1024508"> </a><font color="#666699" >10.3.3&nbsp;&nbsp; Creating the First J2EE Application</font>
+</h4>
+
+
+  <p> <a name="1024509"> </a><font >Create a new J2EE application called <code>MultiApp</code> 
+    and store it in the file named<code> MultiApp.ear</code>. Follow these steps.</font> 
+  </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1024510"> </a>In the deploytool, select the File menu. </font>
+  <li  value="2"><font ><a name="1024511"> </a>From the File menu, choose New -> Application.</font>
+    <li  value="3"><font ><a name="1024512"> </a>Click Browse next to the Application 
+      File Name field, and use the file chooser to locate the directory <code>multi_server</code>. 
+      </font> 
+    <li  value="4"><font ><a name="1024513"> </a>In the File Name field, enter 
+      <code>MultiApp</code>.</font> 
+    <li  value="5"><font ><a name="1024514"> </a>Click New Application.</font>
+  <font ><li  value="6"><a name="1024515"> </a>Click OK. </font>
+</ol>
+
+  <p> <a name="1024516"> </a><font >A diamond icon labeled <code>MultiApp</code> 
+    appears in the tree view on the left side of the deploytool window. The full 
+    path name of <code>MultiApp.ear</code> appears in the General tabbed pane 
+    on the right side.</font> </p>
+
+<h4>
+  <a name="1026480"> </a><font color="#666699" >10.3.4&nbsp;&nbsp; Packaging the Application Client</font>
+</h4>
+
+
+<p>
+  <a name="1026481"> </a><font >In this section, you will run the New Application Client Wizard of the deploytool to package the application client. To start the New Application Client Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1026603"> </a>In the tree view, select <code>MultiApp</code>.</font> 
+    <font ><li  value="2"><a name="1026604"> </a>From the File menu, choose New -> Application Client. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1026485"> </a><i><font color="#666699" >10.3.4.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1026487"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1026488"> </a><i><font color="#666699" >10.3.4.2&nbsp;&nbsp; JAR File Contents Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1026489"> </a>In the combo box labeled Create 
+      Archive Within Application, select <code>MultiApp</code>.</font> 
+    <li  value="2"><font ><a name="1026490"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1026491"> </a>In the dialog box Edit Contents 
+      of &lt;Application Client&gt;, choose the <code>multi_server</code> directory. 
+      If the directory is not already in the Starting Directory field, type it 
+      in the field, or locate it by browsing through the Available Files tree. 
+      </font> 
+    <li  value="4"><font ><a name="1026492"> </a>Select <code>MultiAppServerRequester.class</code> 
+      and <code>MultiAppServerRequester$ReplyListener.class</code> from the Available 
+      Files tree area and click Add. </font> 
+    <li  value="5"><font ><a name="1026493"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1026494"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1026495"> </a><i><font color="#666699" >10.3.4.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1026496"> </a>In the Application Client combo 
+      box, select <code>MultiAppServerRequester</code> in the Main Class field, 
+      and enter <code>MultiAppServerRequester</code> in the Display Name field.</font> 
+    <li  value="2"><font ><a name="1026497"> </a>In the Callback Handler Class combo box, verify that container-managed authentication is selected.</font>
+  <font ><li  value="3"><a name="1026498"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1026499"> </a><i><font color="#666699" >10.3.4.4&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1026500"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1026501"> </a><i><font color="#666699" >10.3.4.5&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1026502"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1026503"> </a><i><font color="#666699" >10.3.4.6&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1026504"> </a><font >In this dialog box, you associate the JNDI API 
+    context names for the connection factories in the <code>MultiAppServerRequester.java</code> 
+    source file with the names of the local and remote connection factories. You 
+    also specify container authentication for the connection factory resources, 
+    defining the user name and the password that the user must enter in order 
+    to be able to create a connection. Follow these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026506"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1026507"> </a>In the Coded Name field, enter 
+      <code>jms/TopicConnectionFactory1</code>--the first logical name referenced 
+      by <code>MultiAppServerRequester</code>.</font> 
+    <li  value="3"><font ><a name="1026508"> </a>In the Type field, select <code>javax.jms.TopicConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1026509"> </a>In the Authentication field, select Container.</font>
+  <li  value="5"><font ><a name="1026510"> </a>In the Sharable field, make sure that the checkbox is selected. This allows the container to optimize connections.</font>
+    <li  value="6"><font ><a name="1026511"> </a>In the JNDI Name field, enter <code>jms/TopicConnectionFactory</code>.</font> 
+    <li  value="7"><font ><a name="1026512"> </a>In the User Name field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="8"><font ><a name="1026513"> </a>In the Password field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="9"><font ><a name="1026514"> </a>Click Add. </font>
+    <li  value="10"><font ><a name="1026515"> </a>In the Coded Name field, enter 
+      <code>jms/TopicConnectionFactory2</code>--the other logical name referenced 
+      by <code>MultiAppServerRequester</code>. </font> 
+    <li  value="11"><font ><a name="1026516"> </a>In the Type field, select<code> 
+      javax.jms.TopicConnectionFactory</code>. </font> 
+    <li  value="12"><font ><a name="1026517"> </a>In the Authentication field, select Container. </font>
+  <li  value="13"><font ><a name="1026518"> </a>In the Sharable field, make sure that the checkbox is selected. </font>
+    <li  value="14"><font ><a name="1026519"> </a>In the JNDI Name field, enter 
+      <code>jms/RemoteTCF</code>. </font> 
+    <li  value="15"><font ><a name="1026520"> </a>In the User Name field, enter 
+      <code>j2ee</code>. (If the user name and the password appear to be filled 
+      in already, make sure that you follow the instructions at the end of <a href="j2eeapp4.html#1026532">Section 
+      10.3.4.8, "Review Settings Dialog Box,"</a> after you exit the Wizard.)</font> 
+    <li  value="16"><font ><a name="1026521"> </a>In the Password field, enter 
+      <code>j2ee</code>. </font> 
+    <font ><li  value="17"><a name="1026522"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1026525"> </a><i><font color="#666699" >10.3.4.7&nbsp;&nbsp; JMS Destination References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1026526"> </a><font >In this dialog box, you associate the JNDI API 
+    context name for the topic in the <code>MultiAppServerRequester.java</code> 
+    source file with the name of the default topic. The client code also uses 
+    a reply topic, but it is a temporary topic created programmatically rather 
+    than administratively and does not have to be specified in the deployment 
+    descriptor. Follow these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026853"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1026528"> </a>In the Coded Name field, enter 
+      <code>jms/PTopic</code>--the logical name for the publisher topic referenced 
+      by <code>MultiAppServerRequester</code>.</font> 
+    <li  value="3"><font ><a name="1026529"> </a>In the Type field, select <code>javax.jms.Topic</code>.</font> 
+    <li  value="4"><font ><a name="1026530"> </a>In the JNDI Name field, enter 
+      <code>jms/Topic</code>--the preconfigured topic.</font> 
+    <font ><li  value="5"><a name="1026531"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1026532"> </a><i><font color="#666699" >10.3.4.8&nbsp;&nbsp; Review Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026533"> </a>Check the settings for the deployment descriptor.</font>
+  <font ><li  value="2"><a name="1026534"> </a>Click Finish.</font>
+</ol>
+
+<p>
+  <a name="1030185"> </a><font >After you exit the Wizard, do the following.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1030198"> </a>Select the <code>MultiAppServerRequester</code> 
+      node in the tree.</font> 
+    <li  value="2"><font ><a name="1030199"> </a>Select the Resource Refs tabbed pane.</font>
+    <li  value="3"><font ><a name="1030200"> </a>Select the second entry in the 
+      table, <code>jms/TopicConnectionFactory2</code>.</font> 
+    <li  value="4"><font ><a name="1030201"> </a>If the User Name and the Password 
+      fields are blank, enter <code>j2ee</code> in each field.</font> 
+    <font ><li  value="5"><a name="1033867"> </a>Choose Save from the File menu to save the application.</font>
+</ol>
+
+<h4>
+  <a name="1027241"> </a><font color="#666699" >10.3.5&nbsp;&nbsp; Creating the Second J2EE Application</font>
+</h4>
+
+
+  <p> <a name="1027242"> </a><font >Create a new J2EE application, called <code>ReplyBeanApp</code>, 
+    and store it in the file named <code>ReplyBeanApp.ear</code>. Follow these 
+    steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1027243"> </a>In the deploytool, select the File menu. </font>
+  <li  value="2"><font ><a name="1027244"> </a>From the File menu, choose New -> Application.</font>
+    <li  value="3"><font ><a name="1027245"> </a>Click Browse next to the Application 
+      File Name field, and use the file chooser to locate the directory <code>multi_server</code>. 
+      </font> 
+    <li  value="4"><font ><a name="1027246"> </a>In the File Name field, enter 
+      <code>ReplyBeanApp</code>.</font> 
+    <li  value="5"><font ><a name="1027247"> </a>Click New Application.</font>
+  <font ><li  value="6"><a name="1027248"> </a>Click OK. </font>
+</ol>
+
+  <p> <a name="1027249"> </a><font >A diamond icon labeled <code>ReplyBeanApp</code> 
+    appears in the tree view on the left side of the deploytool window. The full 
+    path name of <code>ReplyBeanApp.ear</code> appears in the General tabbed pane 
+    on the right side.</font> </p>
+
+<h4>
+  <a name="1026743"> </a><font color="#666699" >10.3.6&nbsp;&nbsp; Packaging the Message-Driven Bean</font>
+</h4>
+
+
+<p>
+  <a name="1026744"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the message-driven bean. To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1026746"> </a>In the tree view, select <code>ReplyBeanApp</code>.</font> 
+    <font ><li  value="2"><a name="1026747"> </a>From the File menu, choose New -> Enterprise Bean. </font>
+</ol>
+
+<h5>
+  <a name="1026748"> </a><i><font color="#666699" >10.3.6.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1026749"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1026750"> </a><i><font color="#666699" >10.3.6.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1027286"> </a>In the combo box labeled JAR File 
+      Location, verify that Create New JAR File in Application and <code>ReplyBeanApp</code> 
+      are selected.</font> 
+    <li  value="2"><font ><a name="1027287"> </a>In the JAR Display Name field, 
+      verify that the name is <code>Ejb1</code>, the default display name.</font> 
+    <li  value="3"><font ><a name="1027301"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="4"><font ><a name="1027289"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the <code>multi_server</code> directory. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="5"><font ><a name="1027290"> </a>Select the <code>ReplyMsgBean.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="6"><font ><a name="1027291"> </a>Click OK. </font>
+  <font ><li  value="7"><a name="1027292"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1026757"> </a><i><font color="#666699" >10.3.6.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026758"> </a>In the Bean Type combo box, select the Message-Driven radio button. </font>
+    <li  value="2"><font ><a name="1026759"> </a>Under Enterprise Bean Class, select 
+      <code>ReplyMsgBean</code>. The combo boxes for the local and remote interfaces 
+      are grayed out.</font> 
+    <li  value="3"><font ><a name="1026760"> </a>In the Enterprise Bean Name field, 
+      enter <code>ReplyMDB</code>. This name will represent the message-driven 
+      bean in the tree view. </font> 
+    <font ><li  value="4"><a name="1026761"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1026768"> </a><i><font color="#666699" >10.3.6.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1027725"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1026770"> </a>In the Transaction Attribute field 
+      opposite the <code>onMessage</code> method, verify that Required is selected.</font> 
+    <font ><li  value="3"><a name="1026771"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1026774"> </a><i><font color="#666699" >10.3.6.5&nbsp;&nbsp; Message-Driven Bean Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026775"> </a>In the Destination Type combo box, select Topic.</font>
+    <li  value="2"><font ><a name="1026776"> </a>In the Destination field, select 
+      <code>jms/Topic</code>.</font> 
+    <font >
+    <li  value="3"><a name="1026777"> </a>In the Connection Factory field, select 
+      <code>jms/TopicConnectionFactory</code>.
+    </font>
+   <li>Click Next.</li>
+</ol>
+
+<h5>
+  <a name="1027059"> </a><i><font color="#666699" >10.3.6.6&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1027060"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1027063"> </a><i><font color="#666699" >10.3.6.7&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1027064"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1027067"> </a><i><font color="#666699" >10.3.6.8&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1027068"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1027069"> </a>In the Coded Name field, enter 
+      <code>jms/TopicConnectionFactory</code>.</font> 
+    <li  value="3"><font ><a name="1027070"> </a>In the Type field, select <code>javax.jms.TopicConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1027071"> </a>In the Authentication field, select Container.</font>
+    <li  value="5"><font ><a name="1027072"> </a>In the JNDI Name field, enter <code>jms/TopicConnectionFactory</code>.</font> 
+    <li  value="6"><font ><a name="1027073"> </a>In the User Name field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="7"><font ><a name="1027074"> </a>In the Password field, enter 
+      <code>j2ee</code>.</font> 
+    <font ><li  value="8"><a name="1027075"> </a>Click Finish. You do not need to enter anything in the other dialog boxes.</font>
+</ol>
+
+<h4>
+  <a name="1026999"> </a><font color="#666699" >10.3.7&nbsp;&nbsp; Checking the JNDI Names</font>
+</h4>
+
+
+<p>
+  <a name="1027000"> </a><font >Verify that the JNDI names for the application components are correct. To do so, do the following.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1027003"> </a>In the tree view, select the <code>MultiApp</code> 
+      application. </font> 
+    <li  value="2"><font ><a name="1027004"> </a>Select the JNDI Names tabbed pane.</font>
+  <font ><li  value="3"><a name="1034723"> </a>Verify that the JNDI names appear as shown in <a href="j2eeapp4.html#1034692">Table 10.1</a>.
+<p></p>
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1034692"> </a><font >Table 10.1: &nbsp;&nbsp; References Pane<br></font>
+
+</font></i></b></caption>
+  <tr valign="bottom" align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034700"> </a><font >Ref. Type<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034702"> </a><font >Referenced By<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034704"> </a><font >Reference Name<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034706"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr valign="top">
+    <td><div align="left"><font face="">
+<a name="1034708"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034710"> </a><font ><code>MultiAppServerRequester</code></font> 
+              </font></div>
+          </td>
+    <td>
+            <div align="left"><font face=""> <a name="1034846"> </a><font ><code>jms/TopicConnectionFactory1</code></font> 
+              </font></div>
+          </td>
+    <td>
+            <div align="left"><font face=""> <a name="1034842"> </a><font ><code>jms/TopicConnectionFactory</code></font> 
+              </font></div>
+          </td>
+  </tr>
+  <tr valign="top">
+    <td><div align="left"><font face="">
+<a name="1034716"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034820"> </a><font ><code>MultiAppServerRequester</code><br>
+              </font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034720"> </a><font ><code>jms/TopicConnectionFactory2</code><br>
+              </font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034722"> </a><font ><code>jms/RemoteTCF</code><br>
+              </font>
+
+</font></div></td>
+  </tr>
+  <tr valign="top">
+    <td><div align="left"><font face="">
+<a name="1034806"> </a><font >Env Resource<br></font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034826"> </a><font ><code>MultiAppServerRequester</code><br>
+              </font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034810"> </a><font ><code>jms/PTopic</code><br>
+              </font>
+
+</font></div></td>
+    <td>
+            <div align="left"><font face=""> <a name="1034812"> </a><font ><code>jms/Topic</code><br>
+              </font>
+
+</font></div></td>
+  </tr>
+</table>
+<p></p>
+</li>
+
+</font>
+    <li  value="4"><font ><a name="1027471"> </a>In the tree view, select the <code>ReplyBeanApp</code> 
+      application. </font> 
+    <li  value="5"><font ><a name="1027480"> </a>Select the JNDI Names tabbed pane.</font>
+  <font ><li  value="6"><a name="1034788"> </a>Verify that the JNDI names appear as shown in <a href="j2eeapp4.html#1034737">Table 10.2</a> and <a href="j2eeapp4.html#1034757">Table 10.3</a>.
+<p></p>
+</li>
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1034737"> </a><font >Table 10.2: &nbsp;&nbsp; Application Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034743"> </a><font >Component Type<br></font>
+
+</font></div></th>
+    <th>
+          <div align="left"><font face="" color="#666699"> <a name="1034745"> 
+            </a><font ><b>Component</b><br>
+            </font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034747"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1034749"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+          <div align="left"><font face=""> <a name="1034751"> </a><font ><code>ReplyMDB</code><br>
+            </font>
+
+</font></div></td>
+    <td>
+          <div align="left"><font face=""> <a name="1034753"> </a><font ><code>jms/Topic</code><br>
+            </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+<p></p>
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1034757"> </a><font >Table 10.3: &nbsp;&nbsp; References Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034765"> </a><font >Ref. Type<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034767"> </a><font >Referenced By<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034769"> </a><font >Reference Name<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1034771"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1034773"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+          <div align="left"><font face=""> <a name="1034775"> </a><font ><code>ReplyMDB</code><br>
+            </font>
+
+</font></div></td>
+    <td>
+          <div align="left"><font face=""> <a name="1034777"> </a><font ><code>jms/TopicConnectionFactory</code><br>
+            </font>
+
+</font></div></td>
+    <td>
+          <div align="left"><font face=""> <a name="1034779"> </a><font ><code>jms/TopicConnectionFactory</code><br>
+            </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+
+
+</font>
+</ol>
+
+<h3>
+  <a name="1025213"> </a><font color="#666699" >10.4&nbsp;&nbsp; Deploying and Running the Applications</font>
+</h3>
+
+
+<p>
+  <a name="1025214"> </a><font >Deploying and running this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1025227">Adding the server</a></font>
+  <li><font ><a href="#1025245">Deploying the applications</a></font>
+  <li><font ><a href="#1025304">Running the client</a></font>
+  <li><font ><a href="#1026930">Undeploying the applications</a></font>
+  <font ><li><a href="#1025387">Removing the applications and stopping the server</a></font>
+</ol>
+
+<h4>
+  <a name="1025227"> </a><font color="#666699" >10.4.1&nbsp;&nbsp; Adding the Server</font>
+</h4>
+
+
+<p>
+  <a name="1027308"> </a><font >Before you can deploy the application, you must make available to the deploytool both the J2EE servers you started in <a href="j2eeapp4.html#1024474">Section 10.3.1, "Starting the J2EE Servers and the Deploytool."</a> To add the remote server, follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1027407"> </a>From the File menu, choose Add Server.</font>
+    <li  value="2"><font ><a name="1027408"> </a>In the Add Server dialog box, enter 
+      the name of the remote system in the Server Name field. Use the same name 
+      you specified when you ran the <code>setup</code> script in <a href="j2eeapp4.html#1024488">Section 
+      10.3.2, "Creating a Connection Factory."</a></font> 
+    <font ><li  value="3"><a name="1027412"> </a>Click OK.</font>
+</ol>
+
+  <p> <a name="1027413"> </a><font >A node with the name of the remote system appears 
+    under <code>Servers</code> in the tree view.</font> </p>
+
+
+  <p> <a name="1025232"> </a><font >Because you started the local J2EE server 
+    before you started the deploytool, the server, named <code>localhost</code>, 
+    probably appears in the tree under <code>Servers</code>. If it does not, do 
+    the following.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025233"> </a>From the File menu, choose Add Server.</font>
+    <li  value="2"><font ><a name="1025234"> </a>In the Add Server dialog box, enter 
+      <code>localhost</code> in the Server Name field.</font> 
+    <font ><li  value="3"><a name="1025235"> </a>Click OK.</font>
+</ol>
+
+  <p> <a name="1025236"> </a><font >The <code>localhost</code> node appears under 
+    <code>Servers</code> in the tree view.</font> </p>
+
+<h4>
+  <a name="1025245"> </a><font color="#666699" >10.4.2&nbsp;&nbsp; Deploying the Applications</font>
+</h4>
+
+
+  <p> <a name="1025246"> </a><font >To deploy the <code>MultiApp</code> application, 
+    perform the following steps.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1027428"> </a>In the tree view, select the <code>MultiApp</code> 
+      application. </font> 
+    <li  value="2"><font ><a name="1025248"> </a>From the Tools menu, choose Deploy. </font>
+    <li  value="3"><font ><a name="1025249"> </a>In the Introduction dialog box, 
+      verify that the Object to Deploy selection is <code>MultiApp</code>, and 
+      select <code>localhost</code> as the Target Server. </font> 
+    <li  value="4"><font ><a name="1025250"> </a>Click Next.</font>
+  <li  value="5"><font ><a name="1025251"> </a>In the JNDI Names dialog box, verify that the JNDI names are correct.</font>
+  <li  value="6"><font ><a name="1025252"> </a>Click Next.</font>
+  <li  value="7"><font ><a name="1025253"> </a>Click Finish.</font>
+  <li  value="8"><font ><a name="1025254"> </a>In the Deployment Progress dialog box, click OK when the "Deployment of MultiApp is complete" message appears.</font>
+  <font >
+    <li  value="9"><a name="1025255"> </a>In the tree view, expand <code>Servers</code> 
+      and select the host name. Verify that <code>MultiApp</code> is deployed.
+    </font>
+</ol>
+
+  <p> <a name="1027437"> </a><font >To deploy the <code>ReplyBeanApp</code> application 
+    on the local server, perform the following steps.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1027438"> </a>In the tree view, select the <code>ReplyBeanApp</code> 
+      application. </font> 
+    <li  value="2"><font ><a name="1027439"> </a>From the Tools menu, choose Deploy. </font>
+    <li  value="3"><font ><a name="1027440"> </a>In the Introduction dialog box, 
+      verify that the Object to Deploy selection is <code>ReplyBeanApp</code>, 
+      and select the local server as the Target Server.</font> 
+    <li  value="4"><font ><a name="1027441"> </a>Click Next.</font>
+  <li  value="5"><font ><a name="1027442"> </a>In the JNDI Names dialog box, verify that the JNDI names are correct.</font>
+  <li  value="6"><font ><a name="1027443"> </a>Click Next.</font>
+  <li  value="7"><font ><a name="1027444"> </a>Click Finish.</font>
+  <li  value="8"><font ><a name="1027445"> </a>In the Deployment Progress dialog box, click OK when the "Deployment of ReplyBeanApp is complete" message appears.</font>
+  <font >
+    <li  value="9"><a name="1027446"> </a>In the tree view, expand <code>Servers</code> 
+      and select the host name. Verify that <code>ReplyBeanApp</code> is deployed.
+    </font>
+  <li><a name="1033983"> </a><font >Repeat steps 1&#150;9 for the remote server, selecting the remote server as the Target Server in step 3.</font>
+</ol>
+
+<h4>
+  <a name="1025304"> </a><font color="#666699" >10.4.3&nbsp;&nbsp; Running the Client</font>
+</h4>
+
+
+<p>
+  <a name="1026916"> </a><font >To run the client, perform the following steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1026919"> </a>At a command line prompt on the local system, enter the following:</font>
+<pre>
+runclient -client MultiApp.ear -name MultiAppServerRequester -textauth
+</pre>
+    <li  value="2"><font ><a name="1026921"> </a>At the login prompts, enter <code>j2ee</code> 
+      as the user name and <code>j2ee</code> as the password. </font> 
+    <font ><li  value="3"><a name="1026922"> </a>Click OK.</font>
+</ol>
+
+<p>
+  <a name="1026923"> </a><font >The client program runs in the command window. Output from the message-driven beans appears on both the local and the remote systems, in the windows in which you started each J2EE server. </font>
+</p>
+
+<h4>
+  <a name="1026930"> </a><font color="#666699" >10.4.4&nbsp;&nbsp; Undeploying the Applications</font>
+</h4>
+
+
+<p>
+  <a name="1025368"> </a><font >To undeploy the J2EE applications, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025369"> </a>In the tree view, select <code>localhost</code> 
+      under Servers.</font> 
+    <li  value="2"><font ><a name="1025370"> </a>Select <code>MultiApp</code> 
+      in the Deployed Objects area.</font> 
+    <li  value="3"><font ><a name="1025371"> </a>Click Undeploy. </font>
+  <li  value="4"><font ><a name="1025372"> </a>Answer Yes in the confirmation dialog.</font>
+  <font >
+    <li  value="5"><a name="1027533"> </a>Repeat steps 1&#150;4 for <code>ReplyBeanApp</code> 
+      on both the local and the remote servers.
+    </font>
+</ol>
+
+<h4>
+  <a name="1025387"> </a><font color="#666699" >10.4.5&nbsp;&nbsp; Removing the Applications and Stopping the Servers</font>
+</h4>
+
+
+<p>
+  <a name="1025392"> </a><font >To remove the applications from the deploytool, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025393"> </a>Select <code>MultiApp</code> in 
+      the tree view.</font> 
+    <li  value="2"><font ><a name="1025394"> </a>Select Close from the File menu.</font>
+  <font >
+    <li  value="3"><a name="1027534"> </a>Repeat these steps for <code>ReplyBeanApp</code>.
+    </font>
+</ol>
+
+<p>
+  <a name="1025411"> </a><font >To delete the connection factory you created, enter the following at a command line prompt on the local system:</font>
+</p>
+
+<pre>
+j2eeadmin -removeJmsFactory jms/RemoteTCF
+</pre>
+
+<p>
+  <a name="1026985"> </a><font >To stop the J2EE servers, use the following command on each system:</font>
+</p>
+
+<pre>
+j2ee -stop
+</pre>
+
+<p>
+  <a name="1026989"> </a><font >To exit the deploytool, choose Exit from the File menu.</font>
+</p>
+
+<h3>
+  <a name="1034912"> </a><font color="#666699" >10.5&nbsp;&nbsp; Accessing a J2EE Application from a Remote System that Is Not Running a J2EE Server</font>
+</h3>
+
+
+  <p> <a name="1034920"> </a><font >To run an application installed on a J2EE server 
+    from a system that is not running a J2EE server, you perform tasks similar 
+    to those described in <a href="client.html#1056129">Section 4.4.2, "Communicating 
+    Between a J2EE Server and a System Not Running a J2EE Server."</a> Again, 
+    the J2EE SDK must be installed on both systems. You may also want to use the 
+    <code>runclient</code> command to run an application client installed on a 
+    remote system. </font> </p>
+
+
+<p>
+  <a name="1034953"> </a><font >This section describes both of these situations:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1034946">Accessing a J2EE application from a standalone client</a></font>
+  <font >
+    <li ><a href="#1035056">Using <code>runclient</code> to access a remote application 
+      client</a>
+    </font>
+</ul>
+
+<h4>
+  <a name="1034946"> </a><font color="#666699" >10.5.1&nbsp;&nbsp; Accessing a J2EE Application from a Standalone Client</font>
+</h4>
+
+
+  <p> <a name="1034951"> </a><font >You can run a standalone client that uses 
+    messages to communicate with a J2EE application. For example, you can use 
+    the deploytool to deploy the <code>ReplyBeanApp</code> application on a system 
+    running the J2EE server, then use a standalone client to publish messages 
+    to the topic that the <code>ReplyMsgBean</code> is listening on and receive 
+    replies on a temporary topic.</font> </p>
+
+
+  <p> <a name="1034959"> </a><font >For example, suppose that the <code>ReplyBeanApp</code> 
+    application is deployed on the server running on the system <code>earth</code>, 
+    and suppose that the standalone client is named <code>PubSub</code> and will 
+    run on the system <code>mars</code>. <a href="j2eeapp4.html#1035061">Section 
+    10.5.1.1</a> shows the client program.</font> </p>
+
+
+<p>
+  <a name="1036904"> </a><font >To specify the remote system on the command line, you use a command line just like the one in <a href="client.html#1056129">Section 4.4.2</a> (you do so after setting your environment variables as shown in <a href="client.html#1025256">Table 4.1</a>).</font>
+</p>
+
+<ul>
+  <li ><font ><a name="1035035"> </a>On a Microsoft Windows system, type the following command:</font>
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties -Dorg.omg.CORBA.ORBInitialHost=earth PubSub jms/Topic
+</pre>
+  <li ><font ><a name="1035037"> </a>On a UNIX system, type the following command:</font>
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties -Dorg.omg.CORBA.ORBInitialHost=earth PubSub jms/Topic
+</pre>
+</ul>
+
+  <p> <a name="1035009"> </a><font >If all the remote applications you need to 
+    access are deployed on the same server, you can edit the file <code>%J2EE_HOME%\config\orb.properties</code> 
+    (on Microsoft Windows systems) or <code>$J2EE_HOME/config/orb.properties</code> 
+    (on UNIX systems) on the local system. The second line of this file looks 
+    like this:</font> </p>
+
+<pre>
+host=localhost
+</pre>
+
+  <p> <a name="1035011"> </a><font >Change <code>localhost</code> to the name 
+    of the system on which the remote applications are deployed (for example, 
+    <code>earth</code>):</font> </p>
+
+<pre>
+host=earth
+</pre>
+
+  <p> <a name="1035051"> </a><font >You can now run the client program as before, 
+    but you do not need to specify the option <code>-Dorg.omg.CORBA.ORBInitialHost</code>. 
+    </font> </p>
+
+<h5>
+  <a name="1035061"> </a><i><font color="#666699" >10.5.1.1&nbsp;&nbsp; The Sample Client Program: <code>PubSub.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1049898"> </a><font >The sample client program <a href="../examples/multi_server/PubSub.java"><code>PubSub.java</code></a> 
+    can publish messages to a topic that the <code>ReplyMsgBean</code> is listening 
+    on and receive the message bean's replies.</font> </p>
+
+<h4>
+  <a name="1035056"> </a><font color="#666699" >10.5.2&nbsp;&nbsp; Using <code>runclient</code> to Access a Remote Application Client</font>
+</h4>
+
+
+  <p> <a name="1036953"> </a><font >If you need to run a J2EE application that 
+    contains an application client and that is deployed on a remote system, you 
+    can use the <code>runclient</code> command to do so. For example, if you deploy 
+    both <code>ReplyBeanApp</code> and <code>MultiApp</code> on the server running 
+    on <code>earth</code>, the steps are as follows.</font> </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1036964"> </a>Make sure that the <code>multi_server</code> 
+      directory on <code>earth</code> is accessible to you via the file system 
+      so that the <code>runclient</code> command can find it.</font> 
+    <li  value="2"><font ><a name="1037038"> </a>Follow the instructions in <a href="j2eeapp4.html#1024488">Section 
+      10.3.2, "Creating a Connection Factory,"</a> and create on <code>mars</code> 
+      a connection factory that will refer to the corresponding connection factory 
+      on <code>earth</code>.</font> 
+    <li  value="3"><font ><a name="1036947"> </a>Set the <code>host</code> property 
+      in the <code>orb.properties</code> file in the J2EE SDK on <code>mars</code>, 
+      as described in <a href="j2eeapp4.html#1034946">Section 10.5.1</a>, because 
+      the <code>runclient</code> command does not allow you to specify the <code>ORBInitialHost</code> 
+      value:</font> 
+      <pre>
+host=earth
+</pre>
+    <li  value="4"><font ><a name="1036931"> </a>Go to the <code>multi_server</code> 
+      directory on <code>earth</code>--or specify the complete path to the <code>MultiApp.ear</code> 
+      file--and issue the <code>runclient</code> command:</font> 
+      <pre>
+runclient -client MultiApp.ear -name MultiAppServerRequester -textauth
+</pre>
+</ol>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="j2eeapp3.html">Prev</a> |
+  <a href="client_samples.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

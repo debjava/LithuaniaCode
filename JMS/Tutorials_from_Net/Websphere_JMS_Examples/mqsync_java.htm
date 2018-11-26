@@ -1,0 +1,237 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0068)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqsync.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2006  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqsync                                                    */
+/*                                                                         */
+/* Description: Sample java program that shows WebSphere MQ syncpointing   */
+/*              of messages during put requests                            */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program is a modified version of the mqsync.c program that can    */
+/*  be found on the WebSphere MQ sample code section of the web at:        */
+/*                                                                         */
+/*    http://www.developer.ibm.com/tech/sampmq.html                        */
+/*                                                                         */
+/*  This program is a java version and shows the use of the java objects   */
+/*  and methods to put messages in syncpoint by checking the message       */
+/*  buffer for the following text:                                         */
+/*                                                                         */
+/*      SYNC or sync: the message is to be put in syncpoint                */
+/*      CMIT or cmit: the syncpointed messages are to be committed         */
+/*      BACK or back: the syncpointed messages are to be backed out        */
+/*                                                                         */
+/* The text must be in all upper case or all lower case and can be found   */
+/* any where in the message text.                                          */
+/*                                                                         */
+/* If both backout and commit are specified, the backout will be done.     */
+/* The best way to run this program is in conjunction with the amqsget     */
+/* sample program.  The mqsync program can be run in one window while      */
+/* the amqsget program can be run in another.  The mqsync program can      */
+/* be run as follows:                                                      */
+/*                                                                         */
+/*     java mqsync SYSTEM.DEFAULT.LOCAL.QUEUE                              */
+/*     message 1                                                           */
+/*     message 2 SYNC                                                      */
+/*     message 3                                                           */
+/*     message 4 sync                                                      */
+/*     message 5 cmit                                                      */
+/*     message 6 sync                                                      */
+/*     message 7                                                           */
+/*     message 8 back                                                      */
+/*     message 9                                                           */
+/*                                                                         */
+/* The amqsget program would then run as follows:                          */
+/*                                                                         */
+/*     amqsget SYSTEM.DEFAULT.LOCAL.QUEUE                                  */
+/*     message 1                                                           */
+/*     message 3                                                           */
+/*     message 5 cmit                 shows up here because not in sync    */
+/*     message 2 SYNC                                                      */
+/*     message 4 sync                                                      */
+/*     message 7                                                           */
+/*     message 8 back                 this caused message 6 to be disarded */
+/*     message 9                                                           */
+/*                                                                         */
+/* This program has been tested with WebSphere MQ V6.0.1.0 and Java 1.5.0. */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/*  mqsync has 2 parameters:                                               */
+/*    queue name (required)                                                */
+/*    queue manager name (optional)                                        */
+/*                                                                         */
+/***************************************************************************/
+import com.ibm.mq.*;            // Include the MQ package
+import java.io.*;
+import java.lang.*;
+
+public class mqsync {
+
+   private MQQueueManager qMgr;
+   private boolean bSyncPoint = false;
+
+   public static void main (String args[]) throws IOException {
+        /****************************************************************/
+        /* Check to make sure that at least the queue name was entered. */
+        /****************************************************************/
+        /* Note: By passing in command line arguments in this fashion,  */
+        /* this program strays from the 100% Pure Java philosophy (not  */
+        /* all OSs allow for arguments).  However, the purpose of this  */
+        /* program is to show the use of the WebSphere MQ syncpoint not */
+        /* the use of Java argument passing.                            */
+        /****************************************************************/
+        if (args.length &lt; 1) {
+           System.out.println("Required parameter missing - queue name");
+        } else {
+           System.out.println("Use SYNC or sync in message text for syncpoint'ed message");
+           System.out.println("Use CMIT or cmit in message text to commit messages");
+           System.out.println("Use BACK or back in message text to backout (discard) messages");
+           mqsync mySample = new mqsync();
+           mySample.init();
+           mySample.start(args);
+        }
+        System.exit(0);
+   }
+
+   /**********************************************************/
+   /* This program doesn't have any specific initialization. */
+   /* If it did, it could go here.                           */
+   /**********************************************************/
+   public void init() {
+   }
+
+   public void start(String args[]) {
+      try {
+
+
+         /******************************************************/
+         /* Create a queue manager object and access the queue */
+         /* that will be used for the putting of messages.     */
+         /******************************************************/
+         if (args.length &gt; 1) {
+            qMgr = new MQQueueManager(args[1]);
+         } else {
+            qMgr = new MQQueueManager("");
+         }
+         int openOptions = MQC.MQOO_OUTPUT;
+
+         MQQueue myQueue = qMgr.accessQueue(args[0], openOptions,
+                                            null, null, null);
+
+         /*****************************************/
+         /* Set up a reader to get the user input */
+         /*****************************************/
+         InputStreamReader isr = new InputStreamReader(System.in);
+         BufferedReader br     = new BufferedReader(isr);
+         String runShow;
+
+         /********************************************/
+         /* As long as the user keeps entering data, */
+         /* process it...                            */
+         /********************************************/
+         do {
+            runShow = br.readLine();
+
+            /************************************/
+            /* See if the user entered anything */
+            /************************************/
+            if (runShow.length() &gt; 0) {
+
+               /****************************************************/
+               /* Set up a new message with a format of string and */
+               /* write the user input to it.                      */
+               /****************************************************/
+               MQMessage myMessage = new MQMessage();
+               myMessage.writeString(runShow);
+               myMessage.format = MQC.MQFMT_STRING;
+
+               /***************************************************************/
+               /* See if the message text contains SYNC or sync.  If it does, */
+               /* turn the pmo syncpoint option to on.                        */
+               /***************************************************************/
+               MQPutMessageOptions pmo = new MQPutMessageOptions();
+               if (   (runShow.indexOf("SYNC") &gt; 0)
+                   || (runShow.indexOf("sync") &gt; 0) ) {
+                  pmo.options = pmo.options | MQC.MQPMO_SYNCPOINT;
+                  bSyncPoint = true;
+               } else {
+                  pmo.options = pmo.options | MQC.MQPMO_NO_SYNCPOINT;
+               }
+
+               myQueue.put(myMessage, pmo);
+
+               /*************************************************************/
+               /* See if the message text indicates to back out or commit   */
+               /* the syncpointed messages.  The message has already been   */
+               /* put on the message queue.                                 */
+               /*************************************************************/
+               if (   (runShow.indexOf("BACK") &gt;= 0)
+                   || (runShow.indexOf("back") &gt;= 0) ) {
+                  qMgr.backout();
+                  bSyncPoint = false;
+               } else if (   (runShow.indexOf("CMIT") &gt;= 0)
+                          || (runShow.indexOf("cmit") &gt;= 0) ) {
+                  qMgr.commit();
+                  bSyncPoint = false;
+               }
+            }
+
+         } while (runShow.length() &gt; 0) ;
+
+         /********************************************************************/
+         /* If the syncpoint flag is on, then a message was put in syncpoint */
+         /* without ever committing it.  The message will be committed now.  */
+         /********************************************************************/
+         if (bSyncPoint) {
+            System.out.println("Syncpoint not done in loop, performing now");
+            qMgr.commit();
+         }
+
+         /**********************************************************/
+         /* Before the program ends, the open queue will be closed */
+         /* and the queue manager will be disconnected.            */
+         /**********************************************************/
+         myQueue.close();
+         qMgr.disconnect();
+      }
+      catch (MQException ex) {
+         System.out.println("An MQ error occurred: " + ex.completionCode + " " +
+                            ex.reasonCode);
+      }
+      catch (java.io.IOException ex) {
+         System.out.println("Java exception: " + ex);
+      }
+   }
+
+}
+</PRE></BODY></HTML>

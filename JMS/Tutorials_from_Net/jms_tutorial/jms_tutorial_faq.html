@@ -1,0 +1,218 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+
+	<TITLE>Java(TM) Message Service API - Tutorial FAQ</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000">
+
+<P>
+<FONT SIZE="+2">Java<SUP><FONT SIZE="-2">TM</FONT></SUP> Message Service 
+Tutorial</FONT>
+<BR>
+<FONT SIZE="+2">FREQUENTLY ASKED QUESTIONS</FONT></P>
+
+<P>
+When you first run the tutorial examples, you may encounter problems that are
+related to setting up your environment. Here are some commonly encountered
+runtime errors and the likely cause for each.
+</P>
+
+<P> <A NAME="tut_ques">
+<FONT SIZE="+1"><STRONG>Errors</STRONG></FONT></A>
+</P>
+<OL>
+<LI><A HREF="#SerialContext"><CODE>Can't find SerialContextProvider</CODE>
+</A></LI>
+<LI><A HREF="#InitContext"><CODE>SEVERE JMSInitialContext: Unable to get internal JNDI context</CODE>
+</A></LI>
+<LI><A HREF="#NameNotFound"><CODE>javax.naming.NameNotFoundException: MyQueueConnectionFactory not found</CODE>
+</A></LI>
+<LI><A HREF="#Marshal"><CODE>java.rmi.MarshalException</CODE>
+</A></LI>
+<LI><A HREF="#NoInitContext"><CODE>javax.naming.NoInitialContextException</CODE>
+</A></LI>
+<LI><A HREF="#NoPackage"><CODE>package javax.jms does not exist</CODE>
+</A></LI>
+<LI><A HREF="#NoJmsService"><CODE>SEVERE ConnectionFactoryImpl: Failed to lookup or connect to JMS service</CODE>
+</A></LI>
+<LI><A HREF="#NoClassDefFound"><CODE>java.lang.NoClassDefFoundError</CODE>
+</A></LI>
+</OL>
+</P>
+<P> <HR> </P>
+
+<P> <FONT SIZE="+1"><STRONG>Answers</STRONG></FONT>
+</P>
+<OL>
+<LI>
+<P><A NAME="SerialContext"><CODE>Can't find SerialContextProvider</CODE></A>
+</P>
+<P>
+<B>Error detail:</B>
+<PRE>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueSender MyQueue 3
+Queue name is MyQueue
+JNDI lookup failed: javax.naming.CommunicationException: Can't find SerialContextProvider
+</PRE>
+<B>Likely cause:&nbsp;</B> The Java<FONT SIZE="-2"><SUP>TM</SUP></FONT> 2,
+Enterprise Edition (J2EE<FONT SIZE="-2"><SUP>TM</SUP></FONT>) server is not 
+running. Use the command <CODE>j2ee -verbose</CODE> to start the server.
+</P>
+</LI>
+<LI>
+<P><A NAME="InitContext"><CODE>SEVERE JMSInitialContext: Unable to get internal JNDI context</CODE></A>
+</P>
+<P>
+<B>Error detail:</B>
+<PRE>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueSender MyQueue 3
+Queue name is MyQueue
+SEVERE JMSInitialContext: Unable to get internal JNDI context because: 
+javax.naming.CommunicationException: Cannot connect to ORB [Root exception is 
+org.omg.CORBA.COMM_FAILURE:   minor code: 1398079689  completed: No]
+</PRE>
+<B>Likely cause:&nbsp;</B> You made some error in specifying the client 
+properties file.  For example, you may have used Microsoft Windows syntax on a 
+UNIX&#174; system, or vice versa.  Also, make sure that you have specified the 
+correct path to the <CODE>jms_client.properties</CODE> file, including the 
+<CODE>config</CODE> directory.
+</P>
+</LI>
+<LI>
+<P><A NAME="NameNotFound"><CODE>javax.naming.NameNotFoundException: MyQueueConnectionFactory not found</CODE></A>
+</P>
+<P> 
+<B>Error detail:</B>
+<PRE>
+runclient -client MDBApp.ear -name SimpleClient
+
+Initiating login ...
+Binding name:`java:comp/env/jms/QueueName `
+Binding name:`java:comp/env/jms/MyQueueConnectionFactory `
+JNDI lookup failed: javax.naming.NameNotFoundException: MyQueueConnectionFactory not found
+Unbinding name:`java:comp/env/jms/QueueName `
+Unbinding name:`java:comp/env/jms/MyQueueConnectionFactory `
+</PRE>
+<B>Likely cause:&nbsp;</B> Notice in the above output that there is an extra 
+space after <CODE>QueueName</CODE> and <CODE>MyQueueConnectionFactory</CODE>, 
+before the closing single quote. If you pasted these names in with the extra 
+space, the J2EE SDK 1.3 deploytool regards the extra space as part of the name. 
+Use the Resource Refs tabbed pane to delete the extra space, then save the 
+application and deploy it again. This problem no longer occurs if you use the 
+J2EE SDK 1.3.1 deploytool.
+</P>
+</LI>
+<LI>
+<P><A NAME="Marshal"><CODE>java.rmi.MarshalException</CODE></A>
+</P>
+<P>
+<A NAME="Marshal"> 
+<B>Error detail:</B>
+<PRE>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueSender MyQueue 3
+Queue name is MyQueue
+JNDI lookup failed: javax.naming.CommunicationException: java.rmi.MarshalException:
+CORBA MARSHAL 1398079699 Maybe; nested exception is:
+    org.omg.CORBA.MARSHAL: Unable to read value from underlying bridge :   
+minor code: 1398079699 completed: Maybe
+org.omg.CORBA.MARSHAL: Unable to read value from underlying bridge :   
+minor code: 1398079699 completed: Maybe
+    at com.sun.corba.ee.internal.iiop.CDRInputStream_1_0.read_value(CDRInputStream_1_0.java:923)
+</PRE>
+<B>Likely cause:&nbsp;</B> The version of the Java 2, Standard Edition 
+(J2SE<FONT SIZE="-2"><SUP>TM</SUP></FONT>) SDK used to run the program is 
+probably not the same version of the J2SE SDK that the J2EE server is using. 
+Make sure that the same version of the J2SE SDK is being used for both.
+</P>
+</LI>
+<LI>
+<P><A NAME="NoInitContext"><CODE>javax.naming.NoInitialContextException</CODE></A>
+</P>
+<P> 
+<B>Error detail:</B>
+<PRE>
+JNDI lookup failed: javax.naming.NoInitialContextException: Need to specify class name in
+environment or system property, or as an applet parameter, or in an application resource file:  
+java.naming.factory.initial
+</PRE>
+<B>Likely cause:&nbsp;</B> If you installed a new version of the J2SE SDK 
+without first removing the previous one, this problem and others can result.
+</P>
+</LI>
+<LI>
+<P><A NAME="NoPackage"><CODE>package javax.jms does not exist</CODE></A>
+</P>
+<P>
+<B>Error detail:</B>
+<PRE>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueSender MyQueue 3
+SimpleQueueSender.java:18: package javax.jms does not exist
+import javax.jms.*;
+^
+SimpleQueueSender.java:32: cannot resolve symbol
+symbol  : class QueueConnectionFactory
+location: class SimpleQueueSender
+        QueueConnectionFactory  queueConnectionFactory = null;
+</PRE>
+<B>Likely cause:&nbsp;</B> Either the <CODE>CLASSPATH</CODE> variable was 
+not set correctly, or the J2EE SDK was not correctly installed.  Make sure 
+that <CODE>j2sdkee1.3.1/lib/j2ee.jar</CODE> is in your classpath, and that 
+the file exists on your system.
+</P>
+</LI>
+<LI>
+<P><A NAME="NoJmsService"><CODE>SEVERE ConnectionFactoryImpl: Failed to lookup or connect to JMS service</CODE></A>
+</P>
+<P>
+<B>Error detail:</B>
+<PRE>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties SimpleQueueSender MyQueue 3
+Queue name is MyQueue
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+SEVERE ConnectionFactoryImpl: Failed to lookup or connect to JMS service because: 
+javax.naming.CommunicationException: Cannot connect to ORB [Root exception is
+org.omg.CORBA.COMM_FAILURE:   minor code: 1398079696 completed: Maybe]
+SEVERE ConnectionFactoryImpl: Failed to lookup or connect to JMS service because:
+javax.naming.CommunicationException: Cannot connect to ORB [Root exception is
+org.omg.CORBA.COMM_FAILURE:   minor code: 1398079696 completed: Maybe]
+Exception in thread "main" java.lang.NullPointerException
+    at com.sun.jms.client.ConnectionImpl.invokeRemoteCreateConnection(ConnectionImpl.java:149)
+    at com.sun.jms.ConnectionFactoryImpl.createConnection(ConnectionFactoryImpl.java:293)
+    at com.sun.jms.QueueConnectionFactoryImpl.createQueueConnection
+      (QueueConnectionFactoryImpl.java:77)
+    at com.sun.jms.QueueConnectionFactoryImpl.createQueueConnection
+      (QueueConnectionFactoryImpl.java:58)
+    at com.sun.enterprise.jms.ConnectionFactoryWrapperStandalone.createQueueConnection
+      (ConnectionFactoryWrapperStandalone.java:44)
+    at SimpleQueueSender.main(SimpleQueueSender.java:89)
+</PRE>
+<B>Likely cause:&nbsp;</B> If you get this error when you try to access a
+remote connection factory, as described in Section 4.4, "Running JMS Client 
+Programs on Multiple Systems," make sure the J2EE server is running on the
+remote system.
+</P>
+</LI>
+<LI>
+<P>
+<A NAME="NoClassDefFound"><CODE>java.lang.NoClassDefFoundError</CODE></A>
+</P>
+<P>
+<B>Error detail:</B>
+<PRE>
+java -Djms.properties=%J2EE_HOME%\jms_client.properties SimpleQueueSender MyQueue 3
+Exception in thread "main" java.lang.NoClassDefFoundError: SimpleQueueSender
+</PRE>
+<B>Likely cause:&nbsp;</B> You may have forgotten to include the current 
+directory (<CODE>.</CODE>) in your classpath.
+</P>
+</LI>
+</OL>
+<hr>
+<font size="-2"> 
+<p><a href="doc/copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</BODY>
+</HTML>

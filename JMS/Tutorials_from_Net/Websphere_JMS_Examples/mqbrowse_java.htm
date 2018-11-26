@@ -1,0 +1,193 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqbrowse.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2000  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqbrowse                                                  */
+/*                                                                         */
+/* Description: Sample java program that shows MQSeries browsing/getting   */
+/*              of messages on a queue                                     */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*  This program is a java program that shows the use of a browse message  */
+/*  cursor for looking at messages before actually getting them.  In       */
+/*  order to run the program, messages must already exist on the queue.    */
+/*                                                                         */
+/*  The program will browse a message and then ask if the message should   */
+/*  actually be retrieved.  Any test string with a 'Y' or a 'y' will be    */
+/*  taken as a yes and the message will be retrieved.                      */
+/*                                                                         */
+/*  The program can be run as follows                                      */
+/*                                                                         */
+/*     java mqbrowse SYSTEM.DEFAULT.LOCAL.QUEUE                            */
+/*                                                                         */
+/* This program has been tested with MQSeries V5.1 and JDK 1.1.7.          */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/*  mqbrowse has 2 parameters:                                             */
+/*    queue name (required)                                                */
+/*    queue manager name (optional)                                        */
+/*                                                                         */
+/***************************************************************************/
+import com.ibm.mq.*;            // Include the MQ package
+import java.io.*;
+import java.lang.*;
+
+public class mqbrowse {
+
+   private MQQueueManager qMgr;
+
+   public static void main (String args[]) throws IOException {
+        /****************************************************************/
+        /* Check to make sure that at least the queue name was entered. */
+        /****************************************************************/
+        /* Note: By passing in command line arguments in this fashion,  */
+        /* this program strays from the 100% Pure Java philosophy (not  */
+        /* all OSs allow for arguments).  However, the purpose of this  */
+        /* program is to show the use of the MQSeries browsing not the  */
+        /* use of Java argument passing.                                */
+        /****************************************************************/
+        if (args.length &lt; 1) {
+           System.out.println("Required parameter missing - queue name");
+        } else {
+           System.out.println("mqbrowse: browse and optionally get messages");
+           mqbrowse mySample = new mqbrowse();
+           mySample.init();
+           mySample.start(args);
+        }
+        System.exit(0);
+   }
+
+   /**********************************************************/
+   /* This program doesn't have any specific initialization. */
+   /* If it did, it could go here.                           */
+   /**********************************************************/
+   public void init() {
+   }
+
+   public void start(String args[]) {
+      try {
+
+         /******************************************************/
+         /* Create a queue manager object and access the queue */
+         /* that will be used for the putting of messages.     */
+         /******************************************************/
+         if (args.length &gt; 1) {
+            qMgr = new MQQueueManager(args[1]);
+         } else {
+            qMgr = new MQQueueManager("");
+         }
+         int openOptions = MQC.MQOO_INPUT_EXCLUSIVE | MQC.MQOO_BROWSE;
+
+         MQQueue myQueue = qMgr.accessQueue(args[0], openOptions,
+                                            null, null, null);
+
+         /*****************************************/
+         /* Set up a reader to get the user input */
+         /*****************************************/
+         InputStreamReader isr = new InputStreamReader(System.in);
+         BufferedReader br     = new BufferedReader(isr);
+         String runShow;
+
+         /******************************************************/
+         /* Set up our options to browse for the first message */
+         /******************************************************/
+         MQGetMessageOptions gmo = new MQGetMessageOptions();
+         gmo.options = MQC.MQGMO_WAIT | MQC.MQGMO_BROWSE_FIRST;
+         MQMessage myMessage = new MQMessage();
+
+         /***************************/
+         /* Set up a loop exit flag */
+         /***************************/
+         boolean done = false;
+         do {
+            try {
+               /*****************************************/
+               /* Reset the message and IDs to be empty */
+               /*****************************************/
+               myMessage.clearMessage();
+               myMessage.correlationId = MQC.MQCI_NONE;
+               myMessage.messageId = MQC.MQMI_NONE;
+ 
+               /**************************************************/
+               /* Browse the message, display it, and ask if the */
+               /* message should actually be gotten              */
+               /**************************************************/
+               myQueue.get(myMessage, gmo);
+               String msg = myMessage.readString(myMessage.getMessageLength()); 
+               System.out.println("Browsed message: " + msg);
+               System.out.println("Actually get message?");
+               runShow = br.readLine();
+               if (runShow.length() &gt; 0) {
+                  if (    (runShow.indexOf("Y") != -1) 
+                       || (runShow.indexOf("y") != -1) ) {
+                     System.out.println("Actually getting the message");
+                     gmo.options = MQC.MQGMO_MSG_UNDER_CURSOR;  
+                     myQueue.get(myMessage, gmo);
+                  }
+               }
+
+               /************************************************/
+               /* Reset the options to browse the next message */
+               /************************************************/
+               gmo.options = MQC.MQGMO_WAIT | MQC.MQGMO_BROWSE_NEXT;
+            } catch (MQException ex) {
+               /**************************************************/
+               /* Probably encountered our no message available: */
+               /* write out error and mark loop to be exited     */
+               /**************************************************/
+               System.out.println("MQ exception: CC = " + ex.completionCode 
+                                  + " RC = " + ex.reasonCode);
+               done = true;
+            } catch (java.io.IOException ex) {
+               System.out.println("Java exception: " + ex);
+               done = true;
+            }
+
+         } while (!done);
+
+
+         /**********************************************************/
+         /* Before the program ends, the open queue will be closed */
+         /* and the queue manager will be disconnected.            */
+         /**********************************************************/
+         myQueue.close();
+         qMgr.disconnect();
+      }
+      catch (MQException ex) {
+         System.out.println("MQ exception: CC = " + ex.completionCode 
+                            + " RC = " + ex.reasonCode);
+      }
+   }
+
+}
+</PRE></BODY></HTML>

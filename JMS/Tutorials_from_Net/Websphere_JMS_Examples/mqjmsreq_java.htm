@@ -1,0 +1,432 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(0070)http://www-304.ibm.com/jct01005c/isv/tech/sample_code/mq/mqjmsreq.java -->
+<HTML><HEAD>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252">
+<META content="MSHTML 6.00.2800.1619" name=GENERATOR></HEAD>
+<BODY><PRE>/***************************************************************************/
+/*                                                                         */
+/* (c) Copyright IBM Corp. 2005  All rights reserved.                      */
+/*                                                                         */
+/* This sample program is owned by International Business Machines         */
+/* Corporation or one of its subsidiaries ("IBM") and is copyrighted       */
+/* and licensed, not sold.                                                 */
+/*                                                                         */
+/* You may copy, modify, and distribute this sample program in any         */
+/* form without payment to IBM,  for any purpose including developing,     */
+/* using, marketing or distributing programs that include or are           */
+/* derivative works of the sample program.                                 */
+/*                                                                         */
+/* The sample program is provided to you on an "AS IS" basis, without      */
+/* warranty of any kind.  IBM HEREBY  EXPRESSLY DISCLAIMS ALL WARRANTIES,  */
+/* EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED   */
+/* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.     */
+/* Some jurisdictions do not allow for the exclusion or limitation of      */
+/* implied warranties, so the above limitations or exclusions may not      */
+/* apply to you.  IBM shall not be liable for any damages you suffer as    */
+/* a result of using, modifying or distributing the sample program or      */
+/* its derivatives.                                                        */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Program name: mqjmsreq                                                  */
+/*                                                                         */
+/* Description: Sample java program that acts as a requester program to    */
+/*              a server program.                                          */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* Function:                                                               */
+/*                                                                         */
+/*   This program acts as a requester in that it sends a message to a      */
+/*   server and expects to get a response back.  It can be run either by   */
+/*   specifying the actual queue that replies should come back to or by    */
+/*   letting the system use a model queue to build the reply queue.        */
+/*                                                                         */
+/* This program is run in one of two ways:                                 */
+/*                                                                         */
+/*     java mqjmsreq -icf ..... -url ... -qcf .... -s .... -r ....         */
+/*                                                                         */
+/* or                                                                      */
+/*                                                                         */
+/*     java mqjmsreq -icf ..... -url ... -qcf .... -s ....                 */
+/*                                                                         */
+/* where                                                                   */
+/*     -icf is the classname of the initial context factory.               */
+/*     -url is the JNDI location of the administered objects.              */
+/*     -qcf is the queue connection factory.                               */
+/*     -s   is the queue for the server program                            */
+/*     -r   is the specific queue to use for replies back to the requester */
+/*          If this parameter is not specified, the program will build a   */
+/*          dynamic queue from the model queue                             */
+/*                                                                         */
+/* It can also be run with an mqjmsreq.properties rather than using        */
+/* command line arguments.                                                 */
+/*                                                                         */
+/* This program is used best when run with the mqjmssrv sample program and */
+/* has been tested with WebSphere MQ V5.3 FixPack 8 and JDK 1.4.2.         */
+/*                                                                         */
+/***************************************************************************/
+/*                                                                         */
+/* The queue connection factory and queue parameters to this program need  */
+/* to be setup so that they can be found.  This is done via the JMS Admin- */
+/* istration tool that is described in the Using Java manual.  This        */
+/* program was tested using a file system context set up in a              */
+/* jmsadmin.config as follows:                                             */
+/*                                                                         */
+/*    INITIAL_CONTEXT_FACTORY=com.sun.jndi.fscontext.RefFSContextFactory   */
+/*    PROVIDER_URL=file:e://support//jms//sample                           */
+/*    SECURITY_AUTHENTICATION=none                                         */
+/*                                                                         */
+/* The actual JMSAdmin utility was run with the following definitions:     */
+/*                                                                         */
+/*    def qcf(sampleQCF) qmanager(bower1.qmgr) tempmodel(QUEUE.TEMP)       */
+/*    def q(qSrv) qu(QUEUE.SERVER)                                         */
+/*    def q(qReq) qu(QUEUE.REQUESTER)                                      */
+/*                                                                         */
+/* where QUEUE.SERVER, QUEUE.REQUESTER, and QUEUE.TEMP were created under  */
+/* under the bower1.qmgr using the runmqsc utility:                        */
+/*                                                                         */
+/*    def ql(QUEUE.SERVER)                                                 */
+/*    def ql(QUEUE.REQUESTER)                                              */
+/*    def qm(QUEUE.TEMP)                                                   */
+/*                                                                         */
+/* The actual program execution would then be:                             */
+/*                                                                         */
+/*    java mqjmsreq -icf com.sun.jndi.fscontext.RefFSContextFactory        */
+/*      -url file:e://support//jms//sample                                 */
+/*      -qcf sampleQCF                                                     */
+/*      -s   qSrv                                                          */
+/*      -r   qReq (this parameter is optional and specifies the actual     */
+/*                 name of a queue rather than using the model)            */
+/*                                                                         */
+/* An alternate method of running this program is to create a file named   */
+/* mqjmsreq.properties that contains the following:                        */
+/*                                                                         */
+/*   icf=com.sun.jndi.fscontext.RefFSContextFactory                        */
+/*   url=file:c://support//jms//sample                                     */
+/*   qcf=sampleQCF                                                         */
+/*   s=qSrv                                                                */
+/*   r=qReq                                                                */
+/*                                                                         */
+/***************************************************************************/
+
+import java.io.*;
+
+import javax.jms.*;
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.util.Hashtable;
+import java.util.Properties;
+
+public class mqjmsreq {
+
+	private static String icf = null;
+	private static String url = null;
+	private static String qcfLookup = null;
+	private static String qrLookup = null;
+	private static String qsLookup = null;
+
+	public mqjmsreq() {
+		url = System.getProperty("url");
+		icf = System.getProperty("icf");
+		qcfLookup = System.getProperty("qcf");
+		qrLookup = System.getProperty("r");
+		qsLookup = System.getProperty("s");
+
+		try {
+
+			Properties props = new Properties(System.getProperties());
+			props.load(
+				new BufferedInputStream(
+					new FileInputStream("mqjmsreq.properties")));
+			System.setProperties(props);
+		} catch (Exception e) {
+			System.out.println("Unable to read mqjmsreq.properties: ");
+			System.out.println("  " + e);
+		}
+
+		if (url == null) {
+			url = System.getProperty("url");
+		}
+		if (icf == null) {
+			icf = System.getProperty("icf");
+		}
+		if (qcfLookup == null) {
+			qcfLookup = System.getProperty("qcf");
+		}
+		if (qrLookup == null) {
+			qrLookup = System.getProperty("r");
+		}
+		if (qsLookup == null) {
+			qsLookup = System.getProperty("s");
+		}
+
+	}
+
+	public mqjmsreq(String[] args) {
+
+		this();
+
+		/**********************************/
+		/* Get the command-line arguments */
+		/**********************************/
+		for (int i = 0; i &lt; args.length; i++) {
+			String arg = args[i].toLowerCase();
+
+			if (arg.equals("-url")) {
+				if (i + 1 &lt; args.length) {
+					url = args[++i];
+				} else {
+					System.out.println("didn't specify url, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-icf")) {
+				if (i + 1 &lt; args.length) {
+					icf = args[++i];
+				} else {
+					System.out.println("didn't specify icf, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-qcf")) {
+				if (i + 1 &lt; args.length) {
+					qcfLookup = args[++i];
+				} else {
+					System.out.println("didn't specify qcf, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-s")) {
+				if (i + 1 &lt; args.length) {
+					qsLookup = args[++i];
+				} else {
+					System.out.println("didn't specify q, exiting");
+					return;
+				}
+
+			} else if (arg.equals("-r")) {
+				if (i + 1 &lt; args.length) {
+					qrLookup = args[++i];
+				} else {
+					System.out.println("didn't specify q, exiting");
+					return;
+				}
+
+			} else {
+				System.out.println("Unknown argument: " + arg);
+			}
+		}
+	}
+
+	public void myRequester() {
+		QueueConnectionFactory factory;
+		QueueConnection connection;
+		QueueSession session;
+		Queue srvQueue;
+		Queue reqQueue = null;
+		TemporaryQueue qTemp = null;
+		Destination dest;
+		QueueReceiver qReceiver = null;
+		QueueSender qSender = null;
+		Message msg;
+		Context ctx = null;
+		String replyString = null;
+		String myFilter = null;
+		String messageID = null;
+
+		System.out.println("mqjmsreq started...");
+
+		/**********************************/
+		/* Get the context factory.       */
+		/**********************************/
+		Hashtable environment = new Hashtable();
+		environment.put(Context.INITIAL_CONTEXT_FACTORY, icf);
+		environment.put(Context.PROVIDER_URL, url);
+		environment.put(Context.REFERRAL, "throw");
+		try {
+			ctx = new InitialDirContext(environment);
+		} catch (Exception e) {
+			System.err.println(
+				"Error during lookup of Context Factory " + e.getMessage());
+			System.err.println(e);
+			return;
+		}
+
+		/****************************************/
+		/* Lookup the queue connection factory. */
+		/****************************************/
+		try {
+			factory = (QueueConnectionFactory) ctx.lookup(qcfLookup);
+		} catch (Exception e) {
+			System.out.println(
+				"Error during lookup of Queue Connection Factory "
+					+ e.getMessage());
+			System.err.println(e);
+			return;
+		}
+
+		/****************************************/
+		/* Lookup the queue of the server.      */
+		/****************************************/
+		try {
+			srvQueue = (Queue) ctx.lookup(qsLookup);
+		} catch (Exception e) {
+			System.out.println(
+				"Error during lookup of server queue (-s)" + e.getMessage());
+			System.err.println(e);
+			return;
+		}
+
+		/***************************************************/
+		/* If a specific requestor queue was specified, it */
+		/* needs to be looked up now.                      */
+		/***************************************************/
+		if (qrLookup != null) {
+			try {
+				reqQueue = (Queue) ctx.lookup(qrLookup);
+			} catch (Exception e) {
+				System.out.println(
+					"Error during lookup requestor queue (-r)"
+						+ e.getMessage());
+				System.err.println(e);
+				return;
+			}
+		}
+
+		/****************************************/
+		/* Create objects, put message.         */
+		/****************************************/
+		try {
+			connection = factory.createQueueConnection();
+			connection.start();
+
+			boolean transacted = false;
+			session =
+				connection.createQueueSession(
+					transacted,
+					Session.AUTO_ACKNOWLEDGE);
+
+			TextMessage outMessage = session.createTextMessage();
+
+			/***********************************************/
+			/* See whether we are creating a queue based   */
+			/* on the -r parameter or by using a temporary */
+			/* queue from the qcf.                         */
+			/* Either way, we need to set the JMSReplyTo   */
+			/* so that it can be passed to the server as   */
+			/* the reply queue.                            */
+			/***********************************************/
+			if (qrLookup != null) {
+				outMessage.setJMSReplyTo(reqQueue);
+			} else {
+				qTemp = session.createTemporaryQueue();
+				outMessage.setJMSReplyTo(qTemp);
+			}
+
+			InputStreamReader isr = new InputStreamReader(System.in);
+			BufferedReader br = new BufferedReader(isr);
+			String sInput;
+
+			do {
+				System.out.println(
+					"Enter text to send to server, blank line to end");
+				sInput = br.readLine();
+				if (sInput.length() &gt; 0) {
+
+					/******************************************/
+					/* Put some text into the actual message. */
+					/******************************************/
+					outMessage.setText(sInput);
+
+					qSender = session.createSender(srvQueue);
+					qSender.send(outMessage);
+
+					/********************************************/
+					/* Wait for the reply message to come back. */
+					/* We're expecting a TextMessage.  If we    */
+					/* don't get one, we'll indicate it.        */
+					/********************************************/
+					messageID = outMessage.getJMSMessageID();
+					myFilter = "JMSCorrelationID = '" + messageID + "'";
+					if (qrLookup != null) {
+						qReceiver = session.createReceiver(reqQueue, myFilter);
+					} else {
+						qReceiver = session.createReceiver(qTemp, myFilter);
+					}
+
+					System.out.println("  Wait for reply msg...");
+					msg = qReceiver.receive(10000);
+					if (msg == null) {
+						System.out.println("No reply message retrieved");
+					} else {
+						if (msg instanceof TextMessage) {
+							replyString = ((TextMessage) msg).getText();
+						} else {
+							replyString = "Reply not text message";
+						}
+						System.out.println("  Server reply: " + replyString);
+					}
+					qReceiver.close();
+				}
+			} while (sInput.length() &gt; 0);
+
+			/*********************************************/
+			/* Make sure that all objects are closed and */
+			/* that the handles are set to null.         */
+			/*********************************************/
+			qSender.close();
+
+			session.close();
+			session = null;
+
+			connection.close();
+			connection = null;
+
+		} catch (JMSException je) {
+			/*******************************************/
+			/* Catch and display exception information */
+			/*******************************************/
+			System.out.println("JMSException: " + je);
+			Exception le = je.getLinkedException();
+			if (le != null)
+				System.out.println("Linked exception: " + le);
+
+		} catch (Exception e) {
+			/*******************************************/
+			/* Catch and display exception information */
+			/*******************************************/
+			System.out.println("Exception: " + e);
+		}
+
+		System.out.println("mqjmsreq finished.");
+	}
+
+	public static void main(String args[]) {
+		mqjmsreq app = new mqjmsreq(args);
+		/******************************************/
+		/* Check that all arguments were entered. */
+		/******************************************/
+		if ((icf == null)
+			|| (url == null)
+			|| (qcfLookup == null)
+			|| (qsLookup == null)) {
+			System.out.println("Usage:");
+			System.out.println(
+				"java mqjmsreq -icf ... -url ... -qcf ... -s ...");
+			System.out.println(
+				"where -icf is the classname of the initial context factory");
+			System.out.println(
+				"      -url is the JNDI location of the administered objects");
+			System.out.println("      -qcf is the queue connection factory");
+			System.out.println("      -s   is the server queue");
+			System.out.println("      -r   is the requester queue");
+			System.out.println(
+				" Note: If -r not specified, the model queue from the qcf will be used.");
+		} else {
+			app.myRequester();
+		}
+	}
+
+}
+</PRE></BODY></HTML>

@@ -1,0 +1,368 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:39 2002">
+<title>JMS Client Examples </title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="j2eeapp4.html">Prev</a> |
+    <a href="jms_tutorialIX.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="997552"> </a><font color="#666699" >A &nbsp;&nbsp; JMS Client Examples </font>
+</h1>
+
+
+  <p> <a name="1002342"> </a><font ><b>T</b>his appendix contains a number of 
+    sample programs that illustrate JMS API concepts and features. The samples 
+    are as follows:</font> </p>
+
+<ul>
+    <li ><font ><a href="#1002876"><code>DurableSubscriberExample.java</code></a>, 
+      a program that illustrates the use of durable subscriptions</font> 
+    <li ><font ><a href="#1022517"><code>TransactedExample.java</code></a>, a 
+      program that shows how to use transactions in standalone applications</font> 
+    <li ><font ><a href="#1019555"><code>AckEquivExample.java</code></a>, a program 
+      that illustrates acknowledgment modes</font> 
+    <font >
+    <li ><a href="#1006838"><code>SampleUtilities.java</code></a>, a utility class 
+      containing methods called by the other sample programs
+    </font>
+</ul>
+
+  <p> <a name="1008938"> </a><font >The programs are all self-contained threaded 
+    applications. The programs include producer and consumer classes that send 
+    and receive messages. If you downloaded the tutorial examples as described 
+    in the preface, you will find the examples for this chapter in the directory 
+    <code>jms_tutorial/examples/appendix</code> (on UNIX&#174; systems) or <code>jms_tutorial\examples\appendix</code> 
+    (on Microsoft Windows systems). You can compile and run the examples using 
+    the instructions in <a href="client.html">Chapter 4</a>. </font> </p>
+
+<h3>
+  <a name="1002876"> </a><font color="#666699" >A.1&nbsp;&nbsp; Durable Subscriptions</font>
+</h3>
+
+
+  <p> <a name="1002881"> </a><font >The <a href="../examples/appendix/DurableSubscriberExample.java"><code>DurableSubscriberExample.java</code></a> 
+    program shows how durable subscriptions work. It demonstrates that a durable 
+    subscription is active even when the subscriber is not active. The program 
+    contains a <code>DurableSubscriber</code> class, a <code>MultiplePublisher</code> 
+    class, a main method, and a method that instantiates the classes and calls 
+    their methods in sequence.</font> </p>
+
+
+<p>
+  <a name="1002896"> </a><font >The program begins like any publish/subscribe program: The subscriber starts, the publisher publishes some messages, and the subscriber receives them. At this point, the subscriber closes itself.  The publisher then publishes some messages while the subscriber is not active.  The subscriber then restarts and receives the messages. </font>
+</p>
+
+
+<p>
+  <a name="1002962"> </a><font >Before you run this program, create a connection factory with a client ID. You can use a command similar to the one shown in <a href="j2eeapp2.html#1040648">Section 8.2.3, "Creating a Connection Factory."</a> Then specify the connection factory name and the topic name on the command line when you run the program, as in the following sample command, for a Microsoft Windows system:</font>
+</p>
+
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties DurableSubscriberExample DurableTopicCF jms/Topic
+</pre>
+
+<p>
+  <a name="1008959"> </a><font >The output looks something like this:</font>
+</p>
+
+<pre>
+Connection factory name is DurableTopicCF
+Topic name is jms/Topic
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Starting subscriber
+PUBLISHER: Publishing message: Here is a message 1
+PUBLISHER: Publishing message: Here is a message 2
+PUBLISHER: Publishing message: Here is a message 3
+SUBSCRIBER: Reading message: Here is a message 1
+SUBSCRIBER: Reading message: Here is a message 2
+SUBSCRIBER: Reading message: Here is a message 3
+Closing subscriber
+PUBLISHER: Publishing message: Here is a message 4
+PUBLISHER: Publishing message: Here is a message 5
+PUBLISHER: Publishing message: Here is a message 6
+Starting subscriber
+SUBSCRIBER: Reading message: Here is a message 4
+SUBSCRIBER: Reading message: Here is a message 5
+SUBSCRIBER: Reading message: Here is a message 6
+Closing subscriber
+Unsubscribing from durable subscription
+</pre>
+
+<h3>
+  <a name="1022517"> </a><font color="#666699" >A.2&nbsp;&nbsp; Transactions</font>
+</h3>
+
+
+  <p> <a name="1022518"> </a><font >The <a href="../examples/appendix/TransactedExample.java"><code>TransactedExample.java</code></a><code> 
+    </code>program demonstrates the use of transactions in a JMS client application. 
+    The program represents a highly simplified e-Commerce application, in which 
+    the following things happen.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1022519"> </a>A retailer sends a message to the vendor order queue, ordering a quantity of computers, and  waits for the vendor's reply.</font>
+  <li  value="2"><font ><a name="1022520"> </a>The vendor receives the retailer's order message and places an order message into each of its suppliers' order queues, all in one transaction. This JMS transaction combines one synchronous receive with multiple sends.</font>
+    <li  value="3"><font ><a name="1022521"> </a>One supplier receives the order 
+      from its order queue, checks its inventory, and sends the items ordered 
+      to the destination named in the order message's <code>JMSReplyTo</code> 
+      field. If it does not have enough in stock, the supplier sends what it has. 
+      The synchronous receive and the send take place in one JMS transaction.</font> 
+    <li  value="4"><font ><a name="1022522"> </a>The other supplier receives the 
+      order from its order queue, checks its inventory, and sends the items ordered 
+      to the destination named in the order message's <code>JMSReplyTo</code> 
+      field. If it does not have enough in stock, the supplier sends what it has. 
+      The synchronous receive and the send take place in one JMS transaction.</font> 
+    <li  value="5"><font ><a name="1022523"> </a>The vendor receives the replies from the suppliers from its confirmation queue and updates the state of the order. Messages are processed by an asynchronous message listener; this step illustrates using JMS transactions with a message listener.</font>
+  <li  value="6"><font ><a name="1022524"> </a>When all outstanding replies are processed for a given order, the vendor sends a message notifying the retailer whether it can fulfill the order.</font>
+  <font ><li  value="7"><a name="1022525"> </a>The retailer receives the message from the vendor. </font>
+</ol>
+
+<p>
+  <a name="1031779"> </a><font ><a href="client_samples.html#1022534">Figure A.1</a> illustrates these steps.</font>
+</p>
+
+
+<a name="1031933"> </a><font ><div align="center"><img src="images/FigA.1.gif" border="0" hspace="0" vspace="0">
+</div><br></font>
+
+<a name="1022534"> </a><i>Figure A.1&nbsp;&nbsp; Transactions: JMS Client Example</i><br>
+
+
+  <p> <a name="1022535"> </a><font >The program contains five classes: <code>Retailer</code>, 
+    <code>Vendor</code>, <code>GenericSupplier</code>, <code>VendorMessageListener</code>, 
+    and <code>Order</code>. The program also contains a main method and a method 
+    that runs the threads of the <code>Retail</code>, <code>Vendor</code>, and 
+    two supplier classes.</font> </p>
+
+
+  <p> <a name="1022536"> </a><font >All the messages use the <code>MapMessage</code> 
+    message type. Synchronous receives are used for all message reception except 
+    for the case of the vendor processing the replies of the suppliers. These 
+    replies are processed asynchronously and demonstrate how to use transactions 
+    within a message listener.</font> </p>
+
+
+  <p> <a name="1022537"> </a><font >At random intervals, the <code>Vendor</code> 
+    class throws an exception to simulate a database problem and cause a rollback.</font> 
+  </p>
+
+
+  <p> <a name="1022538"> </a><font >All classes except <code>Retailer</code> use 
+    transacted sessions.</font> </p>
+
+
+  <p> <a name="1022539"> </a><font >The program uses five queues. Before you run 
+    the program, create the queues and name them <code>A</code>, <code>B</code>, 
+    <code>C</code>, <code>D</code> and <code>E</code>.</font> </p>
+
+
+<p>
+  <a name="1022540"> </a><font >When you run the program, specify on the command line the number of computers to be ordered. For example, on a Microsoft Windows system:</font>
+</p>
+
+<pre>
+java -Djms.properties=%J2EE_HOME%\config\jms_client.properties TransactedExample 3
+</pre>
+
+<p>
+  <a name="1022542"> </a><font >The output looks something like this:</font>
+</p>
+
+<pre>
+Quantity to be ordered is 3
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Retailer: ordered 3 computer(s)
+Vendor: JMSException occurred: javax.jms.JMSException: Simulated database concurrent access exception
+javax.jms.JMSException: Simulated database concurrent access 
+exception at TransactedExample$Vendor.run(TransactedExample.java:300)
+  Vendor: rolled back transaction 1
+Vendor: Retailer ordered 3 Computer(s)
+Vendor: ordered 3 Monitor(s)
+Vendor: ordered 3 Hard Drive(s)
+Hard Drive Supplier: Vendor ordered 3 Hard Drive(s)
+Hard Drive Supplier: sent 3 Hard Drive(s)
+  Vendor: committed transaction 1
+Monitor Supplier: Vendor ordered 3 Monitor(s)
+Monitor Supplier: sent 3 Monitor(s)
+  Hard Drive Supplier: committed transaction
+  Monitor Supplier: committed transaction
+Vendor: Completed processing for order 1
+Vendor: sent 3 computer(s)
+  Vendor: committed transaction 2
+Retailer: Order filled
+Retailer: placing another order
+Retailer: ordered 6 computer(s)
+Vendor: Retailer ordered 6 Computer(s)
+Vendor: ordered 6 Monitor(s)
+Vendor: ordered 6 Hard Drive(s)
+  Vendor: committed transaction 1
+Monitor Supplier: Vendor ordered 6 Monitor(s)
+Hard Drive Supplier: Vendor ordered 6 Hard Drive(s)
+Hard Drive Supplier: sent 6 Hard Drive(s)
+Monitor Supplier: sent 0 Monitor(s)
+  Monitor Supplier: committed transaction
+  Hard Drive Supplier: committed transaction
+Vendor: Completed processing for order 2
+Vendor: unable to send 6 computer(s)
+  Vendor: committed transaction 2
+Retailer: Order not filled
+</pre>
+
+<h3>
+  <a name="1019555"> </a><font color="#666699" >A.3&nbsp;&nbsp; Acknowledgment Modes</font>
+</h3>
+
+
+  <p> <a name="1019556"> </a><font >The <a href="../examples/appendix/AckEquivExample.java"><code>AckEquivExample.java</code></a> 
+    program shows how the following two scenarios both ensure that a message will 
+    not be acknowledged until processing of it is complete:</font> </p>
+
+<ul>
+    <li ><font ><a name="1019557"> </a>Using an asynchronous receiver--a message 
+      listener--in an <code>AUTO_ACKNOWLEDGE</code> session</font> 
+    <font >
+    <li ><a name="1019558"> </a>Using a synchronous receiver in a <code>CLIENT_ACKNOWLEDGE</code> 
+      session
+    </font>
+</ul>
+
+  <p> <a name="1019559"> </a><font >With a message listener, the automatic acknowledgment 
+    happens when the <code>onMessage</code> method returns--that is, after message 
+    processing has finished. With a synchronous receiver, the client acknowledges 
+    the message after processing is complete. (If you use <code>AUTO_ACKNOWLEDGE</code> 
+    with a synchronous receive, the acknowledgment happens immediately after the 
+    <code>receive</code> call; if any subsequent processing steps fail, the message 
+    cannot be redelivered.)</font> </p>
+
+
+  <p> <a name="1019561"> </a><font >The program contains a <code>SynchSender</code> 
+    class, a <code>SynchReceiver</code> class, an <code>AsynchSubscriber</code> 
+    class with a <code>TextListener</code> class, a <code>MultiplePublisher</code> 
+    class, a <code>main</code> method, and a method that runs the other classes' 
+    threads. </font> </p>
+
+
+<p>
+  <a name="1019562"> </a><font >The program needs two queues, a topic, and a connection factory with a client ID, similar to the one in the example in <a href="client_samples.html#1002876">Section A.1, "Durable Subscriptions."</a> You can use existing administered objects or create new ones. Edit the names at the beginning of the source file before compiling if you do not use the objects already specified. You can run the program with a command on one line similar to the following example for UNIX systems:</font>
+</p>
+
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties AckEquivExample
+</pre>
+
+<p>
+  <a name="1019567"> </a><font >The output looks like this:</font>
+</p>
+
+<pre>
+java -Djms.properties=$J2EE_HOME/config/jms_client.properties 
+
+AckEquivExample
+Queue name is controlQueue
+Queue name is jms/Queue
+Topic name is jms/Topic
+Connection factory name is DurableTopicCF
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+Java(TM) Message Service 1.0.2 Reference Implementation (build b14)
+  SENDER: Created client-acknowledge session
+  RECEIVER: Created client-acknowledge session
+  SENDER: Sending message: Here is a client-acknowledge message
+  RECEIVER: Processing message: Here is a client-acknowledge message
+  RECEIVER: Now I'll acknowledge the message
+SUBSCRIBER: Created auto-acknowledge session
+PUBLISHER: Created auto-acknowledge session
+PUBLISHER: Receiving synchronize messages from controlQueue; count = 1
+SUBSCRIBER: Sending synchronize message to controlQueue
+PUBLISHER: Received synchronize message;  expect 0 more
+PUBLISHER: Publishing message: Here is an auto-acknowledge message 1
+PUBLISHER: Publishing message: Here is an auto-acknowledge message 2
+PUBLISHER: Publishing message: Here is an auto-acknowledge message 3
+SUBSCRIBER: Processing message: Here is an auto-acknowledge message 1
+SUBSCRIBER: Processing message: Here is an auto-acknowledge message 2
+SUBSCRIBER: Processing message: Here is an auto-acknowledge message 3
+</pre>
+
+<h3>
+  <a name="1006838"> </a><font color="#666699" >A.4&nbsp;&nbsp; Utility Class</font>
+</h3>
+
+
+  <p> <a name="1006839"> </a><font >The <code>SampleUtilities</code> class, in 
+    <a href="../examples/appendix/SampleUtilities.java"><code>SampleUtilities.java</code></a>, 
+    is a utility class for the other sample programs. It contains the following 
+    methods:</font> </p>
+
+<ul>
+    <li ><font ><a name="1006840"> </a><code>getQueueConnectionFactory</code></font> 
+    <li ><font ><a name="1006841"> </a><code>getTopicConnectionFactory</code></font> 
+    <li ><font ><a name="1006842"> </a><code>getQueue</code></font> 
+    <li ><font ><a name="1006843"> </a><code>getTopic</code></font> 
+    <li ><font ><a name="1006844"> </a><code>jndiLookup</code></font> 
+    <li ><font ><a name="1006846"> </a><code>receiveSynchronizeMessages</code></font> 
+    <font >
+    <li ><a name="1006847"> </a><code>sendSynchronizeMessages</code>
+    </font>
+</ul>
+
+  <p> <a name="1006848"> </a><font >It also contains the class <code>DoneLatch</code>, 
+    which has the following methods:</font> </p>
+
+<ul>
+    <li ><font ><a name="1006849"> </a><code>waitTillDone</code></font> 
+    <font >
+    <li ><a name="1064982"> </a><code>allDone</code>
+    </font>
+</ul>
+
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="j2eeapp4.html">Prev</a> |
+  <a href="jms_tutorialIX.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>

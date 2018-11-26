@@ -1,0 +1,1023 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html">
+<meta name="LASTUPDATED" content="Tue Jan 29 13:23:26 2002">
+<title>A J2EE(TM) Application that Uses the JMS API with a Session Bean</title>
+</head>
+
+<body bgcolor="#FFFFFF"
+link="#666699">
+
+<table width="550">
+  <tr>
+  <TD>
+  <B><FONT SIZE="-1">Java</FONT><FONT SIZE="-2"><SUP>TM</SUP></FONT><FONT SIZE="-1"> Message Service Tutorial</FONT></B>
+  </TD>
+  </tr>
+  <tr>
+    <td align="left" valign="center">
+    <font size="-1">
+    <a href="../index.html" target="_top">Tutorial Homepage</a>
+|
+    <a href="jms_tutorialTOC.html">TOC</a> |
+    <a href="j2eeapp1.html">Prev</a> |
+    <a href="j2eeapp3.html">Next</a> |
+    <a href="jms_tutorialIX.html">Index</a>
+    </font>
+    </td>
+  </tr>
+</table>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<blockquote>
+<h1>
+  <a name="1019090"> </a><font color="#666699" >8 &nbsp;&nbsp; A J2EE<sup><font size="-2">TM</font></sup> Application that Uses the JMS API with a Session Bean</font>
+</h1>
+
+
+<p>
+  <a name="1039834"> </a>This chapter explains how to write, compile, package, deploy, and run a 
+  J2EE<font size="-2"><sup>TM</sup></font> application that uses the JMS API in conjunction with a session bean. The application contains the following components:
+</p>
+
+<ul>
+  <li ><font ><a name="1039835"> </a>An application client that calls an enterprise bean</font>
+  <li ><font ><a name="1039836"> </a>A session bean that publishes several messages to a topic</font>
+  <font ><li ><a name="1039837"> </a>A message-driven bean that receives and processes the messages, using a durable topic subscriber and a message selector</font>
+</ul>
+
+<p>
+  <a name="1039830"> </a><font >The chapter covers the following topics:</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1038294">Writing and compiling the application components</a></font>
+  <li ><font ><a href="#1023764">Creating and packaging the application</a></font>
+  <font ><li ><a href="#1046339">Deploying and running the application</a></font>
+</ul>
+
+  <p> <a name="1046068"> </a><font >If you downloaded the tutorial examples as 
+    described in the preface, you will find the source code files for this chapter 
+    in <code>jms_tutorial/examples/client_ses_mdb</code> (on UNIX&#174; systems) 
+    or <code>jms_tutorial\examples\client_ses_mdb</code> (on Microsoft Windows 
+    systems). The directory <code>ear_files</code> in the <code>examples</code> 
+    directory contains a built application called <code>SamplePubSubApp.ear</code>. 
+    If you run into difficulty at any time, you can open this file in the deploytool 
+    and compare that file to your own version. </font> </p>
+
+<h3>
+  <a name="1038294"> </a><font color="#666699" >8.1&nbsp;&nbsp; Writing and Compiling the Application Components</font>
+</h3>
+
+
+<p>
+  <a name="1038167"> </a><font >This application demonstrates how to send messages from an enterprise bean--in this case, a session bean--rather than from an application client, as in the example in <a href="j2eeapp1.html">Chapter 7</a>. <a href="j2eeapp2.html#1027919">Figure 8.1</a> illustrates the structure of this application.</font>
+</p>
+
+
+<p>
+  <a name="1052008"> </a><img src="images/Fig8.1.gif" border="0" hspace="0" vspace="0">
+</p>
+
+<a name="1027919"> </a><i>Figure 8.1&nbsp;&nbsp; A J2EE Application: Client to Session Bean to Message-Driven Bean</i><br>
+
+
+<p>
+  <a name="1036099"> </a><font >The Publisher enterprise bean in this example is the enterprise-application equivalent of a wire-service news feed that categorizes news events into six news categories. The message-driven bean could represent a newsroom, where the Sports desk, for example, would set up a subscription for all news events pertaining to sports news. </font>
+</p>
+
+
+  <p> <a name="1036122"> </a><font >The application client in the example obtains 
+    a handle to the Publisher enterprise bean's home interface and calls the enterprise 
+    bean's business method. The enterprise bean creates 18 text messages. For 
+    each message, it sets a <code>String</code> property randomly to one of six 
+    values representing the news categories and then publishes the message to 
+    a topic. The message-driven bean uses a message selector for the property 
+    to limit which of the published messages it receives. </font> </p>
+
+
+<p>
+  <a name="1038290"> </a><font >Writing and compiling the components of the application involve</font>
+</p>
+
+<ul>
+  <li ><font ><a href="#1038078">Coding the application client</a></font>
+  <li ><font ><a href="#1028798">Coding the Publisher session bean</a></font>
+  <li ><font ><a href="#1024033">Coding the message-driven bean</a></font>
+  <font ><li ><a href="#1024278">Compiling the source files</a></font>
+</ul>
+
+<h4>
+  <a name="1038078"> </a><font color="#666699" >8.1.1&nbsp;&nbsp; Coding the Application Client: <code>MyAppClient.java</code></font>
+</h4>
+
+
+  <p> <a name="1040790"> </a><font >The application client program, <a href="../examples/client_ses_mdb/MyAppClient.java"><code>MyAppClient.java</code></a>, 
+    performs no JMS API operations and so is simpler than the client program in 
+    <a href="j2eeapp1.html">Chapter 7</a>. The program obtains a handle to the 
+    Publisher enterprise bean's home interface, using the Java<font size="-2"><sup>TM</sup></font> 
+    Naming and Directory Interface<font size="-2"><sup>TM</sup></font> (JNDI) 
+    API naming context <code>java:comp/env</code>. The program then creates an 
+    instance of the bean and calls the bean's business method twice.</font> </p>
+
+<h4>
+  <a name="1028798"> </a><font color="#666699" >8.1.2&nbsp;&nbsp; Coding the Publisher Session Bean</font>
+</h4>
+
+
+  <p> <a name="1023817"> </a><font >The Publisher bean is a stateless session bean 
+    with one <code>create</code> method and one business method. The Publisher 
+    bean uses remote interfaces rather than local interfaces because it is accessed 
+    from outside the EJB container.</font> </p>
+
+<h5>
+  <a name="1028820"> </a><i><font color="#666699" >8.1.2.1&nbsp;&nbsp; The Remote Home Interface: <code>PublisherHome.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1023818"> </a><font >The remote home interface source file is <a href="../examples/client_ses_mdb/PublisherHome.java"><code>PublisherHome.java</code></a>.</font> 
+  </p>
+
+<h5>
+  <a name="1023846"> </a><i><font color="#666699" >8.1.2.2&nbsp;&nbsp; The Remote Interface: <code>Publisher.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1028760"> </a><font >The remote interface, <a href="../examples/client_ses_mdb/Publisher.java"><code>Publisher.java</code></a>, 
+    declares a single business method, <code>publishNews</code>.</font> </p>
+
+<h5>
+  <a name="1023875"> </a><i><font color="#666699" >8.1.2.3&nbsp;&nbsp; The Bean Class: <code>PublisherBean.java</code></font></i>
+</h5>
+
+
+  <p> <a name="1028761"> </a><font >The bean class, <a href="../examples/client_ses_mdb/PublisherBean.java"><code>PublisherBean.java</code></a>, 
+    implements the <code>publishNews</code> method and its helper method <code>chooseType</code>. 
+    The bean class also implements the required methods <code>ejbCreate</code>, 
+    <code>setSessionContext</code>, <code>ejbRemove</code>, <code>ejbActivate</code>, 
+    and <code>ejbPassivate</code>.</font> </p>
+
+
+  <p> <a name="1027511"> </a><font >The <code>ejbCreate</code> method of the bean 
+    class allocates resources--in this case, by looking up the <code>TopicConnectionFactory</code> 
+    and the topic and creating the <code>TopicConnection</code>. The business 
+    method <code>publishNews</code> creates a <code>TopicSession</code> and a 
+    <code>TopicPublisher</code> and publishes the messages.</font> </p>
+
+
+  <p> <a name="1027559"> </a><font >The <code>ejbRemove</code> method must deallocate 
+    the resources that were allocated by the <code>ejbCreate</code> method. In 
+    this case, the <code>ejbRemove</code> method closes the <code>TopicConnection</code>.</font> 
+  </p>
+
+<h4>
+  <a name="1024033"> </a><font color="#666699" >8.1.3&nbsp;&nbsp; Coding the Message-Driven Bean: <code>MessageBean.java</code></font>
+</h4>
+
+
+  <p> <a name="1024066"> </a><font >The message-driven bean class, <a href="../examples/client_ses_mdb/MessageBean.java"><code>MessageBean.java</code></a>, 
+    is identical to the one in <a href="j2eeapp1.html#1024033">Section 7.1.2</a>.</font> 
+  </p>
+
+<h4>
+  <a name="1024278"> </a><font color="#666699" >8.1.4&nbsp;&nbsp; Compiling the Source Files</font>
+</h4>
+
+
+  <p> <a name="1024279"> </a><font >To compile all the files in the application, 
+    go to the directory <code>client_ses_mdb</code> and do the following.</font> 
+  </p>
+
+<ol type="1">
+    <li><font ><a name="1036697"> </a>Make sure that you have set the environment 
+      variables shown in <a href="client.html#1025256">Table 4.1</a>: <code>JAVA_HOME</code>, 
+      <code>J2EE_HOME</code>, <code>CLASSPATH</code>, and <code>PATH</code>.</font> 
+    <li><font ><a name="1036713"> </a>At a command line prompt, compile the source files:</font>
+<pre>
+javac *.java
+</pre>
+</ol>
+
+<h3>
+  <a name="1023764"> </a><font color="#666699" >8.2&nbsp;&nbsp; Creating and Packaging the Application</font>
+</h3>
+
+
+<p>
+  <a name="1028949"> </a><font >Creating and packaging this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1040196">Starting the J2EE server and the deploytool*</a></font>
+  <li><font ><a href="#1036351">Creating a topic</a></font>
+  <li><font ><a href="#1040648">Creating a connection factory</a></font>
+  <li><font ><a href="#1036357">Creating the J2EE application</a></font>
+  <li><font ><a href="#1042047">Packaging the application client</a></font>
+  <li><font ><a href="#1024382">Packaging the session bean</a></font>
+  <li><font ><a href="#1025061">Packaging the message-driven bean</a></font>
+  <font ><li><a href="#1025781">Specifying the JNDI API names ("JNDI names")</a></font>
+</ol>
+
+<p>
+  <a name="1046142"> </a><font >Step 1, marked with an asterisk (*), is not needed if the server and deploytool are still running.</font>
+</p>
+
+<h4>
+  <a name="1040196"> </a><font color="#666699" >8.2.1&nbsp;&nbsp; Starting the J2EE Server and the Deploytool</font>
+</h4>
+
+
+<p>
+  <a name="1040197"> </a><font >Before you can create and package the application, you must start the J2EE server and the deploytool. Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li><font ><a name="1040201"> </a>At the command line prompt, start the J2EE server: </font>
+<pre>
+j2ee -verbose
+</pre>
+<p>
+  <a name="1040203"> </a><font >Wait until the server displays the message "J2EE server startup complete."</font>
+</p>
+
+      <p> <a name="1040204"> </a><font >(To stop the server, type <code>j2ee -stop</code>.)</font> 
+      </p>
+</li>
+  <li><font ><a name="1040207"> </a>At another command line prompt, start the deploytool: </font>
+<pre>
+deploytool
+</pre>
+<p>
+  <a name="1040209"> </a><font >(To access the tool's context-sensitive help, press F1.)</font>
+</p>
+</ol>
+
+<h4>
+  <a name="1036351"> </a><font color="#666699" >8.2.2&nbsp;&nbsp; Creating a Topic</font>
+</h4>
+
+
+  <p> <a name="1036361"> </a><font >In <a href="client.html#1027311">Section 4.3.4, 
+    "Creating the JMS Administered Objects,"</a> you used the <code>j2eeadmin</code> 
+    command to create a topic. This time, you will create the topic by using the 
+    deploytool. Follow these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1040618"> </a>In the deploytool, select the Tools menu.</font>
+  <li  value="2"><font ><a name="1040619"> </a>From the Tools menu, choose Server Configuration.</font>
+  <li  value="3"><font ><a name="1040620"> </a>Under the JMS folder, select Destinations.</font>
+  <li  value="4"><font ><a name="1040621"> </a>In the JMS Topic Destinations area, click Add.</font>
+    <li  value="5"><font ><a name="1040622"> </a>In the text field, enter <code>jms/MyTopic</code>. 
+      (We will observe the J2EE convention of placing the topic in the <code>jms</code> 
+      namespace.)</font> 
+    <li  value="6"><font ><a name="1053455"> </a>Click OK.</font>
+  <li  value="7"><font ><a name="1036626"> </a>If you wish, you can verify that the topic was created:</font>
+<pre>
+j2eeadmin -listJmsDestination
+</pre>
+</ol>
+
+<h4>
+  <a name="1040648"> </a><font color="#666699" >8.2.3&nbsp;&nbsp; Creating a Connection Factory</font>
+</h4>
+
+
+<p>
+  <a name="1040661"> </a><font >For this application, you create a new connection factory. This application will use a durable subscriber, so you need a connection factory that has a client ID. (For more information, see <a href="advanced.html#1024758">Section 5.2.1, "Creating Durable Subscriptions."</a>) Follow these steps.</font>
+</p>
+
+<ol type="1">
+  <li><font ><a name="1040675"> </a>At the command line prompt, enter the following command:</font>
+<pre>
+j2eeadmin -addJmsFactory jms/DurableTopicCF topic -props clientID=MyID
+</pre>
+</li>
+  <font ><li><a name="1040682"> </a>Verify that the connection factory was created:</li></font>
+
+<pre>
+j2eeadmin -listJmsFactory
+</pre>
+</ol>
+
+<p>
+  <a name="1040688"> </a><font >You can also create connection factories by using the deploytool's Server Configuration dialog.</font>
+</p>
+
+<h4>
+  <a name="1036357"> </a><font color="#666699" >8.2.4&nbsp;&nbsp; Creating the J2EE Application</font>
+</h4>
+
+
+  <p> <a name="1040221"> </a><font >Create a new J2EE application called <code>PubSubApp</code> 
+    and store it in the file named<code> PubSubApp.ear</code>. Follow these steps.</font> 
+  </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1040222"> </a>In the deploytool, select the File menu. </font>
+  <li  value="2"><font ><a name="1040223"> </a>From the File menu, choose New -> Application.</font>
+    <li  value="3"><font ><a name="1040224"> </a>Click Browse next to the Application 
+      File Name field and use the file chooser to locate the directory <code>client_ses_mdb</code>. 
+      </font> 
+    <li  value="4"><font ><a name="1040225"> </a>In the File Name field, enter 
+      <code>PubSubApp</code>.</font> 
+    <li  value="5"><font ><a name="1040226"> </a>Click New Application.</font>
+  <font ><li  value="6"><a name="1040227"> </a>Click OK. </font>
+</ol>
+
+  <p> <a name="1040228"> </a><font >A diamond icon labeled <code>PubSubApp</code> 
+    appears in the tree view on the left side of the deploytool window. The full 
+    path name of <code>PubSubApp.ear</code> appears in the General tabbed pane 
+    on the right side.</font> </p>
+
+<h4>
+  <a name="1042047"> </a><font color="#666699" >8.2.5&nbsp;&nbsp; Packaging the Application Client</font>
+</h4>
+
+
+<p>
+  <a name="1042048"> </a><font >In this section, you will run the New Application Client Wizard of the deploytool to package the application client. To start the New Application Client Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1042050"> </a>In the tree view, select <code>PubSubApp</code>.</font> 
+    <font ><li  value="2"><a name="1042051"> </a>From the File menu, choose New -> Application Client. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1042052"> </a><i><font color="#666699" >8.2.5.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1042053"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1042054"> </a><i><font color="#666699" >8.2.5.2&nbsp;&nbsp; JAR File Contents Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1042055"> </a>In the combo box labeled Create 
+      Archive Within Application, select <code>PubSubApp</code>.</font> 
+    <li  value="2"><font ><a name="1042056"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="3"><font ><a name="1042057"> </a>In the dialog box Edit Contents 
+      of &lt;Application Client&gt;, choose the <code>client_ses_mdb</code> directory. 
+      If the directory is not already in the Starting Directory field, type it 
+      in the field, or locate it by browsing through the Available Files tree. 
+      </font> 
+    <li  value="4"><font ><a name="1042058"> </a>Select the <code>MyAppClient.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="5"><font ><a name="1042059"> </a>Click OK. </font>
+  <font ><li  value="6"><a name="1042060"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1042061"> </a><i><font color="#666699" >8.2.5.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1042062"> </a>In the Application Client combo 
+      box, select <code>MyAppClient</code> in the Main Class field, and enter 
+      <code>MyAppClient</code> in the Display Name field.</font> 
+    <li  value="2"><font ><a name="1042063"> </a>In the Callback Handler Class combo box, verify that container-managed authentication is selected.</font>
+  <font ><li  value="3"><a name="1042064"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1042065"> </a><i><font color="#666699" >8.2.5.4&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1042066"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1042069"> </a><i><font color="#666699" >8.2.5.5&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+  <p> <a name="1042070"> </a><font >In this dialog box, you associate the JNDI API 
+    context name for the EJB reference in the <code>MyAppClient.java</code> source 
+    file with the home and remote interfaces of the Publisher enterprise bean. 
+    Follow these steps.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1042071"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1042072"> </a>In the Coded Name column, enter 
+      <code>ejb/MyEjbReference</code>. </font> 
+    <li  value="3"><font ><a name="1042073"> </a>In the Type column, select Session. </font>
+  <li  value="4"><font ><a name="1042074"> </a>In the Interfaces column, select Remote.</font>
+    <li  value="5"><font ><a name="1042075"> </a>In the Home Interface column, enter 
+      <code>PublisherHome</code>. </font> 
+    <li  value="6"><font ><a name="1042076"> </a>In the Local/Remote Interface 
+      column, enter <code>Publisher</code>. </font> 
+    <li  value="7"><font ><a name="1042077"> </a>In the Deployment Settings combo 
+      box, select JNDI Name. In the JNDI Name field, enter <code>MyPublisher</code>.</font> 
+    <font ><li  value="8"><a name="1042078"> </a>Click Finish. You do not need to enter anything in the other dialog boxes.</font>
+</ol>
+
+<h4>
+  <a name="1024382"> </a><font color="#666699" >8.2.6&nbsp;&nbsp; Packaging the Session Bean</font>
+</h4>
+
+
+<p>
+  <a name="1039803"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the session bean. Follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1040292"> </a>In the tree view, select <code>PubSubApp</code>.</font> 
+    <font ><li  value="2"><a name="1040293"> </a>From the File menu, choose New -> Enterprise Bean. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1040373"> </a><i><font color="#666699" >8.2.6.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1040374"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1024617"> </a><i><font color="#666699" >8.2.6.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1040301"> </a>In the combo box labeled JAR File 
+      Location, verify that Create New JAR File in Application and <code>PubSubApp</code> 
+      are selected.</font> 
+    <li  value="2"><font ><a name="1040302"> </a>In the JAR Display Name field, 
+      verify that the name is <code>Ejb1</code>, the default display name. Representing 
+      the enterprise bean JAR file that contains the bean, this name will be displayed 
+      in the tree view. </font> 
+    <li  value="3"><font ><a name="1040303"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="4"><font ><a name="1040312"> </a>In the dialog box Edit Contents 
+      of Ejb1, choose the <code>client_ses_mdb</code> directory. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="5"><font ><a name="1040310"> </a>Select the files <code>Publisher.class</code>, 
+      <code>PublisherBean.class</code>, and <code>PublisherHome.class</code> from 
+      the Available Files tree area and click Add. </font> 
+    <li  value="6"><font ><a name="1040323"> </a>Click OK. </font>
+  <font ><li  value="7"><a name="1040324"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1024779"> </a><i><font color="#666699" >8.2.6.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1024781"> </a>In the Bean Type combo box, select the Session radio button. </font>
+  <li  value="2"><font ><a name="1024783"> </a>Select the Stateless radio button. </font>
+    <li  value="3"><font ><a name="1024785"> </a>In the Enterprise Bean Class combo 
+      box, select <code>PublisherBean</code>. </font> 
+    <li  value="4"><font ><a name="1038883"> </a>In the Enterprise Bean Name field, 
+      enter <code>PublisherEJB</code>.</font> 
+    <li  value="5"><font ><a name="1024787"> </a>In the Remote Interfaces combo 
+      box, select <code>PublisherHome</code> for Remote Home Interface and <code>Publisher</code> 
+      for Remote Interface. Ignore the Local Interfaces combo box.</font> 
+    <font ><li  value="6"><a name="1040331"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1038857"> </a><i><font color="#666699" >8.2.6.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1038858"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1038859"> </a>In the Transaction Attribute field 
+      opposite the <code>publishNews</code> method, verify that Required is selected. 
+      </font> 
+    <font ><li  value="3"><a name="1040338"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1040380"> </a><i><font color="#666699" >8.2.6.5&nbsp;&nbsp; Environment Entries Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1040381"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1040391"> </a><i><font color="#666699" >8.2.6.6&nbsp;&nbsp; Enterprise Bean References Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1040395"> </a><font >Click Next.</font>
+</p>
+
+<h5>
+  <a name="1024936"> </a><i><font color="#666699" >8.2.6.7&nbsp;&nbsp; Resource References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1040342"> </a>Click Add. </font>
+    <li  value="2"><font ><a name="1024939"> </a>In the Coded Name field, enter 
+      <code>jms/MyTopicConnectionFactory</code>.</font> 
+    <li  value="3"><font ><a name="1024940"> </a>In the Type field, select <code>javax.jms.TopicConnectionFactory</code>.</font> 
+    <li  value="4"><font ><a name="1024941"> </a>In the Authentication field, select Container.</font>
+    <li  value="5"><font ><a name="1024942"> </a>In the JNDI Name field, enter <code>jms/DurableTopicCF</code>.</font> 
+    <li  value="6"><font ><a name="1024943"> </a>In the User Name field, enter 
+      <code>j2ee</code>.</font> 
+    <li  value="7"><font ><a name="1024944"> </a>In the Password field, enter 
+      <code>j2ee</code>.</font> 
+    <font ><li  value="8"><a name="1040347"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1038992"> </a><i><font color="#666699" >8.2.6.8&nbsp;&nbsp; Resource Environment References Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1040360"> </a>Click Add.</font>
+    <li  value="2"><font ><a name="1038993"> </a>In the Coded Name field, enter 
+      <code>jms/TopicName</code>--the logical name referenced by the <code>PublisherBean</code>.</font> 
+    <li  value="3"><font ><a name="1038994"> </a>In the Type field, select <code>javax.jms.Topic</code>.</font> 
+    <li  value="4"><font ><a name="1038995"> </a>In the JNDI Name field, enter 
+      <code>jms/MyTopic</code>.</font> 
+    <font ><li  value="5"><a name="1040354"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1040402"> </a><i><font color="#666699" >8.2.6.9&nbsp;&nbsp; Security Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1040403"> </a><font >Use the default Security Identity setting for a session or an entity bean, Use Caller ID. Click Next.</font>
+</p>
+
+<h5>
+  <a name="1040405"> </a><i><font color="#666699" >8.2.6.10&nbsp;&nbsp; Review Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1040406"> </a>Check the settings for the deployment descriptor.</font>
+  <font ><li  value="2"><a name="1040407"> </a>Click Finish.</font>
+</ol>
+
+<h4>
+  <a name="1025061"> </a><font color="#666699" >8.2.7&nbsp;&nbsp; Packaging the Message-Driven Bean</font>
+</h4>
+
+
+<p>
+  <a name="1040364"> </a><font >In this section, you will run the New Enterprise Bean Wizard of the deploytool to package the message-driven bean. To start the New Enterprise Bean Wizard, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1040365"> </a>In the tree view, select <code>PubSubApp</code>.</font> 
+    <font ><li  value="2"><a name="1040366"> </a>From the File menu, choose New -> Enterprise Bean. The wizard displays a series of dialog boxes. </font>
+</ol>
+
+<h5>
+  <a name="1040425"> </a><i><font color="#666699" >8.2.7.1&nbsp;&nbsp; Introduction Dialog Box</font></i>
+</h5>
+
+
+<p>
+  <a name="1040426"> </a><font >Click Next. </font>
+</p>
+
+<h5>
+  <a name="1025131"> </a><i><font color="#666699" >8.2.7.2&nbsp;&nbsp; EJB JAR Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1040437"> </a>In the combo box labeled JAR File 
+      Location, verify that Create New JAR File in Application and <code>PubSubApp</code> 
+      are selected.</font> 
+    <li  value="2"><font ><a name="1040435"> </a>In the JAR Display Name field, 
+      verify that the name is <code>Ejb2</code>, the default display name.</font> 
+    <li  value="3"><font ><a name="1040449"> </a>Click the Edit button next to the Contents text area. </font>
+    <li  value="4"><font ><a name="1040450"> </a>In the dialog box Edit Contents 
+      of Ejb2, choose the <code>client_ses_mdb</code> directory. If the directory 
+      is not already in the Starting Directory field, type it in the field, or 
+      locate it by browsing through the Available Files tree. </font> 
+    <li  value="5"><font ><a name="1040474"> </a>Select the <code>MessageBean.class</code> 
+      file from the Available Files tree area and click Add. </font> 
+    <li  value="6"><font ><a name="1040475"> </a>Click OK. </font>
+  <font ><li  value="7"><a name="1040476"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1025263"> </a><i><font color="#666699" >8.2.7.3&nbsp;&nbsp; General Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025265"> </a>In the Bean Type combo box, select the Message-Driven radio button. </font>
+    <li  value="2"><font ><a name="1025267"> </a>In the Enterprise Bean Class combo 
+      box, select <code>MessageBean</code>. </font> 
+    <li  value="3"><font ><a name="1025269"> </a>In the Enterprise Bean Name field, 
+      enter <code>MessageBean</code>. </font> 
+    <font ><li  value="4"><a name="1040484"> </a>Click Next. </font>
+</ol>
+
+<h5>
+  <a name="1038865"> </a><i><font color="#666699" >8.2.7.4&nbsp;&nbsp; Transaction Management Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1039004"> </a>Select the Container-Managed radio button.</font>
+    <li  value="2"><font ><a name="1039005"> </a>In the Transaction Type field opposite 
+      the <code>onMessage</code> method, verify that Required is selected.</font> 
+    <font ><li  value="3"><a name="1040491"> </a>Click Next.</font>
+</ol>
+
+<h5>
+  <a name="1038344"> </a><i><font color="#666699" >8.2.7.5&nbsp;&nbsp; Message-Driven Bean Settings Dialog Box</font></i>
+</h5>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1025322"> </a>In the Destination Type combo box, select Topic.</font>
+  <li  value="2"><font ><a name="1025324"> </a>Check the Durable Subscriber checkbox.</font>
+    <li  value="3"><font ><a name="1036683"> </a>In the Subscription Name field, 
+      enter <code>MySub</code>.</font> 
+    <li  value="4"><font ><a name="1036235"> </a>In the Destination field, select 
+      <code>jms/MyTopic</code>.</font> 
+    <li  value="5"><font ><a name="1036236"> </a>In the Connection Factory field, 
+      select <code>jms/DurableTopicCF</code>.</font> 
+    <li  value="6"><font ><a name="1025327"> </a>In the JMS Message Selector field, enter the following exactly as shown:</font>
+<pre>
+NewsType = 'Opinion' OR NewsType = 'Sports'
+</pre>
+      <p> <a name="1025330"> </a><font >This will cause the message-driven bean to receive 
+        only messages whose <code>NewsType</code> property is set to one of these 
+        values.</font> </p>
+</li>
+  <font ><li  value="7"><a name="1040496"> </a>Click Finish. You do not need to enter anything in the other dialog boxes.</font>
+</ol>
+
+<h4>
+  <a name="1025781"> </a><font color="#666699" >8.2.8&nbsp;&nbsp; Specifying the JNDI Names</font>
+</h4>
+
+
+  <p> <a name="1025814"> </a><font >Verify that the JNDI names are correct, and 
+    add one for the <code>PublisherEJB</code> component. Follow these steps.</font> 
+  </p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1025791"> </a>In the tree view, select the <code>PubSubApp</code> 
+      application. </font> 
+    <li  value="2"><font ><a name="1027768"> </a>Select the JNDI Names tabbed pane.</font>
+  <font >
+    <li  value="3"><a name="1045948"> </a>Make sure that the JNDI names appear 
+      as shown in <a href="j2eeapp2.html#1045951">Table 8.1</a> and <a href="j2eeapp2.html#1045977">Table 
+      8.2</a>. You will need to enter <code>MyPublisher</code> as the JNDI name 
+      for the <code>PublisherEJB</code> component. 
+    </font></ol><font >
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1045951"> </a><font >Table 8.1: &nbsp;&nbsp; Application Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1045957"> </a><font >Component Type<br></font>
+
+</font></div></th>
+    <th>
+        <div align="left"><font face="" color="#666699"> <a name="1045959"> </a><font ><b>Component</b><br>
+          </font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1045961"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1045963"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045965"> </a><font ><code>MessageBean</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045967"> </a><font ><code>jms/MyTopic</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1045969"> </a><font >EJB<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045971"> </a><font ><code>PublisherEJB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045973"> </a><font ><code>MyPublisher</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+<p></p>
+
+<table border="1" cellpadding="5" cellspacing="0">
+  <caption><b><i><font face="">
+<a name="1045977"> </a><font >Table 8.2: &nbsp;&nbsp; References Pane<br></font>
+
+</font></i></b></caption>
+  <tr align="center" bgcolor="#CCCCCC">
+    <th><div align="left"><font face="" color="#666699">
+<a name="1045985"> </a><font >Ref. Type<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1045987"> </a><font >Referenced By<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1045989"> </a><font >Reference Name<br></font>
+
+</font></div></th>
+    <th><div align="left"><font face="" color="#666699">
+<a name="1045991"> </a><font >JNDI Name<br></font>
+
+</font></div></th>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1045993"> </a><font >Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045995"> </a><font ><code>PublisherEJB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045997"> </a><font ><code>jms/MyTopicConnectionFactory</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1045999"> </a><font ><code>jms/DurableTopicCF</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1046001"> </a><font >Env Resource<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1046003"> </a><font ><code>PublisherEJB</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1046005"> </a><font ><code>jms/TopicName</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1046007"> </a><font ><code>jms/MyTopic</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+  <tr>
+    <td><div align="left"><font face="">
+<a name="1046009"> </a><font >EJB Ref<br></font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1046011"> </a><font ><code>MyAppClient</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1046013"> </a><font ><code>ejb/MyEjbReference</code><br>
+          </font>
+
+</font></div></td>
+    <td>
+        <div align="left"><font face=""> <a name="1046015"> </a><font ><code>MyPublisher</code><br>
+          </font>
+
+</font></div></td>
+  </tr>
+</table>
+
+
+
+</font>
+
+<h3>
+  <a name="1046339"> </a><font color="#666699" >8.3&nbsp;&nbsp; Deploying and Running the Application</font>
+</h3>
+
+
+<p>
+  <a name="1046340"> </a><font >Deploying and running this application involve several steps:</font>
+</p>
+
+<ol type="1">
+  <li><font ><a href="#1041076">Adding the server, if necessary</a></font>
+  <li><font ><a href="#1041090">Deploying the application</a></font>
+  <li><font ><a href="#1041117">Running the client</a></font>
+  <li><font ><a href="#1041134">Undeploying the application</a></font>
+  <font ><li><a href="#1041160">Removing the application and stopping the server</a></font>
+</ol>
+
+<h4>
+  <a name="1041076"> </a><font color="#666699" >8.3.1&nbsp;&nbsp; Adding the Server</font>
+</h4>
+
+
+  <p> <a name="1041077"> </a><font >Before you can deploy the application, you 
+    must make available to the deploytool the J2EE server you started in <a href="j2eeapp2.html#1040196">Section 
+    8.2.1, "Starting the J2EE Server and the Deploytool."</a> Because you started 
+    the J2EE server before you started the deploytool, the server, named <code>localhost</code>, 
+    probably appears in the tree under <code>Servers</code>. If it does not, do 
+    the following.</font> </p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1041082"> </a>From the File menu, choose Add Server.</font>
+    <li  value="2"><font ><a name="1041083"> </a>In the Add Server dialog box, enter 
+      <code>localhost</code> in the Server Name field.</font> 
+    <font >
+    <li  value="3"><a name="1041084"> </a>Click OK. A <code>localhost</code> node 
+      appears under <code>Servers</code> in the tree view.
+    </font>
+</ol>
+
+<h4>
+  <a name="1041090"> </a><font color="#666699" >8.3.2&nbsp;&nbsp; Deploying the Application</font>
+</h4>
+
+
+<p>
+  <a name="1041091"> </a><font >To deploy the application, perform the following steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1041092"> </a>From the File menu, choose Save to save the application.</font>
+  <li  value="2"><font ><a name="1041093"> </a>From the Tools menu, choose Deploy. </font>
+    <li  value="3"><font ><a name="1041094"> </a>In the Introduction dialog box, 
+      verify that the Object to Deploy selection is <code>PubSubApp</code> and 
+      that the Target Server selection is <code>localhost</code>. </font> 
+    <li  value="4"><font ><a name="1041095"> </a>Click Next.</font>
+  <li  value="5"><font ><a name="1041096"> </a>In the JNDI Names dialog box, verify that the JNDI names are correct.</font>
+  <li  value="6"><font ><a name="1041097"> </a>Click Next.</font>
+  <li  value="7"><font ><a name="1041098"> </a>Click Finish.</font>
+  <li  value="8"><font ><a name="1041099"> </a>In the Deployment Progress dialog box, click OK when the "Deployment of PubSubApp is complete" message appears.</font>
+  <font >
+    <li  value="9"><a name="1041100"> </a>In the tree view, expand <code>Servers</code> 
+      and select <code>localhost</code>. Verify that <code>PubSubApp</code> is 
+      deployed.
+    </font>
+</ol>
+
+<h4>
+  <a name="1041117"> </a><font color="#666699" >8.3.3&nbsp;&nbsp; Running the Client</font>
+</h4>
+
+
+<p>
+  <a name="1041118"> </a><font >To run the client, perform the following steps.</font>
+</p>
+
+<ol type="1">
+  <li  value="1"><font ><a name="1041121"> </a>At the command line prompt, enter the following:</font>
+<pre>
+runclient -client PubSubApp.ear -name MyAppClient -textauth
+</pre>
+    <li  value="2"><font ><a name="1026152"> </a>At the login prompts, enter <code>j2ee</code> 
+      as the user name and <code>j2ee</code> as the password.</font> 
+    <font ><li  value="3"><a name="1041125"> </a>Click OK.</font>
+</ol>
+
+<p>
+  <a name="1025977"> </a><font >The client program runs in the command window and has output that looks like this:</font>
+</p>
+
+<pre>
+Binding name:'java:comp/env/ejb/MyEjbReference'
+Looking up EJB reference
+Looked up home
+Narrowed home
+Got the EJB
+Unbinding name:'java:comp/env/ejb/MyEjbReference'
+</pre>
+
+<p>
+  <a name="1038713"> </a><font >Output from the application appears in the window in which you started the J2EE server. Suppose that the last few messages from the Publisher session bean look like this:</font>
+</p>
+
+<pre>
+PUBLISHER: Setting message text to: Item 13: Opinion
+PUBLISHER: Setting message text to: Item 14: Sports
+PUBLISHER: Setting message text to: Item 15: Nation/World
+PUBLISHER: Setting message text to: Item 16: Living/Arts
+PUBLISHER: Setting message text to: Item 17: Opinion
+</pre>
+
+<p>
+  <a name="1038771"> </a><font >Because of the message selector, the last few messages received by the message-driven bean will look like this:</font>
+</p>
+
+<pre>
+MESSAGE BEAN: Message received: Item 13: Opinion
+MESSAGE BEAN: Message received: Item 14: Sports
+MESSAGE BEAN: Message received: Item 17: Opinion
+</pre>
+
+<h4>
+  <a name="1041134"> </a><font color="#666699" >8.3.4&nbsp;&nbsp; Undeploying the Application</font>
+</h4>
+
+
+<p>
+  <a name="1041135"> </a><font >To undeploy the J2EE application, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1041136"> </a>In the tree view, select <code>localhost</code>.</font> 
+    <li  value="2"><font ><a name="1041137"> </a>Select <code>PubSubApp</code> 
+      in the Deployed Objects area.</font> 
+    <li  value="3"><font ><a name="1041138"> </a>Click Undeploy. </font>
+  <font ><li  value="4"><a name="1041139"> </a>Answer Yes in the confirmation dialog.</font>
+</ol>
+
+<h4>
+  <a name="1041160"> </a><font color="#666699" >8.3.5&nbsp;&nbsp; Removing the Application and Stopping the Server</font>
+</h4>
+
+
+<p>
+  <a name="1041153"> </a><font >To remove the application from the deploytool, follow these steps.</font>
+</p>
+
+<ol type="1">
+    <li  value="1"><font ><a name="1041154"> </a>Select <code>PubSubApp</code> in 
+      the tree view.</font> 
+    <font ><li  value="2"><a name="1041155"> </a>Select Close from the File menu.</font>
+</ol>
+
+<p>
+  <a name="1041179"> </a><font >To delete the topic you created, enter the following at the command line prompt:</font>
+</p>
+
+<pre>
+j2eeadmin -removeJmsDestination jms/MyTopic
+</pre>
+
+<p>
+  <a name="1042494"> </a><font >To delete the connection factory you created, enter the following:</font>
+</p>
+
+<pre>
+j2eeadmin -removeJmsFactory jms/DurableTopicCF
+</pre>
+
+<p>
+  <a name="1042475"> </a><font >To stop the J2EE server, use the following command:</font>
+</p>
+
+<pre>
+j2ee -stop
+</pre>
+</blockquote>
+
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+<br>
+<font size="-1"> 
+  <a href="jms_tutorialTOC.html">TOC</a> |
+  <a href="j2eeapp1.html">Prev</a> |
+  <a href="j2eeapp3.html">Next</a> | 
+  <a href="jms_tutorialIX.html">Index</a>
+</font>
+<br>
+<img src="images/blueline.gif" width="550" height="8" ALIGN="BOTTOM" NATURALSIZEFLAG="3">
+
+<font size="-2"> 
+<p>This Tutorial contains information on the 1.3.1 version of the Java 2 Platform, 
+Enterprise Edition.</p>
+<p><a href="copyright.html">Copyright</a> &#169; 2002 Sun Microsystems, Inc.
+All rights reserved.</p>
+</font>
+<br>
+</body>
+</html>
